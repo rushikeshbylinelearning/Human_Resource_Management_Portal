@@ -83,6 +83,13 @@ jobs:
       # ── salary-service backend + built frontend ───────────────────────────────
       # .env is NEVER deployed via rsync — it lives only on the server.
       # Set it manually once via cPanel or SSH, then leave it in place.
+      # rsync 3.1.3 on the server cannot create nested dest dirs; mkdir -p first.
+      - name: Ensure salary-service deploy directory exists
+        run: |
+          ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.SSH_PORT }} \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "mkdir -p '${{ env.SALARY_DEPLOY_ROOT }}/public'"
+
       - name: Deploy salary-service backend
         run: |
           rsync -avz --delete \
