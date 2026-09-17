@@ -80,28 +80,39 @@ jobs:
             cd /home/bylinelm/attendance-test.bylinelms.com/backend
             npm ci --omit=dev
 
+            # Test .env lives only on the server (never rsynced). Fill the values
+            # required to boot: SESSION_SECRET, PORT=5005, test site URLs.
+            node scripts/ensure-test-env.js
+
             # Only create/replace the TEST process. Never restart/delete production
-            # (attendance-system on :3011 / attendance.bylinelms.com).
-            pm2 delete attendancetest-backend || true
+            # (attendance-backend on :3011 / attendance.bylinelms.com).
+            pm2 delete attendancetest-backend >/dev/null 2>&1 || true
             PORT=5005 HOST=127.0.0.1 NODE_ENV=production \
               pm2 start ecosystem.config.cjs --only attendancetest-backend --env production --update-env
             pm2 save
 
             echo "Waiting for attendancetest-backend on :5005..."
             healthy=0
-            for i in $(seq 1 15); do
-              if curl -fsS "http://127.0.0.1:5005/health" >/dev/null; then
+            for i in $(seq 1 20); do
+              code=$(curl -sS -o /tmp/ams-test-health.json -w '%{http_code}' "http://127.0.0.1:5005/health" || true)
+              if [ "$code" = "200" ]; then
                 echo "attendancetest-backend is healthy on :5005"
-                curl -fsS "http://127.0.0.1:5005/health"
+                cat /tmp/ams-test-health.json
                 echo
                 healthy=1
                 break
               fi
+              echo "health attempt $i: HTTP ${code:-down}"
               sleep 2
             done
 
             if [ "$healthy" != "1" ]; then
               echo "attendancetest-backend did not become healthy on :5005"
+              echo "--- listeners on 5005 ---"
+              ss -lntp 2>/dev/null | grep 5005 || netstat -lntp 2>/dev/null | grep 5005 || true
+              echo "--- last health body ---"
+              cat /tmp/ams-test-health.json 2>/dev/null || true
+              echo
               pm2 describe attendancetest-backend || true
               pm2 logs attendancetest-backend --lines 80 --nostream || true
               exit 1
