@@ -479,3 +479,30 @@
     '    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)',
   timestamp: '2026-08-13 14:17:02'
 }
+{
+  service: 'attendance-system',
+  message: 'Application Error Validation failed',
+  stack: 'Error: Validation failed\n' +
+    '    at handleValidationErrors (/app/middleware/validation.js:15:14)\n' +
+    '    at Layer.handleRequest (/app/node_modules/router/lib/layer.js:152:17)\n' +
+    '    at next (/app/node_modules/router/lib/route.js:157:13)\n' +
+    '    at middleware (/app/node_modules/express-validator/lib/middlewares/check.js:16:13)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)',
+  errors: [
+    {
+      field: 'email',
+      message: 'Email or Employee Code is required',
+      value: ''
+    },
+    {
+      field: 'password',
+      message: 'Password must be at least 6 characters long',
+      value: undefined
+    }
+  ],
+  body: { email: '' },
+  params: [Object: null prototype] {},
+  query: [Object: null prototype] {},
+  level: 'error',
+  timestamp: '2026-09-10 17:46:30'
+}

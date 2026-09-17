@@ -1,22 +1,19 @@
 // frontend/src/pages/AdminDashboardPage.jsx
-import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
+import React, { Suspense, useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
 import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { Alert, Avatar, Button, Tooltip, Snackbar, Chip, Dialog, DialogTitle, DialogContent, Typography, Box, DialogActions, Stack, Skeleton } from '@mui/material';
-import {
-    PeopleAlt as PeopleAltIcon,
-    Work as WorkIcon,
-    AccessAlarm as AccessAlarmIcon,
-    EventBusy as EventBusyIcon,
-    Link as LinkIcon,
-    Notes as NotesIcon,
-    MoreTime as MoreTimeIcon,
-    HistoryEdu as HistoryEduIcon,
-    Assessment as AssessmentIcon,
-    PersonOff as PersonOffIcon,
-} from '@mui/icons-material';
-import EmployeeListModal from '../components/EmployeeListModal';
-import EnhancedLeaveRequestModal from '../components/EnhancedLeaveRequestModal';
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import WorkIcon from '@mui/icons-material/Work';
+import AccessAlarmIcon from '@mui/icons-material/AccessAlarm';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
+import LinkIcon from '@mui/icons-material/Link';
+import NotesIcon from '@mui/icons-material/Notes';
+import MoreTimeIcon from '@mui/icons-material/MoreTime';
+import HistoryEduIcon from '@mui/icons-material/HistoryEdu';
+import AssessmentIcon from '@mui/icons-material/Assessment';
+import PersonOffIcon from '@mui/icons-material/PersonOff';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 import PageHeroHeader from '../components/PageHeroHeader';
 import { formatLeaveRequestType } from '../utils/saturdayUtils';
 import { formatISTTime, formatISTDate } from '../utils/istTime';
@@ -35,6 +32,9 @@ import {
 } from '../utils/apiCache';
 
 import '../styles/AdminDashboardPage.css';
+
+const EmployeeListModal = lazyWithRetry(() => import('../components/EmployeeListModal'));
+const EnhancedLeaveRequestModal = lazyWithRetry(() => import('../components/EnhancedLeaveRequestModal'));
 
 // --- Memoized Child Components ---
 const SummaryCard = memo(({ title, value, icon, iconBgClass, onClick, clickable = false }) => (
@@ -807,7 +807,15 @@ const AdminDashboardPage = () => {
                 <Dialog 
                     open={isActivityModalOpen} 
                     onClose={handleCloseActivityModal}
-                    PaperProps={{ style: { borderRadius: 12, padding: '16px', minWidth: '400px' } }}
+                    fullWidth
+                    maxWidth="sm"
+                    PaperProps={{
+                        sx: {
+                            borderRadius: { xs: '16px 16px 0 0', sm: 3 },
+                            p: { xs: 0, sm: 2 },
+                            minWidth: 0,
+                        },
+                    }}
                 >
                     <DialogTitle sx={{ fontWeight: 600, pb: 1, pt: 1 }}>
                         {selectedActivity.type === 'Note' && 'Note from '}
@@ -849,14 +857,17 @@ const AdminDashboardPage = () => {
                 message={snackbar.message} 
             />
 
+            <Suspense fallback={null}>
+            {isEmployeeModalOpen && (
             <EmployeeListModal
                 open={isEmployeeModalOpen}
                 onClose={handleCloseEmployeeModal}
                 cardType={selectedCardType}
                 cardTitle={selectedCardTitle}
             />
+            )}
 
-            {/* Leave Request Details Modal */}
+            {viewLeaveRequestDialog.open && (
             <EnhancedLeaveRequestModal
                 open={viewLeaveRequestDialog.open}
                 onClose={handleCloseLeaveRequestDetails}
@@ -895,6 +906,8 @@ const AdminDashboardPage = () => {
                     window.location.href = `/admin/leaves`;
                 }}
             />
+            )}
+            </Suspense>
         </div>
     );
 };

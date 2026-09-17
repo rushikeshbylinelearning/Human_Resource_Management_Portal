@@ -1,5 +1,7 @@
 import { useRef, useState } from "react";
-import { FileUp, Plus, Trash2 } from "lucide-react";
+import FileUp from "lucide-react/dist/esm/icons/file-up";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import api from "../../api/axios";
 import { parseQuestionsFromPdf } from "../../utils/pdfPollParser";
 import {

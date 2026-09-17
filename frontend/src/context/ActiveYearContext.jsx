@@ -5,7 +5,7 @@ import { useAuth } from './AuthContext';
 const ActiveYearContext = createContext();
 
 export const ActiveYearProvider = ({ children }) => {
-    const { authStatus } = useAuth();
+    const { authStatus, user } = useAuth();
     const [activeYear, setActiveYear] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -39,8 +39,15 @@ export const ActiveYearProvider = ({ children }) => {
             return;
         }
 
+        if (user?.role !== 'Admin' && user?.role !== 'HR') {
+            setActiveYear(null);
+            setError(null);
+            setLoading(false);
+            return;
+        }
+
         fetchActiveYear();
-    }, [authStatus, fetchActiveYear]);
+    }, [authStatus, user?.role, fetchActiveYear]);
 
     const refreshActiveYear = useCallback(() => {
         return fetchActiveYear();

@@ -1,12 +1,8 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, Suspense } from 'react';
 import { createPortal } from 'react-dom';
-import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
+import { PdfDocument, PdfPage } from './lazy/LazyPdfComponents';
 import '../styles/CustomPdfViewer.css';
 import api from '../api/axios';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
 
 const MIN_READ_SECONDS = 60;
 
@@ -362,7 +358,13 @@ const CustomPdfViewer = ({
                         )}
 
                         {!error && pdfBlob && (
-                            <Document
+                            <Suspense fallback={
+                                <div className="pdf-loading">
+                                    <div className="pdf-spinner" />
+                                    <p>Loading PDF...</p>
+                                </div>
+                            }>
+                            <PdfDocument
                                 file={pdfBlob}
                                 onLoadSuccess={onDocumentLoadSuccess}
                                 onLoadError={onDocumentLoadError}
@@ -376,7 +378,7 @@ const CustomPdfViewer = ({
                                         className="pdf-page-wrapper"
                                         data-page-number={index + 1}
                                     >
-                                        <Page
+                                        <PdfPage
                                             pageNumber={index + 1}
                                             scale={scale}
                                             renderTextLayer={true}
@@ -392,7 +394,8 @@ const CustomPdfViewer = ({
                                         </div>
                                     </div>
                                 ))}
-                            </Document>
+                            </PdfDocument>
+                            </Suspense>
                         )}
                     </div>
 

@@ -95,7 +95,6 @@ async function revokeRefreshToken(rawToken) {
 
 module.exports = {
     RefreshTokenReuseError,
-    generateRefreshToken,
     hashRefreshToken,
     issueRefreshToken,
     rotateRefreshToken,

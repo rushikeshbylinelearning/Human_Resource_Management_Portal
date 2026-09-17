@@ -4,7 +4,18 @@ import socket from "../socket";
 import { useAuth } from "../context/AuthContext";
 import UserAvatar from "./common/UserAvatar";
 import PollMessage from "./announcements/PollMessage";
-import { Send, X, Megaphone, Smile, MoreVertical, Edit2, Trash2, Pin, PinOff, Eye, Lock, OctagonX } from "lucide-react";
+import Send from "lucide-react/dist/esm/icons/send";
+import X from "lucide-react/dist/esm/icons/x";
+import Megaphone from "lucide-react/dist/esm/icons/megaphone";
+import Smile from "lucide-react/dist/esm/icons/smile";
+import MoreVertical from "lucide-react/dist/esm/icons/more-vertical";
+import Edit2 from "lucide-react/dist/esm/icons/edit-2";
+import Trash2 from "lucide-react/dist/esm/icons/trash-2";
+import Pin from "lucide-react/dist/esm/icons/pin";
+import PinOff from "lucide-react/dist/esm/icons/pin-off";
+import Eye from "lucide-react/dist/esm/icons/eye";
+import Lock from "lucide-react/dist/esm/icons/lock";
+import OctagonX from "lucide-react/dist/esm/icons/octagon-x";
 import EmojiPicker from "./EmojiPicker";
 
 function sortMessagesChronologically(list) {

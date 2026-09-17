@@ -21,48 +21,20 @@ import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutl
 import api from '../../api/axios';
 import DocumentTemplateEditorDialog from './DocumentTemplateEditorDialog';
 import TemplateAssignDialog from './TemplateAssignDialog';
+import {
+    RED, RED_DARK, RED_BG, RED_LIGHT, TEXT, MUTED, BORDER, SURFACE,
+    FONT, SUCCESS_BG, SUCCESS_TEXT, WARN_BG, WARN_TEXT, INFO_BG, INFO_TEXT,
+    cardSx, sectionTitleSx, sectionDescSx, primaryBtnSx, outlineBtnSx,
+    fieldSx, tableHeadCellSx, iconBoxSx, pageTitleSx, pageDescSx,
+} from '../../theme/policiesPageTheme';
 
-// The 4 built-in types that use templates
 const BUILT_IN_KEYS = ['joining_letter', 'kra', 'probation_confirmation', 'probation_extension'];
 
-const sectionCardSx = {
-    background: '#fff',
-    border: '1px solid #e2e8f0',
-    borderRadius: '12px',
-    p: 2.5,
-    height: '100%',
-};
-
-const sectionTitleSx = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 1,
-    fontWeight: 700,
-    fontSize: '0.95rem',
-    color: '#1e293b',
-    mb: 0.5,
-};
-
-const sectionDescSx = {
-    color: '#64748b',
-    fontSize: '0.8rem',
-    mb: 2,
-    lineHeight: 1.5,
-};
-
-const primaryBtnSx = {
-    background: '#6366f1',
-    textTransform: 'none',
-    fontWeight: 600,
-    boxShadow: 'none',
-    '&:hover': { background: '#4f46e5', boxShadow: 'none' },
-};
-
 const docStatusConfig = {
-    pending: { label: 'Pending', color: '#92400e', bg: '#fef3c7', icon: <HourglassEmptyOutlinedIcon sx={{ fontSize: 14 }} /> },
-    viewed: { label: 'Viewed', color: '#1e40af', bg: '#dbeafe', icon: <CheckCircleOutlineIcon sx={{ fontSize: 14 }} /> },
-    acknowledged: { label: 'Acknowledged', color: '#166534', bg: '#dcfce7', icon: <CheckCircleOutlineIcon sx={{ fontSize: 14 }} /> },
-    hr_pending: { label: 'HR Pending', color: '#9a3412', bg: '#ffedd5', icon: <WarningAmberOutlinedIcon sx={{ fontSize: 14 }} /> },
+    pending: { label: 'Pending', color: WARN_TEXT, bg: WARN_BG, icon: <HourglassEmptyOutlinedIcon sx={{ fontSize: 14 }} /> },
+    viewed: { label: 'Viewed', color: INFO_TEXT, bg: INFO_BG, icon: <CheckCircleOutlineIcon sx={{ fontSize: 14 }} /> },
+    acknowledged: { label: 'Acknowledged', color: SUCCESS_TEXT, bg: SUCCESS_BG, icon: <CheckCircleOutlineIcon sx={{ fontSize: 14 }} /> },
+    hr_pending: { label: 'HR Pending', color: RED_DARK, bg: RED_BG, icon: <WarningAmberOutlinedIcon sx={{ fontSize: 14 }} /> },
 };
 
 const DocStatusChip = ({ status }) => {
@@ -72,12 +44,14 @@ const DocStatusChip = ({ status }) => {
             size="small"
             icon={cfg.icon}
             label={cfg.label}
-            sx={{
+        sx={{
                 background: cfg.bg,
                 color: cfg.color,
                 fontWeight: 600,
                 fontSize: '0.72rem',
+                height: 24,
                 border: 'none',
+                fontFamily: FONT,
                 '& .MuiChip-icon': { color: 'inherit' },
             }}
         />
@@ -90,11 +64,13 @@ const BoolChip = ({ val }) => (
         label={val ? 'Yes' : 'No'}
         variant="outlined"
         sx={{
-            borderColor: val ? '#86efac' : '#fecaca',
-            background: val ? '#f0fdf4' : '#fef2f2',
-            color: val ? '#166534' : '#991b1b',
+            borderColor: val ? '#A5D6A7' : '#F5C6C6',
+            background: val ? SUCCESS_BG : RED_BG,
+            color: val ? SUCCESS_TEXT : RED_DARK,
             fontWeight: 600,
             fontSize: '0.72rem',
+            height: 22,
+            fontFamily: FONT,
         }}
     />
 );
@@ -102,11 +78,11 @@ const BoolChip = ({ val }) => (
 const SectionHeader = ({ icon, title, description }) => (
     <Box sx={{ mb: 2 }}>
         <Typography component="div" sx={sectionTitleSx}>
-            {icon}
+            <Box sx={iconBoxSx}>{icon}</Box>
             {title}
         </Typography>
         {description && (
-            <Typography variant="body2" sx={sectionDescSx}>
+            <Typography variant="body2" sx={{ ...sectionDescSx, mt: 0.75, pl: '48px' }}>
                 {description}
             </Typography>
         )}
@@ -159,7 +135,7 @@ const ChangeStatusDialog = ({ open, onClose, employee, onSuccess }) => {
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
             <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Change Employment Status</DialogTitle>
             <DialogContent>
-                <Typography variant="body2" sx={{ mb: 2, color: '#64748b' }}>
+                <Typography variant="body2" sx={{ mb: 2, color: MUTED }}>
                     {employee?.employeeName} ({employee?.employeeCode}) — current: {employee?.employmentStatus || 'Unknown'}
                 </Typography>
                 {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
@@ -332,12 +308,12 @@ const EmployeeDocumentsDashboard = () => {
     const totalPages = Math.ceil(total / 25);
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, fontFamily: FONT }}>
             <Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5 }}>
+                <Typography sx={pageTitleSx}>
                     Employee Documents
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#64748b', maxWidth: 640 }}>
+                <Typography sx={{ ...pageDescSx, mt: 0.4, maxWidth: 640 }}>
                     Manage document types, assign letters from templates, and track employee compliance.
                 </Typography>
             </Box>
@@ -348,38 +324,53 @@ const EmployeeDocumentsDashboard = () => {
                 </Alert>
             )}
 
+            <Box sx={{
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' },
+                gap: 2.5,
+                alignItems: 'stretch',
+            }}>
             {/* ── Document Types card ─────────────────────────────────── */}
-            <Box sx={sectionCardSx}>
+            <Box sx={{ ...cardSx, height: '100%' }}>
                 <SectionHeader
-                    icon={<CategoryOutlinedIcon sx={{ fontSize: 20, color: '#6366f1' }} />}
+                    icon={<CategoryOutlinedIcon sx={{ fontSize: 18 }} />}
                     title="Document Types"
-                    description="Built-in types use templates. Click the settings icon to configure a template. Custom types use direct PDF upload."
+                    description="Built-in types use templates. Click the gear to configure. Custom types use direct PDF upload."
                 />
                 <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2, minHeight: 32 }}>
                     {types.length === 0 ? (
-                        <Typography variant="body2" sx={{ color: '#94a3b8', fontStyle: 'italic' }}>
+                        <Typography variant="body2" sx={{ color: MUTED, fontStyle: 'italic' }}>
                             No document types configured.
                         </Typography>
                     ) : types.map((t) => (
-                        <Box key={t.key} sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
-                            <Chip
-                                label={t.label}
-                                size="small"
-                                variant="outlined"
-                                sx={{
-                                    borderColor: t.isBuiltIn ? '#c7d2fe' : '#e2e8f0',
-                                    background: t.isBuiltIn ? '#eef2ff' : '#f8fafc',
-                                    color: t.isBuiltIn ? '#4338ca' : '#475569',
-                                    fontWeight: 500,
-                                    fontSize: '0.78rem',
-                                }}
-                            />
+                        <Box
+                            key={t.key}
+                            sx={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 0.25,
+                                pl: 1.25,
+                                pr: t.isBuiltIn ? 0.4 : 1.25,
+                                py: 0.35,
+                                borderRadius: '999px',
+                                border: `1px solid ${t.isBuiltIn ? 'rgba(198, 40, 40, 0.22)' : BORDER}`,
+                                background: t.isBuiltIn ? RED_LIGHT : SURFACE,
+                            }}
+                        >
+                            <Typography sx={{
+                                fontSize: '0.78rem',
+                                fontWeight: 600,
+                                color: t.isBuiltIn ? RED_DARK : TEXT,
+                                fontFamily: FONT,
+                            }}>
+                                {t.label}
+                            </Typography>
                             {t.isBuiltIn && BUILT_IN_KEYS.includes(t.key) && (
                                 <Tooltip title={`Manage template for ${t.label}`}>
                                     <IconButton
                                         size="small"
                                         onClick={() => { setTemplateEditorType(t.key); setTemplateEditorOpen(true); }}
-                                        sx={{ p: 0.25, color: '#6366f1', '&:hover': { background: '#eef2ff' } }}
+                                        sx={{ p: 0.4, color: RED_DARK, '&:hover': { background: RED_BG } }}
                                         aria-label={`Manage template for ${t.label}`}
                                     >
                                         <TuneOutlinedIcon sx={{ fontSize: 15 }} />
@@ -396,14 +387,14 @@ const EmployeeDocumentsDashboard = () => {
                         value={newTypeLabel}
                         onChange={(e) => setNewTypeLabel(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAddCustomType()}
-                        sx={{ flex: 1 }}
+                        sx={{ flex: 1, ...fieldSx }}
                     />
                     <Button
                         variant="outlined"
                         startIcon={savingTypes ? <CircularProgress size={16} /> : <AddIcon />}
                         onClick={handleAddCustomType}
                         disabled={savingTypes || !newTypeLabel.trim()}
-                        sx={{ textTransform: 'none', whiteSpace: 'nowrap', borderColor: '#cbd5e1', color: '#475569' }}
+                        sx={{ ...outlineBtnSx, whiteSpace: 'nowrap' }}
                     >
                         Add Custom Type
                     </Button>
@@ -411,16 +402,16 @@ const EmployeeDocumentsDashboard = () => {
             </Box>
 
             {/* ── Assign Document card ─────────────────────────────────── */}
-            <Box sx={sectionCardSx}>
+            <Box sx={{ ...cardSx, height: '100%' }}>
                 <SectionHeader
-                    icon={<AssignmentOutlinedIcon sx={{ fontSize: 20, color: '#6366f1' }} />}
+                    icon={<AssignmentOutlinedIcon sx={{ fontSize: 18 }} />}
                     title="Assign Document"
                     description="Select a document type. Built-in types generate from a template; custom types require a PDF upload."
                 />
 
                 {/* Step 1: pick type */}
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, mb: 2 }}>
-                    <FormControl size="small">
+                    <FormControl size="small" sx={fieldSx}>
                         <InputLabel>Document Type</InputLabel>
                         <Select
                             value={assignType}
@@ -436,7 +427,7 @@ const EmployeeDocumentsDashboard = () => {
                                 <MenuItem key={t.key} value={t.key}>
                                     {t.label}
                                     {t.isBuiltIn && (
-                                        <Typography component="span" variant="caption" sx={{ ml: 1, color: '#6366f1' }}>
+                                        <Typography component="span" variant="caption" sx={{ ml: 1, color: RED_DARK }}>
                                             (template)
                                         </Typography>
                                     )}
@@ -501,11 +492,13 @@ const EmployeeDocumentsDashboard = () => {
                             sx={{
                                 py: 1.5,
                                 textTransform: 'none',
+                                fontWeight: 600,
+                                borderRadius: '10px',
                                 borderStyle: 'dashed',
-                                borderColor: assignFile ? '#6366f1' : '#cbd5e1',
-                                color: assignFile ? '#4338ca' : '#64748b',
-                                background: assignFile ? '#f5f3ff' : '#fafafa',
-                                '&:hover': { borderStyle: 'dashed', borderColor: '#6366f1', background: '#f5f3ff' },
+                                borderColor: assignFile ? RED : BORDER,
+                                color: assignFile ? RED_DARK : MUTED,
+                                background: assignFile ? RED_LIGHT : SURFACE,
+                                '&:hover': { borderStyle: 'dashed', borderColor: RED, background: RED_LIGHT },
                             }}
                         >
                             {assignFile ? assignFile.name : 'Choose PDF file to upload'}
@@ -523,10 +516,14 @@ const EmployeeDocumentsDashboard = () => {
                                     checked={requiresAck}
                                     onChange={(e) => setRequiresAck(e.target.checked)}
                                     size="small"
+                                    sx={{
+                                        '& .MuiSwitch-switchBase.Mui-checked': { color: RED },
+                                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: RED },
+                                    }}
                                 />
                             }
                             label={
-                                <Typography variant="body2" sx={{ color: '#475569' }}>
+                                <Typography variant="body2" sx={{ color: MUTED }}>
                                     Require employee acknowledgment
                                 </Typography>
                             }
@@ -544,20 +541,21 @@ const EmployeeDocumentsDashboard = () => {
                     </Stack>
                 )}
             </Box>
+            </Box>
 
             {/* ── Compliance Table ─────────────────────────────────────── */}
-            <Box sx={sectionCardSx}>
+            <Box sx={cardSx}>
                 <Box sx={{
                     display: 'flex',
                     alignItems: 'flex-start',
                     justifyContent: 'space-between',
                     gap: 2,
-                    mb: 2,
+                    mb: 1,
                     flexWrap: 'wrap',
                 }}>
                     <Box>
                         <SectionHeader
-                            icon={<FactCheckOutlinedIcon sx={{ fontSize: 20, color: '#6366f1' }} />}
+                            icon={<FactCheckOutlinedIcon sx={{ fontSize: 18 }} />}
                             title="Compliance Records"
                             description={`${total} assignment${total === 1 ? '' : 's'} tracked across employees.`}
                         />
@@ -567,7 +565,7 @@ const EmployeeDocumentsDashboard = () => {
                             size="small"
                             onClick={loadRecords}
                             disabled={loading}
-                            sx={{ border: '1px solid #e2e8f0', borderRadius: 1.5 }}
+                            sx={{ border: `1px solid ${BORDER}`, borderRadius: '10px', color: MUTED }}
                         >
                             <RefreshIcon fontSize="small" />
                         </IconButton>
@@ -614,24 +612,20 @@ const EmployeeDocumentsDashboard = () => {
                 <TableContainer
                     component={Paper}
                     variant="outlined"
-                    sx={{ borderRadius: 2, borderColor: '#e2e8f0', boxShadow: 'none' }}
+                    sx={{
+                        borderRadius: '12px',
+                        borderColor: BORDER,
+                        boxShadow: 'none',
+                        overflowX: 'auto',
+                        overflowY: 'hidden',
+                        WebkitOverflowScrolling: 'touch',
+                    }}
                 >
                     <Table size="small">
                         <TableHead>
-                            <TableRow sx={{ background: '#f8fafc' }}>
+                            <TableRow>
                                 {['Employee', 'Department', 'Document', 'Assigned', 'Viewed', 'Acknowledged', 'Forwarded', 'Assigned By', 'Status', 'Actions'].map((col) => (
-                                    <TableCell
-                                        key={col}
-                                        sx={{
-                                            fontWeight: 600,
-                                            fontSize: '0.75rem',
-                                            color: '#64748b',
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.04em',
-                                            py: 1.25,
-                                            borderBottom: '1px solid #e2e8f0',
-                                        }}
-                                    >
+                                    <TableCell key={col} sx={tableHeadCellSx}>
                                         {col}
                                     </TableCell>
                                 ))}
@@ -641,32 +635,32 @@ const EmployeeDocumentsDashboard = () => {
                             {loading && (
                                 <TableRow>
                                     <TableCell colSpan={10} align="center" sx={{ py: 5 }}>
-                                        <CircularProgress size={24} sx={{ color: '#6366f1' }} />
+                                        <CircularProgress size={24} sx={{ color: RED }} />
                                     </TableCell>
                                 </TableRow>
                             )}
                             {!loading && records.map((r) => (
                                 <TableRow key={r._id} hover sx={{ '&:last-child td': { borderBottom: 0 } }}>
                                     <TableCell>
-                                        <Typography variant="body2" sx={{ fontWeight: 600, color: '#1e293b' }}>
+                                        <Typography variant="body2" sx={{ fontWeight: 600, color: TEXT }}>
                                             {r.employeeName}
                                         </Typography>
-                                        <Typography variant="caption" sx={{ color: '#94a3b8' }}>
+                                        <Typography variant="caption" sx={{ color: MUTED }}>
                                             {r.employeeCode}
                                         </Typography>
                                     </TableCell>
-                                    <TableCell sx={{ color: '#64748b', fontSize: '0.8125rem' }}>
+                                    <TableCell sx={{ color: MUTED, fontSize: '0.8125rem' }}>
                                         {r.department || '—'}
                                     </TableCell>
-                                    <TableCell sx={{ fontSize: '0.8125rem', color: '#334155' }}>
+                                    <TableCell sx={{ fontSize: '0.8125rem', color: TEXT }}>
                                         {r.documentTypeLabel}
                                         {r.templateVersion != null && (
-                                            <Typography variant="caption" sx={{ display: 'block', color: '#94a3b8' }}>
+                                            <Typography variant="caption" sx={{ display: 'block', color: MUTED }}>
                                                 template v{r.templateVersion}
                                             </Typography>
                                         )}
                                     </TableCell>
-                                    <TableCell sx={{ color: '#64748b', fontSize: '0.8125rem' }}>
+                                    <TableCell sx={{ color: MUTED, fontSize: '0.8125rem' }}>
                                         {r.assignedAt ? new Date(r.assignedAt).toLocaleDateString('en-IN') : '—'}
                                     </TableCell>
                                     <TableCell><BoolChip val={!!r.viewedAt} /></TableCell>
@@ -684,7 +678,7 @@ const EmployeeDocumentsDashboard = () => {
                                             <BoolChip val={false} />
                                         )}
                                     </TableCell>
-                                    <TableCell sx={{ fontSize: '0.8125rem', color: '#64748b' }}>
+                                    <TableCell sx={{ fontSize: '0.8125rem', color: MUTED }}>
                                         {r.assignedByDisplay}
                                     </TableCell>
                                     <TableCell><DocStatusChip status={r.displayStatus || r.status} /></TableCell>
@@ -705,7 +699,8 @@ const EmployeeDocumentsDashboard = () => {
                                                 sx={{
                                                     textTransform: 'none',
                                                     fontSize: '0.75rem',
-                                                    color: '#6366f1',
+                                                    fontWeight: 600,
+                                                    color: RED_DARK,
                                                     minWidth: 0,
                                                     px: 1,
                                                 }}
@@ -737,7 +732,7 @@ const EmployeeDocumentsDashboard = () => {
                         >
                             Previous
                         </Button>
-                        <Typography variant="body2" sx={{ color: '#64748b' }}>
+                        <Typography variant="body2" sx={{ color: MUTED }}>
                             Page {page} of {totalPages}
                         </Typography>
                         <Button

@@ -125,7 +125,7 @@ const ProfileCompletionBanner = () => {
                                 }}
                             />
                             {!isOverdue && (
-                                <Typography variant="caption" sx={{ color: '#9ca3af' }}>
+                                <Typography variant="caption" sx={{ color: '#6b7280' }}>
                                     to complete your profile
                                 </Typography>
                             )}

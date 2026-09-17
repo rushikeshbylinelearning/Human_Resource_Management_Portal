@@ -6,13 +6,17 @@ const AnnouncementMessage = require('../models/AnnouncementMessage');
 const NewNotificationService = require('./NewNotificationService');
 const cacheService = require('./cacheService');
 const cache = require('../utils/cache');
-const { getISTNow, getISTDateString } = require('../utils/istTime');
+const { getISTNow, getISTDateString, getShiftDateTimeIST, formatISTTime } = require('../utils/istTime');
 const { getLiveAttendanceOverview } = require('./liveAttendanceService');
 const { stopAllActiveTeaBreaks } = require('./teaBreakStopService');
+const { getGracePeriodMinutes } = require('../utils/gracePeriod');
+const EarlyCheckoutRequest = require('../models/EarlyCheckoutRequest');
 const {
     UNPAID_BREAK_ALLOWANCE_MINUTES,
     EXTRA_BREAK_ALLOWANCE_MINUTES,
     PAID_BREAK_ALLOWANCE_MINUTES,
+    MINIMUM_ELAPSED_SHIFT_HOURS_FOR_FULL_DAY,
+    MINIMUM_ELAPSED_SHIFT_HOURS_FOR_HALF_DAY,
 } = require('../config/shiftPolicy');
 
 const VALID_ACTIONS = new Set([
@@ -21,7 +25,11 @@ const VALID_ACTIONS = new Set([
     'end_lunch_breaks',
     'end_other_breaks',
     'overwrite_tea_break_overruns',
+    'checkout_all_employees',
 ]);
+
+const HH_MM_RE = /^([01]?\d|2[0-3]):([0-5]\d)$/;
+const FUTURE_CHECKOUT_BUFFER_MS = 60 * 1000;
 
 const TEA_BREAK_SAFETY_CUTOFF_MS = 30 * 60 * 1000;
 
@@ -217,13 +225,299 @@ async function clearTeaBreakOverruns() {
     };
 }
 
+async function getClockedInLogsForToday() {
+    const today = getISTDateString();
+    const logs = await AttendanceLog.find({
+        attendanceDate: today,
+        clockInTime: { $ne: null },
+        clockOutTime: null,
+    }).lean();
+
+    if (!logs.length) return [];
+
+    const activeSessions = await AttendanceSession.find({
+        attendanceLog: { $in: logs.map((log) => log._id) },
+        endTime: null,
+    })
+        .select('attendanceLog')
+        .lean();
+
+    const activeLogIds = new Set(activeSessions.map((session) => String(session.attendanceLog)));
+    return logs.filter((log) => activeLogIds.has(String(log._id)));
+}
+
+async function getClockedInEmployeesPreview() {
+    const logs = await getClockedInLogsForToday();
+    if (!logs.length) return [];
+
+    const users = await User.find({ _id: { $in: logs.map((log) => log.user) } })
+        .select('fullName employeeCode')
+        .lean();
+    const userMap = new Map(users.map((user) => [String(user._id), user]));
+
+    return logs.map((log) => {
+        const user = userMap.get(String(log.user)) || {};
+        return {
+            userId: String(log.user),
+            fullName: user.fullName || 'Unknown',
+            employeeCode: user.employeeCode || '',
+            clockInTime: log.clockInTime,
+        };
+    });
+}
+
+function parseCheckoutTime(checkoutTimeInput) {
+    const today = getISTDateString();
+    const now = getISTNow();
+
+    if (checkoutTimeInput == null || checkoutTimeInput === '') {
+        return now;
+    }
+
+    if (typeof checkoutTimeInput !== 'string') {
+        const error = new Error('Checkout time must be a HH:mm string in IST.');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const trimmed = checkoutTimeInput.trim();
+    if (!HH_MM_RE.test(trimmed)) {
+        const error = new Error('Checkout time must be in HH:mm format (IST).');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const checkoutTime = getShiftDateTimeIST(today, trimmed);
+    if (!(checkoutTime instanceof Date) || isNaN(checkoutTime.getTime())) {
+        const error = new Error('Invalid checkout time.');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if (checkoutTime.getTime() > now.getTime() + FUTURE_CHECKOUT_BUFFER_MS) {
+        const error = new Error('Checkout time cannot be in the future.');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    return checkoutTime;
+}
+
+async function endActiveBreakAt(activeBreak, log, breakEndTime) {
+    const startMs = new Date(activeBreak.startTime).getTime();
+    const endMs = Math.max(startMs, new Date(breakEndTime).getTime());
+    const resolvedEnd = new Date(endMs);
+    const currentBreakDuration = Math.max(0, Math.round((endMs - startMs) / (1000 * 60)));
+
+    let penalty = 0;
+    let paidBreakToAdd = 0;
+    let unpaidBreakToAdd = 0;
+
+    if (activeBreak.breakType === 'Paid') {
+        const user = await User.findById(log.user).populate('shiftGroup').lean();
+        const paidBreakAllowance = user?.shiftGroup?.paidBreakMinutes || PAID_BREAK_ALLOWANCE_MINUTES;
+        const remainingPaidAllowance = paidBreakAllowance - (log.paidBreakMinutesTaken || 0);
+        paidBreakToAdd = currentBreakDuration;
+        if (currentBreakDuration > Math.max(0, remainingPaidAllowance)) {
+            penalty = currentBreakDuration - Math.max(0, remainingPaidAllowance);
+        }
+    } else if (activeBreak.breakType === 'Unpaid' || activeBreak.breakType === 'Extra') {
+        const allowance = activeBreak.breakType === 'Unpaid'
+            ? UNPAID_BREAK_ALLOWANCE_MINUTES
+            : EXTRA_BREAK_ALLOWANCE_MINUTES;
+        unpaidBreakToAdd = currentBreakDuration;
+        if (currentBreakDuration > allowance) {
+            penalty = currentBreakDuration - allowance;
+        }
+    }
+
+    await BreakLog.findByIdAndUpdate(activeBreak._id, {
+        $set: { endTime: resolvedEnd, durationMinutes: currentBreakDuration },
+    });
+
+    const updatePayload = { $inc: {} };
+    if (penalty > 0) updatePayload.$inc.penaltyMinutes = penalty;
+    if (paidBreakToAdd > 0) updatePayload.$inc.paidBreakMinutesTaken = paidBreakToAdd;
+    if (unpaidBreakToAdd > 0) updatePayload.$inc.unpaidBreakMinutesTaken = unpaidBreakToAdd;
+    if (Object.keys(updatePayload.$inc).length > 0) {
+        await AttendanceLog.findByIdAndUpdate(log._id, updatePayload);
+        if (paidBreakToAdd > 0) log.paidBreakMinutesTaken = (log.paidBreakMinutesTaken || 0) + paidBreakToAdd;
+        if (unpaidBreakToAdd > 0) log.unpaidBreakMinutesTaken = (log.unpaidBreakMinutesTaken || 0) + unpaidBreakToAdd;
+    }
+}
+
+async function checkoutSingleEmployee(log, checkoutTime, gracePeriodMinutes, performedByUserId) {
+    const userId = String(log.user);
+    const today = log.attendanceDate;
+    const clockInMs = new Date(log.clockInTime).getTime();
+
+    if (checkoutTime.getTime() <= clockInMs) {
+        return { userId, success: false, error: 'Checkout time is not after clock-in time.' };
+    }
+
+    const activeBreaks = await BreakLog.find({
+        $or: [
+            { attendanceLog: log._id, endTime: null },
+            { userId: log.user, endTime: null, isAutoBreak: true },
+        ],
+    }).lean();
+
+    for (const activeBreak of activeBreaks) {
+        await endActiveBreakAt(activeBreak, log, checkoutTime);
+    }
+
+    const openSession = await AttendanceSession.findOne({
+        attendanceLog: log._id,
+        endTime: null,
+    }).sort({ startTime: -1 });
+
+    if (!openSession) {
+        return { userId, success: false, error: 'No active session found.' };
+    }
+
+    if (checkoutTime.getTime() <= new Date(openSession.startTime).getTime()) {
+        return { userId, success: false, error: 'Checkout time is not after session start.' };
+    }
+
+    await AttendanceSession.findByIdAndUpdate(openSession._id, {
+        $set: { endTime: checkoutTime, logoutType: 'MANUAL' },
+    });
+
+    const [sessionsList, breaksList] = await Promise.all([
+        AttendanceSession.find({ attendanceLog: log._id }).sort({ startTime: 1 }).lean(),
+        BreakLog.find({ attendanceLog: log._id }).lean(),
+    ]);
+
+    let totalWorkingMinutes = 0;
+    let totalBreakMinutes = 0;
+    sessionsList.forEach((session) => {
+        if (session.endTime) totalWorkingMinutes += (session.endTime - session.startTime) / (1000 * 60);
+    });
+    breaksList.forEach((breakLog) => {
+        if (breakLog.endTime) totalBreakMinutes += (breakLog.endTime - breakLog.startTime) / (1000 * 60);
+    });
+    const netWorkingMinutes = Math.max(0, totalWorkingMinutes - totalBreakMinutes);
+    const totalWorkingHours = netWorkingMinutes / 60;
+
+    const updateData = {
+        clockOutTime: checkoutTime,
+        totalWorkingHours,
+        logoutType: 'MANUAL',
+        autoLogoutReason: null,
+    };
+
+    if (!log.overriddenByAdmin) {
+        const withinGracePeriod = (log.lateMinutes || 0) <= gracePeriodMinutes;
+        const elapsedShiftHours = (checkoutTime.getTime() - clockInMs) / (1000 * 60 * 60);
+
+        if (elapsedShiftHours < MINIMUM_ELAPSED_SHIFT_HOURS_FOR_HALF_DAY) {
+            updateData.isHalfDay = false;
+            updateData.isLate = false;
+            updateData.attendanceStatus = 'Absent';
+            updateData.halfDayReasonCode = 'INSUFFICIENT_WORKING_HOURS';
+            updateData.halfDayReasonText = `Less than ${MINIMUM_ELAPSED_SHIFT_HOURS_FOR_HALF_DAY} hours total shift time (${elapsedShiftHours.toFixed(1)} hours elapsed). Minimum ${MINIMUM_ELAPSED_SHIFT_HOURS_FOR_HALF_DAY} hrs for half-day, ${MINIMUM_ELAPSED_SHIFT_HOURS_FOR_FULL_DAY} hrs for full day.`;
+            updateData.halfDaySource = 'AUTO';
+        } else if (elapsedShiftHours < MINIMUM_ELAPSED_SHIFT_HOURS_FOR_FULL_DAY) {
+            updateData.isHalfDay = true;
+            updateData.isLate = withinGracePeriod ? false : log.isLate;
+            updateData.attendanceStatus = 'Half-day';
+            updateData.halfDayReasonCode = 'INSUFFICIENT_WORKING_HOURS';
+            updateData.halfDayReasonText = `Insufficient shift time (${elapsedShiftHours.toFixed(1)} hours elapsed, minimum required: ${MINIMUM_ELAPSED_SHIFT_HOURS_FOR_FULL_DAY} hours for full day)`;
+            updateData.halfDaySource = 'AUTO';
+        }
+    }
+
+    await AttendanceLog.findByIdAndUpdate(log._id, { $set: updateData });
+
+    const earlyCheckoutUpdate = { status: 'Approved', reviewedAt: getISTNow() };
+    if (performedByUserId) earlyCheckoutUpdate.reviewedBy = performedByUserId;
+    await EarlyCheckoutRequest.updateMany(
+        { attendanceLog: log._id, status: 'Pending' },
+        { $set: earlyCheckoutUpdate }
+    );
+
+    const user = await User.findById(log.user).select('fullName role').lean();
+    if (user && !['Admin', 'HR'].includes(user.role)) {
+        const timeLabel = formatISTTime(checkoutTime, { hour12: true, hour: '2-digit', minute: '2-digit' });
+        NewNotificationService.createAndEmitNotification({
+            message: `You were checked out by an administrator at ${timeLabel}.`,
+            type: 'info',
+            userId: log.user,
+            userName: user.fullName,
+            recipientType: 'user',
+            category: 'attendance',
+        }).catch(() => {});
+    }
+
+    cache.delete(`status:${userId}:${today}`);
+    cache.delete(`employee_dashboard:${userId}:${today}`);
+
+    return {
+        userId,
+        success: true,
+        attendanceStatus: updateData.attendanceStatus || log.attendanceStatus,
+        totalWorkingHours,
+    };
+}
+
+async function checkoutAllEmployees(checkoutTimeInput, performedByUserId) {
+    const checkoutTime = parseCheckoutTime(checkoutTimeInput);
+    const logs = await getClockedInLogsForToday();
+    if (!logs.length) {
+        return { processedCount: 0, failedCount: 0, details: [], checkoutTime: checkoutTime.toISOString() };
+    }
+
+    const gracePeriodMinutes = await getGracePeriodMinutes();
+    const details = [];
+
+    for (const log of logs) {
+        try {
+            const result = await checkoutSingleEmployee(log, checkoutTime, gracePeriodMinutes, performedByUserId);
+            details.push(result);
+        } catch (err) {
+            details.push({
+                userId: String(log.user),
+                success: false,
+                error: err.message,
+            });
+        }
+    }
+
+    const today = getISTDateString();
+    cacheService.invalidateDashboard(today);
+    cacheService.invalidateAttendance(null, today);
+    cache.deletePattern('dashboard-summary:*');
+    cache.deletePattern('live_attendance_overview:*');
+
+    try {
+        const { getIO } = require('../socketManager');
+        const io = getIO();
+        if (io) {
+            io.emit('attendance_log_updated', {
+                attendanceDate: today,
+                timestamp: getISTNow().toISOString(),
+                message: 'Bulk checkout completed.',
+            });
+            io.emit('live_attendance_refreshed', { date: today });
+        }
+    } catch (_) { /* optional */ }
+
+    return {
+        processedCount: details.filter((d) => d.success).length,
+        failedCount: details.filter((d) => !d.success).length,
+        details,
+        checkoutTime: checkoutTime.toISOString(),
+    };
+}
+
 async function getBulkActionPreview() {
-    const [overview, teaBreakCount, lunchBreakCount, otherBreakCount, overrunList] = await Promise.all([
+    const [overview, teaBreakCount, lunchBreakCount, otherBreakCount, overrunList, clockedInEmployees] = await Promise.all([
         getLiveAttendanceOverview({ leaveRange: 'today' }),
         countActiveTeaBreaks(),
         countActiveBreaksByCategory(['Paid']),
         countActiveBreaksByCategory(['Unpaid', 'Extra']),
         getTeaBreakOverruns(),
+        getClockedInEmployeesPreview(),
     ]);
 
     return {
@@ -253,6 +547,12 @@ async function getBulkActionPreview() {
             description: 'Remove auto-applied overrun penalties for employees who exceeded tea break time today. This reverses the unpaid break minutes added.',
             affectedCount: overrunList.length,
             overrunDetails: overrunList,
+        },
+        checkout_all_employees: {
+            label: 'Check out all employees',
+            description: 'Check out every employee still clocked in today at a time you choose. Active breaks are ended automatically. Attendance status still follows elapsed shift hours.',
+            affectedCount: clockedInEmployees.length,
+            employees: clockedInEmployees,
         },
     };
 }
@@ -410,7 +710,7 @@ async function refreshLiveAttendance() {
     };
 }
 
-async function executeBulkAction(action, performedByUserId) {
+async function executeBulkAction(action, performedByUserId, options = {}) {
     if (!VALID_ACTIONS.has(action)) {
         const error = new Error(`Invalid action: ${action}`);
         error.statusCode = 400;
@@ -440,6 +740,9 @@ async function executeBulkAction(action, performedByUserId) {
         case 'overwrite_tea_break_overruns':
             result = await clearTeaBreakOverruns();
             break;
+        case 'checkout_all_employees':
+            result = await checkoutAllEmployees(options.checkoutTime, performedByUserId);
+            break;
         default:
             result = { processedCount: 0 };
     }
@@ -449,6 +752,7 @@ async function executeBulkAction(action, performedByUserId) {
         await logAction(performedByUserId, 'BULK_ATTENDANCE_ACTION', {
             action,
             processedCount: result.processedCount ?? 0,
+            checkoutTime: result.checkoutTime || options.checkoutTime || null,
             details: `Bulk attendance action "${action}" executed.`,
         });
     } catch (_) {

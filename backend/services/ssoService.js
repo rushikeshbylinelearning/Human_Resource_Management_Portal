@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const jwtUtils = require('../utils/jwtUtils');
 const axios = require('axios');
 const User = require('../models/User');
+const { syncOrgFields } = require('../utils/syncOrgFields');
 
 const DEFAULT_SSO_ROLE = (() => {
     const allowed = ['Admin', 'HR', 'Employee', 'Intern'];
@@ -161,7 +162,15 @@ class SSOService
                         authMethod: 'SSO'
                     };
 
-                    if (ssoUser.department) updateData.department = ssoUser.department;
+                    if (ssoUser.department) {
+                        const orgFields = syncOrgFields({
+                            department: ssoUser.department,
+                            domain: user.domain,
+                            designation: ssoUser.designation || user.designation,
+                        });
+                        updateData.department = orgFields.department;
+                        updateData.domain = orgFields.domain;
+                    }
                     if (ssoUser.designation) updateData.designation = ssoUser.designation;
                     if (ssoUser.employeeCode) updateData.employeeCode = ssoUser.employeeCode;
 
@@ -182,14 +191,19 @@ class SSOService
             }
 
             // Auto-provision new user
+            const orgFields = syncOrgFields({
+                department: ssoUser.department || 'Unknown',
+                domain: ssoUser.domain || ssoUser.department || 'Unknown',
+                designation: ssoUser.designation || 'Employee',
+            });
             const newUser = new User({
                 email: ssoUser.email,
                 fullName: ssoUser.name,
                 employeeCode: ssoUser.employeeCode || `SSO_${Date.now()}`, // Generate unique employee code if not provided
                 role: ssoUser.role || DEFAULT_SSO_ROLE,
-                department: ssoUser.department || 'Unknown',
-                designation: ssoUser.designation || 'Employee',
-                domain: ssoUser.domain || 'Unknown',
+                department: orgFields.department,
+                designation: orgFields.designation,
+                domain: orgFields.domain,
                 passwordHash: 'SSO_USER_NO_PASSWORD', // Placeholder for SSO users
                 joiningDate: new Date(),
                 isActive: true,

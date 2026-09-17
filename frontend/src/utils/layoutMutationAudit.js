@@ -11,41 +11,24 @@
  */
 
 let mutationObserver = null;
-let componentMountCounts = new Map();
-let apiCallLog = [];
 let layoutShiftLog = [];
 
-/**
- * Track component mounts/remounts
- */
-export const trackComponentMount = (componentName) => {
-    const count = (componentMountCounts.get(componentName) || 0) + 1;
-    componentMountCounts.set(componentName, count);
-    
-    if (count > 1) {
-        console.error(`🚨 COMPONENT REMOUNT DETECTED: ${componentName} (mount #${count})`);
-        console.trace('Mount stack trace:');
-    } else {
-        console.log(`✅ Component mounted: ${componentName}`);
-    }
-    
-    return count;
+const classNameOf = (node) => {
+    if (!node) return '';
+    if (typeof node.className === 'string') return node.className;
+    return node.className?.baseVal || '';
 };
 
-/**
- * Track API calls that trigger re-renders
- */
-export const trackAPICall = (endpoint, triggerTime) => {
-    const logEntry = {
-        endpoint,
-        triggerTime,
-        timestamp: Date.now()
-    };
-    
-    apiCallLog.push(logEntry);
-    console.warn(`📡 API CALL: ${endpoint} at ${triggerTime}ms after load`);
-    
-    return logEntry;
+const isExpectedLiveStyleMutation = (target) => {
+    const className = classNameOf(target);
+    return className.includes('progress-bar-segment');
+};
+
+const isTextOnlyChildList = (mutation) => {
+    const nodes = [...mutation.addedNodes, ...mutation.removedNodes];
+    return nodes.length > 0 && nodes.every((node) => (
+        node.nodeType === Node.TEXT_NODE || node.nodeType === Node.COMMENT_NODE
+    ));
 };
 
 /**
@@ -53,13 +36,15 @@ export const trackAPICall = (endpoint, triggerTime) => {
  */
 const detectStyleMutation = (mutation) => {
     const target = mutation.target;
+    if (isExpectedLiveStyleMutation(target)) return;
+
     const oldValue = mutation.oldValue;
     const newValue = target.getAttribute('style');
     
     if (oldValue !== newValue) {
         const logEntry = {
             type: 'STYLE_MUTATION',
-            element: target.className || target.tagName,
+            element: classNameOf(target) || target.tagName,
             oldValue,
             newValue,
             timestamp: Date.now()
@@ -99,10 +84,11 @@ const detectClassMutation = (mutation) => {
  * Detect DOM structure mutations
  */
 const detectDOMMutation = (mutation) => {
+    if (isTextOnlyChildList(mutation)) return;
     if (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0) {
         const logEntry = {
             type: 'DOM_MUTATION',
-            target: mutation.target.className || mutation.target.tagName,
+            target: classNameOf(mutation.target) || mutation.target.tagName,
             added: mutation.addedNodes.length,
             removed: mutation.removedNodes.length,
             timestamp: Date.now()
@@ -120,11 +106,10 @@ const detectDOMMutation = (mutation) => {
 export const auditLayoutMutations = () => {
     console.log('🔍 LAYOUT MUTATION AUDIT STARTED');
     console.log('⏱️  Monitoring for 10 seconds...');
+    console.log('ℹ️  Ignoring live progress-bar width and text-only clock updates.');
     console.log('');
     
     // Reset logs
-    componentMountCounts.clear();
-    apiCallLog = [];
     layoutShiftLog = [];
     
     // Create mutation observer
@@ -165,51 +150,20 @@ export const auditLayoutMutations = () => {
 /**
  * Stop audit
  */
-export const stopAudit = () => {
+const stopAudit = () => {
     if (mutationObserver) {
         mutationObserver.disconnect();
         mutationObserver = null;
     }
 };
 
-/**
- * Generate audit report
- */
-export const generateReport = () => {
+const generateReport = () => {
     console.log('');
     console.log('═══════════════════════════════════════════════════════════');
     console.log('📊 LAYOUT MUTATION AUDIT REPORT');
     console.log('═══════════════════════════════════════════════════════════');
     console.log('');
-    
-    // Component remounts
-    console.log('🔄 COMPONENT REMOUNTS:');
-    let hasRemounts = false;
-    componentMountCounts.forEach((count, name) => {
-        if (count > 1) {
-            console.error(`   ❌ ${name}: ${count} mounts (SHOULD BE 1)`);
-            hasRemounts = true;
-        } else {
-            console.log(`   ✅ ${name}: ${count} mount`);
-        }
-    });
-    if (!hasRemounts) {
-        console.log('   ✅ No remounts detected');
-    }
-    console.log('');
-    
-    // API calls
-    console.log('📡 API CALLS AFTER LOAD:');
-    if (apiCallLog.length === 0) {
-        console.log('   ✅ No API calls detected');
-    } else {
-        apiCallLog.forEach((log) => {
-            console.warn(`   ⚠️  ${log.endpoint} at ${log.triggerTime}ms`);
-        });
-    }
-    console.log('');
-    
-    // Layout shifts
+
     console.log('🚨 LAYOUT MUTATIONS:');
     if (layoutShiftLog.length === 0) {
         console.log('   ✅ No layout mutations detected');
@@ -229,11 +183,7 @@ export const generateReport = () => {
     }
     console.log('');
     
-    // Summary
-    const totalIssues = 
-        Array.from(componentMountCounts.values()).filter(c => c > 1).length +
-        apiCallLog.length +
-        layoutShiftLog.length;
+    const totalIssues = layoutShiftLog.length;
     
     if (totalIssues === 0) {
         console.log('✅ AUDIT PASSED: NO MUTATIONS DETECTED');
@@ -246,20 +196,13 @@ export const generateReport = () => {
     console.log('');
     
     return {
-        componentMountCounts: Object.fromEntries(componentMountCounts),
-        apiCallLog,
         layoutShiftLog,
         totalIssues
     };
 };
 
-/**
- * Get current audit data
- */
-export const getAuditData = () => {
+const getAuditData = () => {
     return {
-        componentMountCounts: Object.fromEntries(componentMountCounts),
-        apiCallLog,
         layoutShiftLog
     };
 };
@@ -271,3 +214,4 @@ if (typeof window !== 'undefined') {
     window.generateReport = generateReport;
     window.getAuditData = getAuditData;
 }
+

@@ -24,13 +24,30 @@ const policySchema = new mongoose.Schema({
         enum: ['Active', 'Archived'],
         default: 'Active'
     },
+    // pdf = uploaded PDF; consent_template = assignment stub for a published wizard
+    sourceKind: {
+        type: String,
+        enum: ['pdf', 'consent_template'],
+        default: 'pdf',
+        index: true
+    },
+    templateId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'PolicyTemplate',
+        default: null,
+        index: true
+    },
     fileId: {
         type: mongoose.Schema.Types.ObjectId,
-        required: true
+        required: function requiredFileId() {
+            return (this.sourceKind || 'pdf') !== 'consent_template';
+        }
     },
     fileName: {
         type: String,
-        required: true
+        required: function requiredFileName() {
+            return (this.sourceKind || 'pdf') !== 'consent_template';
+        }
     },
     fileSize: {
         type: Number
@@ -69,6 +86,7 @@ const policySchema = new mongoose.Schema({
 // Index for faster queries
 policySchema.index({ status: 1, effectiveFrom: -1 });
 policySchema.index({ name: 1, version: 1 });
+policySchema.index({ templateId: 1, status: 1 });
 
 const Policy = mongoose.model('Policy', policySchema);
 

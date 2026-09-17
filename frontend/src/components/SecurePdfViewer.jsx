@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import PropTypes from 'prop-types';
-import { Document, Page, pdfjs } from 'react-pdf';
+import { PdfDocument, PdfPage } from './lazy/LazyPdfComponents';
 import { Box, IconButton, Typography, Stack, CircularProgress } from '@mui/material';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
@@ -10,9 +10,6 @@ import DownloadIcon from '@mui/icons-material/Download';
 import CloseIcon from '@mui/icons-material/Close';
 import '../styles/SecurePdfViewer.css';
 import api from '../api/axios';
-
-// Configure PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 const SecurePdfViewer = ({ pdfUrl, policyName, role = 'employee', onClose }) => {
     const [numPages, setNumPages] = useState(null);
@@ -272,7 +269,12 @@ const SecurePdfViewer = ({ pdfUrl, policyName, role = 'employee', onClose }) => 
                 }}
             >
                 {pdfBlob && (
-                    <Document
+                    <Suspense fallback={
+                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                            <CircularProgress />
+                        </Box>
+                    }>
+                    <PdfDocument
                         file={pdfBlob}
                         onLoadSuccess={onDocumentLoadSuccess}
                         loading={
@@ -294,7 +296,7 @@ const SecurePdfViewer = ({ pdfUrl, policyName, role = 'employee', onClose }) => 
                                 data-page-number={index + 1}
                                 sx={{ mb: 2 }}
                             >
-                                <Page
+                                <PdfPage
                                     pageNumber={index + 1}
                                     scale={scale}
                                     renderTextLayer={false}
@@ -302,7 +304,8 @@ const SecurePdfViewer = ({ pdfUrl, policyName, role = 'employee', onClose }) => 
                                 />
                             </Box>
                         ))}
-                    </Document>
+                    </PdfDocument>
+                    </Suspense>
                 )}
             </Box>
         </Box>

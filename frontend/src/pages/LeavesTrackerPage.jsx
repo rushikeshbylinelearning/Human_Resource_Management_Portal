@@ -20,9 +20,6 @@ import {
   ExpandMore,
   CalendarToday
 } from '@mui/icons-material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from '../api/axios';
@@ -997,7 +994,6 @@ const LeavesTrackerPage = () => {
   }
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
       <Box className="leaves-tracker-container">
         {/* Breadcrumb */}
         {/* Header Section */}
@@ -4196,7 +4192,6 @@ const LeavesTrackerPage = () => {
         
         <Snackbar open={snackbar.open} autoHideDuration={6000} onClose={() => setSnackbar({ ...snackbar, open: false })}><Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity}>{snackbar.message}</Alert></Snackbar>
       </Box>
-    </LocalizationProvider>
   );
 };
 

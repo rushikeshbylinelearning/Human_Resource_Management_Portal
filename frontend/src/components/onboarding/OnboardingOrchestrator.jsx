@@ -12,11 +12,13 @@
 // The correct dashboard is already rendered by DashboardRouter in App.jsx
 // before this component runs — this component never forces a dashboard render.
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useOnboarding } from '../../context/OnboardingContext';
 import { useAuth } from '../../context/AuthContext';
-import OnboardingPolicyModal from './OnboardingPolicyModal';
-import AppTour from './AppTour';
+import { lazyWithRetry } from '../../utils/lazyWithRetry';
+
+const OnboardingPolicyModal = lazyWithRetry(() => import('./OnboardingPolicyModal'));
+const AppTour = lazyWithRetry(() => import('./AppTour'));
 
 const OnboardingOrchestrator = () => {
     const { user, authStatus } = useAuth();
@@ -35,10 +37,18 @@ const OnboardingOrchestrator = () => {
     return (
         <>
             {/* Step 1 — Policy modal: full-screen, blocks all interaction */}
-            {showPolicyModal && <OnboardingPolicyModal />}
+            {showPolicyModal && (
+                <Suspense fallback={null}>
+                    <OnboardingPolicyModal />
+                </Suspense>
+            )}
 
             {/* Step 2 — Guided tour: starts with welcome screen, then driver.js */}
-            {showTour && <AppTour />}
+            {showTour && (
+                <Suspense fallback={null}>
+                    <AppTour />
+                </Suspense>
+            )}
         </>
     );
 };

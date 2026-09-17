@@ -1,6 +1,7 @@
 // backend/middleware/ssoTokenAuth.js
 const User = require('../models/User');
 const SSOVerification = require('../utils/ssoVerification');
+const { syncOrgFields } = require('../utils/syncOrgFields');
 
 const DEFAULT_SSO_ROLE = (() => {
   const allowed = ['Admin', 'HR', 'Employee', 'Intern'];
@@ -48,7 +49,7 @@ function ssoTokenAuth(SSO_CONFIG) {
       if (process.env.NODE_ENV !== 'production') console.log('[SSOAuth] SSO not configured, redirecting to SSO portal');
       const redirectUrl = process.env.NODE_ENV === 'production'
         ? 'https://sso.bylinelms.com/login'
-        : 'http://localhost:3000/login';
+        : 'http://localhost:5173/login';
       return res.redirect(redirectUrl);
     }
 
@@ -81,7 +82,7 @@ function ssoTokenAuth(SSO_CONFIG) {
           if (process.env.NODE_ENV !== 'production') console.log(`[SSOAuth] User ${userClaims.email} not found and auto-provisioning disabled`);
           const redirectUrl = process.env.NODE_ENV === 'production'
             ? 'https://sso.bylinelms.com/login'
-            : 'http://localhost:3000/login';
+            : 'http://localhost:5173/login';
           return res.redirect(redirectUrl);
         }
 
@@ -96,14 +97,19 @@ function ssoTokenAuth(SSO_CONFIG) {
           if (process.env.NODE_ENV !== 'production') console.log(`[SSOAuth] Hashed password for new user: ${lookupEmail}`);
         }
         
+        const orgFields = syncOrgFields({
+          department: userClaims.department || 'Unknown',
+          domain: userClaims.domain || userClaims.department || 'Unknown',
+          designation: userClaims.designation || 'Employee',
+        });
         user = new User({
           email: lookupEmail,
           fullName: userClaims.name || lookupEmail.split('@')[0],
           employeeCode: userClaims.employeeCode || `SSO_${Date.now()}`,
           role: DEFAULT_SSO_ROLE,
-          department: userClaims.department || 'Unknown',
-          designation: userClaims.designation || 'Employee',
-          domain: userClaims.domain || 'Unknown',
+          department: orgFields.department,
+          designation: orgFields.designation,
+          domain: orgFields.domain,
           passwordHash: passwordHash,
           joiningDate: new Date(),
           isActive: true,
@@ -139,7 +145,7 @@ function ssoTokenAuth(SSO_CONFIG) {
               console.error(`[SSOAuth] ❌ Password verification failed for user: ${lookupEmail}`);
               const redirectUrl = process.env.NODE_ENV === 'production'
                 ? 'https://sso.bylinelms.com/login'
-                : 'http://localhost:3000/login';
+                : 'http://localhost:5173/login';
               return res.redirect(redirectUrl);
             }
             if (process.env.NODE_ENV !== 'production') console.log(`[SSOAuth] ✅ Password verification successful for user: ${lookupEmail}`);
@@ -147,7 +153,7 @@ function ssoTokenAuth(SSO_CONFIG) {
             console.error(`[SSOAuth] ❌ Password verification error: ${passwordError.message}`);
             const redirectUrl = process.env.NODE_ENV === 'production'
               ? 'https://sso.bylinelms.com/login'
-              : 'http://localhost:3000/login';
+              : 'http://localhost:5173/login';
             return res.redirect(redirectUrl);
           }
         } else if (userClaims.appPassword && (!user.passwordHash || user.passwordHash === 'SSO_USER_NO_PASSWORD')) {
@@ -169,7 +175,15 @@ function ssoTokenAuth(SSO_CONFIG) {
             authMethod: 'SSO'
           };
 
-          if (userClaims.department) updateData.department = userClaims.department;
+          if (userClaims.department) {
+            const orgFields = syncOrgFields({
+              department: userClaims.department,
+              domain: user.domain,
+              designation: userClaims.designation || user.designation,
+            });
+            updateData.department = orgFields.department;
+            updateData.domain = orgFields.domain;
+          }
           if (userClaims.designation) updateData.designation = userClaims.designation;
           if (userClaims.employeeCode) updateData.employeeCode = userClaims.employeeCode;
 
@@ -203,7 +217,7 @@ function ssoTokenAuth(SSO_CONFIG) {
       console.error('❌ Invalid SSO token:', err.message);
       const redirectUrl = process.env.NODE_ENV === 'production'
         ? 'https://sso.bylinelms.com/login'
-        : 'http://localhost:3000/login';
+        : 'http://localhost:5173/login';
       return res.redirect(redirectUrl);
     }
   };

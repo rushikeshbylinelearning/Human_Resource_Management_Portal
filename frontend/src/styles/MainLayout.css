@@ -32,6 +32,7 @@ body, html {
     /* This container holds everything */
     position: relative;
     width: 100%;
+    min-height: 100vh;
 }
 
 /* --- Topbar Styling --- */
@@ -174,6 +175,8 @@ body, html {
     transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1200;
     width: 256px !important;
+    max-width: min(86vw, 320px);
+    height: 100dvh;
     box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
   }
 
@@ -203,14 +206,14 @@ body, html {
   /* Main content: zero margin-left, padding adjusted for topbar only */
   .main-content {
     margin-left: 0 !important;
-    padding: 72px 16px 88px 16px !important;
+    padding: 72px 16px 24px 16px !important;
     width: 100% !important;
     box-sizing: border-box !important;
   }
 
   .admin-view .main-content {
     margin-left: 0 !important;
-    padding: 72px 16px 88px 16px !important;
+    padding: 72px 16px 24px 16px !important;
     width: 100% !important;
     box-sizing: border-box !important;
   }
@@ -227,7 +230,7 @@ body, html {
   .main-content,
   .admin-view .main-content,
   .employee-view .main-content {
-    padding: 68px 12px 80px 12px !important;
+    padding: 68px 12px 20px 12px !important;
   }
 }
 
@@ -235,6 +238,6 @@ body, html {
   .main-content,
   .admin-view .main-content,
   .employee-view .main-content {
-    padding: 64px 8px 72px 8px !important;
+    padding: 64px 8px 16px 8px !important;
   }
 }

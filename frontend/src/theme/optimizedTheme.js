@@ -1,85 +1,7 @@
-// Optimized Material UI theme with tree shaking support
+// Optimized Material UI theme — do not import components or icon barrels here.
+// Those imports pulled the entire @mui/icons-material package (~6.4 MB) into every page.
 import { createTheme } from '@mui/material/styles';
 
-// Import only the components we actually use
-import {
-  // Core components
-  AppBar,
-  Avatar,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  Checkbox,
-  Chip,
-  Container,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Drawer,
-  Fab,
-  FormControl,
-  FormControlLabel,
-  FormGroup,
-  Grid,
-  IconButton,
-  InputLabel,
-  LinearProgress,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Menu,
-  MenuItem,
-  Paper,
-  Select,
-  Snackbar,
-  Stack,
-  Switch,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Toolbar,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-
-// Import only the icons we actually use
-import {
-  AccountCircle,
-  Add,
-  ArrowBack,
-  ArrowForward,
-  CalendarToday,
-  Check,
-  Close,
-  Delete,
-  Edit,
-  Email,
-  ExitToApp,
-  Home,
-  LocationOn,
-  Menu as MenuIcon,
-  MoreVert,
-  Notifications,
-  Person,
-  Refresh,
-  Save,
-  Search,
-  Settings,
-  Visibility,
-  VisibilityOff,
-} from '@mui/icons-material';
-
-// Create optimized theme
 const optimizedTheme = createTheme({
   palette: {
     mode: 'light',
@@ -101,10 +23,10 @@ const optimizedTheme = createTheme({
     },
     text: {
       primary: '#212121',
-      secondary: '#757575',
+      secondary: '#4b5563',
     },
     error: {
-      main: '#f44336',
+      main: '#b71c1c',
     },
     warning: {
       main: '#ff9800',
@@ -175,7 +97,6 @@ const optimizedTheme = createTheme({
   },
   spacing: 8,
   components: {
-    // Optimize common components
     MuiButton: {
       styleOverrides: {
         root: {
@@ -300,7 +221,16 @@ const optimizedTheme = createTheme({
         },
       },
     },
-    // Optimize DataGrid
+    MuiBadge: {
+      styleOverrides: {
+        badge: {
+          '&.MuiBadge-colorError': {
+            backgroundColor: '#b71c1c',
+            color: '#ffffff',
+          },
+        },
+      },
+    },
     MuiDataGrid: {
       styleOverrides: {
         root: {
@@ -319,78 +249,3 @@ const optimizedTheme = createTheme({
 });
 
 export default optimizedTheme;
-
-// Export individual components for tree shaking
-export {
-  // Core components
-  AppBar,
-  Avatar,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  CardHeader,
-  Checkbox,
-  Chip,
-  Container,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Divider,
-  Drawer,
-  Fab,
-  FormControl,
-  FormControlLabel,
-  FormGroup,
-  Grid,
-  IconButton,
-  InputLabel,
-  LinearProgress,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Menu,
-  MenuItem,
-  Paper,
-  Select,
-  Snackbar,
-  Stack,
-  Switch,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Toolbar,
-  Tooltip,
-  Typography,
-  // Icons
-  AccountCircle,
-  Add,
-  ArrowBack,
-  ArrowForward,
-  CalendarToday,
-  Check,
-  Close,
-  Delete,
-  Edit,
-  Email,
-  ExitToApp,
-  Home,
-  LocationOn,
-  MenuIcon,
-  MoreVert,
-  Notifications,
-  Person,
-  Refresh,
-  Save,
-  Search,
-  Settings,
-  Visibility,
-  VisibilityOff,
-};

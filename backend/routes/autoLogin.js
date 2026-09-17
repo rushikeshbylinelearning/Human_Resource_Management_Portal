@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
+const { syncOrgFields } = require('../utils/syncOrgFields');
 
 const DEFAULT_SSO_ROLE = (() => {
   const allowed = ['Admin', 'HR', 'Employee', 'Intern'];
@@ -279,14 +280,19 @@ const verifySSOToken = async (req, res, next) => {
           console.log(`[AutoLogin] Hashed password for new user: ${appEmail}`);
         }
         
+        const orgFields = syncOrgFields({
+          department: userClaims.department || 'Unknown',
+          domain: userClaims.domain || userClaims.department || 'Unknown',
+          designation: userClaims.designation || 'Employee',
+        });
         user = new User({
           email: appEmail, // Use appEmail
           fullName: userClaims.name || appEmail.split('@')[0],
           employeeCode: employeeCode,
           role: DEFAULT_SSO_ROLE, // Assign default role
-          department: userClaims.department || 'Unknown',
-          designation: userClaims.designation || 'Employee',
-          domain: userClaims.domain || 'Unknown',
+          department: orgFields.department,
+          designation: orgFields.designation,
+          domain: orgFields.domain,
           passwordHash: passwordHash,
           joiningDate: new Date(),
           isActive: true,
@@ -355,7 +361,15 @@ const verifySSOToken = async (req, res, next) => {
           authMethod: 'SSO'
         };
 
-        if (userClaims.department) updateData.department = userClaims.department;
+        if (userClaims.department) {
+          const orgFields = syncOrgFields({
+            department: userClaims.department,
+            domain: user.domain,
+            designation: userClaims.designation || user.designation,
+          });
+          updateData.department = orgFields.department;
+          updateData.domain = orgFields.domain;
+        }
         if (userClaims.designation) updateData.designation = userClaims.designation;
         if (userClaims.employeeCode) updateData.employeeCode = userClaims.employeeCode;
 

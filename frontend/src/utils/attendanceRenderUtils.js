@@ -3,7 +3,7 @@
  * Used by both Admin and Employee views for consistency
  */
 
-import { formatISTTime, formatISTDate, isSameISTDay, getISTDateString, getISTDateParts, getISTNow } from './istTime';
+import { formatISTTime, formatISTDate, getISTDateString, getISTNow } from './istTime';
 import { getStatusColor } from '../constants/attendanceColors';
 
 /**
@@ -177,18 +177,6 @@ export const formatDurationWithSeconds = (totalMinutes) => {
     const seconds = Math.round((totalMinutes % 1) * 60);
     
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-};
-
-/**
- * Check if a date string matches in IST
- * Used for comparing holiday/leave dates
- * @param {Date|string} date1 - First date
- * @param {Date|string} date2 - Second date
- * @returns {boolean} True if dates match in IST
- */
-export const isSameDateIST = (date1, date2) => {
-    if (!date1 || !date2) return false;
-    return getISTDateString(date1) === getISTDateString(date2);
 };
 
 /** Matches the fixed labels on the attendance summary time axis (10 AM – 7 PM). */

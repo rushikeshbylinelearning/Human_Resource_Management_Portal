@@ -235,11 +235,11 @@ const EnhancedLeaveRequestModal = ({
                 // In development, if URL has production domain, replace with local backend
                 if (certificateUrl.includes('https://') || certificateUrl.includes('http://localhost:') === false) {
                     // Extract filename and construct local backend URL
-                    const backendUrl = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:3011';
+                    const backendUrl = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:5000';
                     fileUrl = `${backendUrl}/medical-certificates/${filename}`;
                 } else if (!certificateUrl.startsWith('http')) {
                     // Relative path - construct full local URL
-                    const backendUrl = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:3011';
+                    const backendUrl = api.defaults.baseURL?.replace('/api', '') || 'http://localhost:5000';
                     fileUrl = `${backendUrl}/medical-certificates/${filename}`;
                 }
             }

@@ -50,6 +50,8 @@ const ShiftProgressBar = ({
   }, [status, sessions, breaks, now, workedMinutes]);
 
   useEffect(() => {
+    // Parent already ticks unifiedState every second; a second interval here double-renders the bar.
+    if (useUnified) return;
     const isClockedIn = status === 'Clocked In' || status === 'On Break';
     const hasActiveBreak = !!activeBreakOverride || breaks?.some(b => !b.endTime);
     const hasActiveSession = sessions?.some(s => !s.endTime);
@@ -57,7 +59,7 @@ const ShiftProgressBar = ({
       const timerId = setInterval(() => setNow(new Date()), 1000);
       return () => clearInterval(timerId);
     }
-  }, [status, breaks, sessions, activeBreakOverride]);
+  }, [status, breaks, sessions, activeBreakOverride, useUnified]);
 
   const totalBreakMinutes = useMemo(() => {
     if (!breaks || breaks.length === 0) return 0;
@@ -80,7 +82,7 @@ const ShiftProgressBar = ({
     sortedBreaks.forEach(breakItem => {
       if (!breakItem.startTime || (!breakItem.breakType && !breakItem.type)) return;
       const breakStart = new Date(breakItem.startTime);
-      const breakEnd = breakItem.endTime ? new Date(breakItem.endTime) : now;
+      const breakEnd = breakItem.endTime ? new Date(breakItem.endTime) : (useUnified ? new Date() : now);
       const durationMinutes = (breakEnd - breakStart) / 60000;
       if (durationMinutes <= 0) return;
       const elapsedTimeBeforeBreak = (breakStart - sessionStart) / 60000;
@@ -122,7 +124,7 @@ const ShiftProgressBar = ({
         <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.8125rem', color: '#111827' }}>
           Shift Progress
         </Typography>
-        <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.8125rem', color: hasExtension ? '#ef4444' : '#9ca3af' }}>
+        <Typography variant="body2" sx={{ fontWeight: 500, fontSize: '0.8125rem', color: hasExtension ? '#b71c1c' : '#4b5563' }}>
           {formatMinutesToHM(displayElapsed)} / {formatMinutesToHM(displayTotal)}
         </Typography>
       </Stack>
@@ -130,13 +132,23 @@ const ShiftProgressBar = ({
       <div className="progress-bar-container">
         <div
           className={`progress-bar-segment progress-bar-work ${hasExtension ? 'overtime' : ''}`}
-          style={{ width: `${workProgress}%` }}
+          style={{ width: `${Math.max(0, Math.min(100, workProgress)).toFixed(1)}%` }}
         />
-        {breakSegments.map((seg, index) => (
-          <Tooltip key={index} title={seg.isComplete ? `${seg.type} Break: ${seg.duration} min` : `Ongoing ${seg.type} Break: ${seg.duration} min`} arrow>
-            <div className="progress-bar-segment progress-bar-break" style={{ left: `${seg.left}%`, width: `${seg.width}%` }} />
-          </Tooltip>
-        ))}
+        {breakSegments.map((seg, index) => {
+          const label = seg.isComplete
+            ? `${seg.type} Break: ${seg.duration} min`
+            : `Ongoing ${seg.type} Break: ${seg.duration} min`;
+          return (
+            <Tooltip key={index} title={label} arrow>
+              <div
+                className="progress-bar-segment progress-bar-break"
+                role="img"
+                aria-label={label}
+                style={{ left: `${seg.left}%`, width: `${seg.width}%` }}
+              />
+            </Tooltip>
+          );
+        })}
       </div>
 
       <Box sx={{ mt: 0.5, minHeight: '20px', textAlign: 'right' }}>

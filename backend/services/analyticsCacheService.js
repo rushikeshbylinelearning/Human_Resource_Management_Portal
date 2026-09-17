@@ -1,8 +1,7 @@
 /**
  * ANALYTICS CACHE SERVICE
  * 
- * Provides caching layer for analytics queries
- * Supports both Redis (if available) and in-memory LRU cache
+ * Provides caching layer for analytics queries using an in-memory LRU cache.
  * 
  * Cache Strategy:
  * - Key format: analytics:{startDate}:{endDate}:{page}:{limit}:{filters}
@@ -77,17 +76,6 @@ class LRUCache {
 
 // Initialize cache
 const memoryCache = new LRUCache(100);
-let redisClient = null;
-
-/**
- * Initialize Redis client (optional)
- * 
- * @param {Object} client - Redis client instance
- */
-function initRedis(client) {
-    redisClient = client;
-    console.log('[AnalyticsCacheService] Redis client initialized');
-}
 
 /**
  * Generate cache key from filters
@@ -147,16 +135,6 @@ async function getCachedAnalytics(filters) {
     const key = generateCacheKey(filters);
     
     try {
-        // Try Redis first if available
-        if (redisClient && redisClient.isReady) {
-            const cached = await redisClient.get(key);
-            if (cached) {
-                console.log(`[AnalyticsCacheService] ✅ Redis cache HIT: ${key}`);
-                return JSON.parse(cached);
-            }
-        }
-        
-        // Fallback to memory cache
         if (memoryCache.has(key)) {
             const entry = memoryCache.get(key);
             if (entry && Date.now() <= entry.expiresAt) {
@@ -186,13 +164,6 @@ async function setCachedAnalytics(filters, data, ttl = 300) {
     const key = generateCacheKey(filters);
     
     try {
-        // Store in Redis if available
-        if (redisClient && redisClient.isReady) {
-            await redisClient.setEx(key, ttl, JSON.stringify(data));
-            console.log(`[AnalyticsCacheService] ✅ Stored in Redis: ${key} (TTL: ${ttl}s)`);
-        }
-        
-        // Always store in memory cache as fallback
         memoryCache.set(key, data, ttl);
         console.log(`[AnalyticsCacheService] ✅ Stored in memory: ${key} (TTL: ${ttl}s)`);
         
@@ -208,16 +179,6 @@ async function setCachedAnalytics(filters, data, ttl = 300) {
  */
 async function clearAnalyticsCache() {
     try {
-        // Clear Redis cache
-        if (redisClient && redisClient.isReady) {
-            const keys = await redisClient.keys('analytics:*');
-            if (keys.length > 0) {
-                await redisClient.del(keys);
-                console.log(`[AnalyticsCacheService] ✅ Cleared ${keys.length} Redis cache entries`);
-            }
-        }
-        
-        // Clear memory cache
         memoryCache.clear();
         console.log('[AnalyticsCacheService] ✅ Cleared memory cache');
         
@@ -235,19 +196,8 @@ async function clearAnalyticsCache() {
  */
 async function clearCacheForDateRange(startDate, endDate) {
     try {
-        // Clear Redis cache
-        if (redisClient && redisClient.isReady) {
-            const pattern = `analytics:${startDate}:${endDate}:*`;
-            const keys = await redisClient.keys(pattern);
-            if (keys.length > 0) {
-                await redisClient.del(keys);
-                console.log(`[AnalyticsCacheService] ✅ Cleared ${keys.length} Redis entries for ${startDate} to ${endDate}`);
-            }
-        }
-        
-        // Note: Memory cache uses hash, so we clear all to be safe
         memoryCache.clear();
-        console.log('[AnalyticsCacheService] ✅ Cleared memory cache');
+        console.log(`[AnalyticsCacheService] ✅ Cleared memory cache for ${startDate} to ${endDate}`);
         
     } catch (error) {
         console.error('[AnalyticsCacheService] Error clearing cache for date range:', error);
@@ -260,31 +210,15 @@ async function clearCacheForDateRange(startDate, endDate) {
  * @returns {Promise<Object>} Cache statistics
  */
 async function getCacheStats() {
-    const stats = {
+    return {
         memoryCache: {
             size: memoryCache.size(),
             maxSize: memoryCache.maxSize
-        },
-        redis: {
-            connected: redisClient && redisClient.isReady,
-            keys: 0
         }
     };
-    
-    try {
-        if (redisClient && redisClient.isReady) {
-            const keys = await redisClient.keys('analytics:*');
-            stats.redis.keys = keys.length;
-        }
-    } catch (error) {
-        console.error('[AnalyticsCacheService] Error getting Redis stats:', error);
-    }
-    
-    return stats;
 }
 
 module.exports = {
-    initRedis,
     getCachedAnalytics,
     setCachedAnalytics,
     clearAnalyticsCache,

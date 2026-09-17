@@ -39,13 +39,13 @@ const PolicyListCompact = ({ policies, loading, onView, onReplace, onDelete, for
                     key={policy._id}
                     sx={{
                         p: 2,
-                        border: '1px solid #e8e8e8',
-                        borderRadius: '10px',
-                        backgroundColor: '#fafafa',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '12px',
+                        backgroundColor: '#fff',
                         transition: 'all 0.2s ease',
                         '&:hover': {
-                            backgroundColor: '#f5f5f5',
-                            borderColor: '#d0d0d0'
+                            backgroundColor: 'rgba(229, 57, 53, 0.03)',
+                            borderColor: '#F5C6C6'
                         }
                     }}
                 >

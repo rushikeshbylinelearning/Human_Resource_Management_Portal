@@ -89,8 +89,10 @@ const HolidayFormPanel = ({ open, onClose, holiday, yearId, onSuccess }) => {
             onClose={onClose}
             PaperProps={{
                 sx: {
-                    width: 480,
-                    p: 3,
+                    width: { xs: '100%', sm: 480 },
+                    maxWidth: '100vw',
+                    p: { xs: 2, sm: 3 },
+                    boxSizing: 'border-box',
                     bgcolor: '#fafafa'
                 }
             }}

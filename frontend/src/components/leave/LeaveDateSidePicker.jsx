@@ -1,13 +1,13 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, Suspense } from 'react';
 import { createPortal } from 'react-dom';
-import { StaticDatePicker } from '@mui/x-date-pickers/StaticDatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format, isValid } from 'date-fns';
 import CloseIcon from '@mui/icons-material/Close';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import { getLeaveSidePanelPosition, LEAVE_MODAL_SELECTOR } from '../../utils/leaveSidePanelPosition';
+import { lazyWithRetry } from '../../utils/lazyWithRetry';
 import '../../styles/LeaveSidePanel.css';
+
+const BoundStaticDatePicker = lazyWithRetry(() => import('../lazy/BoundStaticDatePicker'));
 
 function formatDateDisplay(value) {
     if (!value || !isValid(value)) return '';
@@ -131,8 +131,8 @@ const LeaveDateSidePicker = ({
                             </div>
 
                             <div className="leave-side-body">
-                                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                    <StaticDatePicker
+                                <Suspense fallback={<div className="leave-side-skeleton" aria-hidden="true" />}>
+                                    <BoundStaticDatePicker
                                         value={draft}
                                         onChange={setDraft}
                                         shouldDisableDate={shouldDisableDate}
@@ -142,7 +142,7 @@ const LeaveDateSidePicker = ({
                                             actionBar: { actions: [] },
                                         }}
                                     />
-                                </LocalizationProvider>
+                                </Suspense>
                             </div>
 
                             <div className="leave-side-actions">

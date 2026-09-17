@@ -13,6 +13,44 @@ const Setting = require('../models/Setting');
 
 // --- Services ---
 const { sendEmail } = require('../services/mailService');
+const { syncOrgFields } = require('../utils/syncOrgFields');
+
+const toPlainObject = (value) => {
+    if (!value) return {};
+    if (typeof value.toObject === 'function') return value.toObject();
+    return { ...value };
+};
+
+let orgBackfillPromise = null;
+const backfillMissingOrgFields = () => {
+    if (orgBackfillPromise) return orgBackfillPromise;
+    orgBackfillPromise = (async () => {
+        try {
+            await User.updateMany(
+                {
+                    $and: [
+                        { $or: [{ department: { $exists: false } }, { department: null }, { department: '' }] },
+                        { domain: { $type: 'string', $nin: ['', 'Unknown'] } },
+                    ],
+                },
+                [{ $set: { department: '$domain' } }]
+            );
+            await User.updateMany(
+                {
+                    $and: [
+                        { $or: [{ domain: { $exists: false } }, { domain: null }, { domain: '' }] },
+                        { department: { $type: 'string', $nin: ['', 'Unknown'] } },
+                    ],
+                },
+                [{ $set: { domain: '$department' } }]
+            );
+        } catch (error) {
+            orgBackfillPromise = null;
+            console.error('Org field backfill failed:', error);
+        }
+    })();
+    return orgBackfillPromise;
+};
 
 const SALT_ROUNDS = 10;
 
@@ -79,7 +117,7 @@ router.get('/', [authenticateToken, isAdminOrHr], async (req, res) => {
         
         // --- START OF FIX: Ensure leave balances are always included ---
         // Both `all=true` and paginated requests now include these critical fields.
-        const fieldsToSelect = '_id fullName employeeCode alternateSaturdayPolicy shiftGroup department email leaveBalances leaveEntitlements isActive role joiningDate profileImageUrl employmentStatus probationStatus personalDetails identityDetails reportingPerson';
+        const fieldsToSelect = '_id fullName employeeCode alternateSaturdayPolicy shiftGroup department domain designation email leaveBalances leaveEntitlements isActive role joiningDate profileImageUrl employmentStatus probationStatus personalDetails identityDetails reportingPerson';
 
         // Filter: Exclude Admin role; handle status filtering
         let employeeQuery = { role: { $ne: 'Admin' } };
@@ -103,6 +141,8 @@ router.get('/', [authenticateToken, isAdminOrHr], async (req, res) => {
                 { email: { $regex: searchQuery, $options: 'i' } }
             ];
         }
+
+        backfillMissingOrgFields().catch(() => {});
 
         if (getAllEmployees) {
             // Check for slim=true parameter for minimal field selection
@@ -217,6 +257,30 @@ router.get('/', [authenticateToken, isAdminOrHr], async (req, res) => {
     }
 });
 
+// GET /api/admin/employees/org-options
+router.get('/org-options', [authenticateToken, isAdminOrHr], async (req, res) => {
+    try {
+        await backfillMissingOrgFields();
+        const [departments, designations, domains] = await Promise.all([
+            User.distinct('department'),
+            User.distinct('designation'),
+            User.distinct('domain'),
+        ]);
+        const departmentSet = new Set(
+            [...departments, ...domains].filter((value) => value && String(value).trim() && value !== 'Unknown')
+        );
+        res.json({
+            departments: [...departmentSet].sort((a, b) => a.localeCompare(b)),
+            designations: designations
+                .filter((value) => value && String(value).trim() && value !== 'Unknown')
+                .sort((a, b) => a.localeCompare(b)),
+        });
+    } catch (error) {
+        console.error('Failed to fetch org options:', error);
+        res.status(500).json({ error: 'Failed to fetch department and designation options' });
+    }
+});
+
 // POST /api/admin/employees
 router.post('/', [authenticateToken, isAdminOrHr], async (req, res) => {
     const { 
@@ -234,6 +298,7 @@ router.post('/', [authenticateToken, isAdminOrHr], async (req, res) => {
         // IMPORTANT: Save email exactly as typed by admin (trim whitespace only, no normalization)
         // Email normalization is only applied in SSO authentication flow, not for admin-created users
         const emailToSave = email.trim();
+        const orgFields = syncOrgFields({ department, domain, designation });
         
         // Validate reporting person if provided
         if (reportingPerson) {
@@ -249,9 +314,9 @@ router.post('/', [authenticateToken, isAdminOrHr], async (req, res) => {
             email: emailToSave, // Save exactly as typed
             passwordHash, 
             role, 
-            domain,
-            designation, 
-            department, 
+            domain: orgFields.domain,
+            designation: orgFields.designation, 
+            department: orgFields.department, 
             joiningDate, 
             shiftGroup: shiftGroup || null,
             alternateSaturdayPolicy,
@@ -276,28 +341,13 @@ router.post('/', [authenticateToken, isAdminOrHr], async (req, res) => {
 // PUT /api/admin/employees/:id
 router.put('/:id', [authenticateToken, isAdminOrHr], async (req, res) => {
     const { id } = req.params;
-    const { 
-        employeeCode, fullName, email, role, domain, designation, department, 
+    const body = req.body || {};
+    const {
+        employeeCode, fullName, email, role, domain, designation, department,
         joiningDate, shiftGroup, isActive, alternateSaturdayPolicy,
         employmentStatus, leaveBalances, internshipDurationMonths, workingDays,
         password, personalDetails, identityDetails, reportingPerson
-    } = req.body;
-    
-    // IMPORTANT: Save email exactly as typed by admin (trim whitespace only, no normalization)
-    // Email normalization is only applied in SSO authentication flow, not for admin-edited users
-    const emailToSave = email ? email.trim() : undefined;
-    
-    const updateData = { 
-        employeeCode, fullName, email: emailToSave, role, domain, designation, department, 
-        joiningDate, shiftGroup: shiftGroup || null, isActive, alternateSaturdayPolicy,
-        employmentStatus, leaveBalances,
-        internshipDurationMonths: employmentStatus === 'Intern' ? internshipDurationMonths : null,
-        workingDays,
-        // Add new fields
-        personalDetails: personalDetails || {},
-        identityDetails: identityDetails || {},
-        reportingPerson: reportingPerson || null
-    };
+    } = body;
 
     try {
         const currentEmployee = await User.findById(id);
@@ -305,17 +355,87 @@ router.put('/:id', [authenticateToken, isAdminOrHr], async (req, res) => {
             return res.status(404).json({ error: 'Employee not found.' });
         }
 
-        // Validate reporting person
-        if (reportingPerson) {
-            // Check if employee is trying to assign themselves as reporting person
-            if (reportingPerson.toString() === id) {
-                return res.status(400).json({ error: 'Employee cannot report to themselves.' });
+        const updateData = {};
+        const assignIfPresent = (key, value) => {
+            if (value !== undefined) updateData[key] = value;
+        };
+
+        assignIfPresent('employeeCode', employeeCode);
+        assignIfPresent('fullName', fullName);
+        assignIfPresent('role', role);
+        assignIfPresent('joiningDate', joiningDate);
+        assignIfPresent('isActive', isActive);
+        assignIfPresent('alternateSaturdayPolicy', alternateSaturdayPolicy);
+        assignIfPresent('employmentStatus', employmentStatus);
+        assignIfPresent('workingDays', workingDays);
+
+        if (email !== undefined) {
+            updateData.email = email ? email.trim() : email;
+        }
+
+        if (shiftGroup !== undefined) {
+            updateData.shiftGroup = shiftGroup || null;
+        }
+
+        if (reportingPerson !== undefined) {
+            if (reportingPerson) {
+                if (reportingPerson.toString() === id) {
+                    return res.status(400).json({ error: 'Employee cannot report to themselves.' });
+                }
+                const managerExists = await User.findById(reportingPerson);
+                if (!managerExists) {
+                    return res.status(400).json({ error: 'Selected reporting person does not exist.' });
+                }
             }
-            
-            // Check if reporting person exists
-            const managerExists = await User.findById(reportingPerson);
-            if (!managerExists) {
-                return res.status(400).json({ error: 'Selected reporting person does not exist.' });
+            updateData.reportingPerson = reportingPerson || null;
+        }
+
+        if (leaveBalances !== undefined) {
+            updateData.leaveBalances = {
+                ...toPlainObject(currentEmployee.leaveBalances),
+                ...leaveBalances,
+            };
+        }
+
+        if (personalDetails !== undefined) {
+            const currentPersonal = toPlainObject(currentEmployee.personalDetails);
+            updateData.personalDetails = {
+                ...currentPersonal,
+                ...personalDetails,
+                address: {
+                    ...toPlainObject(currentPersonal.address),
+                    ...toPlainObject(personalDetails.address),
+                },
+            };
+        }
+
+        if (identityDetails !== undefined) {
+            updateData.identityDetails = {
+                ...toPlainObject(currentEmployee.identityDetails),
+                ...identityDetails,
+            };
+        }
+
+        if (employmentStatus !== undefined) {
+            updateData.internshipDurationMonths = employmentStatus === 'Intern'
+                ? (internshipDurationMonths ?? currentEmployee.internshipDurationMonths)
+                : null;
+        } else if (internshipDurationMonths !== undefined) {
+            updateData.internshipDurationMonths = internshipDurationMonths;
+        }
+
+        if (department !== undefined || domain !== undefined || designation !== undefined) {
+            const orgFields = syncOrgFields({
+                department: department !== undefined ? department : currentEmployee.department,
+                domain: domain !== undefined ? domain : currentEmployee.domain,
+                designation: designation !== undefined ? designation : currentEmployee.designation,
+            });
+            if (department !== undefined || domain !== undefined) {
+                updateData.department = orgFields.department;
+                updateData.domain = orgFields.domain;
+            }
+            if (designation !== undefined) {
+                updateData.designation = orgFields.designation;
             }
         }
 
@@ -326,8 +446,8 @@ router.put('/:id', [authenticateToken, isAdminOrHr], async (req, res) => {
         const result = await User.findByIdAndUpdate(id, updateData, { new: true });
         if (!result) { return res.status(404).json({ error: 'Employee not found.' });}
 
-        // Emit Socket.IO event if reporting person changed
-        if (currentEmployee.reportingPerson?.toString() !== reportingPerson?.toString()) {
+        if (reportingPerson !== undefined &&
+            currentEmployee.reportingPerson?.toString() !== (reportingPerson?.toString() || undefined)) {
             try {
                 const { getIO } = require('../socketManager');
                 const io = getIO();
@@ -350,11 +470,10 @@ router.put('/:id', [authenticateToken, isAdminOrHr], async (req, res) => {
             }
         }
 
-        if (currentEmployee.employmentStatus !== employmentStatus) {
+        if (employmentStatus !== undefined && currentEmployee.employmentStatus !== employmentStatus) {
             sendEmploymentStatusChangeNotification(result, currentEmployee.employmentStatus, employmentStatus)
                 .catch(err => console.error('Error sending employment status change notification:', err));
             
-            // Emit Socket.IO event to notify the employee about employment status change
             try {
                 const { getIO } = require('../socketManager');
                 const io = getIO();

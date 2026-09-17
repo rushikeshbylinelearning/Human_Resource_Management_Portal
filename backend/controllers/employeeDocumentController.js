@@ -6,7 +6,6 @@ const Setting = require('../models/Setting');
 const NewNotificationService = require('../services/NewNotificationService');
 const cacheService = require('../services/cacheService');
 const { getPolicyBucket } = require('../db');
-const { startOfISTDay } = require('../utils/istTime');
 
 const DOCUMENT_TYPES_KEY = 'employeeDocumentTypes';
 const AUTO_RULE_KEY = 'employeeDocumentAutoRule';
@@ -100,24 +99,6 @@ async function notifyEmployeeDocumentAssigned(employee, doc) {
             documentId: doc._id.toString(),
             documentType: doc.documentType,
             requiresAcknowledgment: doc.requiresAcknowledgment,
-        },
-    });
-}
-
-async function notifyHrProbationPending(employee, doc) {
-    await NewNotificationService.broadcastToAdmins({
-        message: `Probation ended for ${employee.fullName} (${employee.employeeCode}). HR decision required for document assignment.`,
-        type: 'employee_document_pending_hr',
-        category: 'admin',
-        priority: 'high',
-        navigationData: {
-            page: 'admin/policies',
-            params: { tab: 'employee-documents', employeeId: employee._id.toString(), documentId: doc._id.toString() },
-        },
-        metadata: {
-            employeeId: employee._id.toString(),
-            documentId: doc._id.toString(),
-            probationEndDate: employee.probationEndDate,
         },
     });
 }
@@ -341,9 +322,6 @@ exports.getAdminCompliance = async (req, res) => {
 
 exports.getMyDocuments = async (req, res) => {
     try {
-        // Auto-trigger removed: documents are only created by explicit admin action.
-        // Previously called runProbationEndChecksForUser here — that path is now disabled.
-
         const docs = await EmployeeDocument.find({ employeeId: req.user.userId })
             .sort({ assignedAt: -1 })
             .lean();
@@ -755,112 +733,4 @@ exports.changeEmploymentStatus = async (req, res) => {
         console.error('[EmployeeDoc] changeEmploymentStatus error:', err);
         res.status(500).json({ error: 'Failed to change employment status.' });
     }
-};
-
-// ─── Probation end automation ─────────────────────────────────────────────────
-
-async function createProbationEndDocument(employee, rule) {
-    const types = await getDocumentTypesConfig();
-    const today = startOfISTDay();
-
-    const existing = await EmployeeDocument.findOne({
-        employeeId: employee._id,
-        method: 'auto',
-        documentType: { $in: ['probation_confirmation', 'probation_extension', 'hr_pending'] },
-        assignedAt: { $gte: employee.probationStartDate || new Date(0) },
-    }).lean();
-
-    if (existing) return null;
-
-    let documentType = rule.outcome;
-    let status = 'pending';
-    let typeLabel = findTypeLabel(types, documentType);
-
-    if (rule.outcome === 'pending_hr_decision') {
-        documentType = 'probation_confirmation';
-        status = 'hr_pending';
-        typeLabel = 'Probation End — HR Decision Pending';
-    }
-
-    const doc = await EmployeeDocument.create({
-        employeeId: employee._id,
-        employeeName: employee.fullName,
-        employeeCode: employee.employeeCode,
-        department: employee.department || '',
-        employmentStatus: employee.employmentStatus || 'Probation',
-        documentType,
-        documentTypeLabel: typeLabel,
-        fileRef: null,
-        fileName: '',
-        assignedBy: 'system',
-        assignedByName: 'System',
-        assignedAt: today,
-        method: 'auto',
-        requiresAcknowledgment: false,
-        note: `Auto-triggered on probation end date (${employee.probationEndDate?.toISOString?.()?.slice(0, 10) || 'N/A'})`,
-        status,
-        timeline: [{
-            event: 'auto_triggered',
-            timestamp: today,
-            notes: `Probation end date reached. Rule outcome: ${rule.outcome}`,
-            performedBy: 'System',
-        }],
-    });
-
-    if (status === 'hr_pending') {
-        doc.timeline.push({
-            event: 'hr_pending',
-            timestamp: today,
-            notes: 'Awaiting HR decision — employment status not changed',
-            performedBy: 'System',
-        });
-        await doc.save();
-        await notifyHrProbationPending(employee, doc);
-    } else {
-        await doc.save();
-        await notifyEmployeeDocumentAssigned(employee, doc);
-    }
-
-    return doc;
-}
-
-exports.runProbationEndChecksForUser = async (userId) => {
-    const rule = await getAutoRuleConfig();
-    if (!rule.enabled) return;
-
-    const user = await User.findById(userId)
-        .select('fullName employeeCode department employmentStatus probationEndDate probationStartDate isActive')
-        .lean();
-
-    if (!user || !user.isActive || user.employmentStatus !== 'Probation' || !user.probationEndDate) {
-        return;
-    }
-
-    const today = startOfISTDay();
-    const endDate = startOfISTDay(new Date(user.probationEndDate));
-    if (endDate > today) return;
-
-    await createProbationEndDocument(user, rule);
-};
-
-exports.runProbationEndChecks = async () => {
-    const rule = await getAutoRuleConfig();
-    if (!rule.enabled) return { processed: 0 };
-
-    const today = startOfISTDay();
-    const users = await User.find({
-        isActive: true,
-        employmentStatus: 'Probation',
-        probationEndDate: { $lte: today },
-    })
-        .select('fullName employeeCode department employmentStatus probationEndDate probationStartDate')
-        .lean();
-
-    let processed = 0;
-    for (const user of users) {
-        const created = await createProbationEndDocument(user, rule);
-        if (created) processed += 1;
-    }
-
-    return { processed };
 };

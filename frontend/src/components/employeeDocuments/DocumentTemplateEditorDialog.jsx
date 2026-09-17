@@ -47,11 +47,12 @@ const AUTO_FILL_OPTIONS = [
 ];
 
 const primaryBtnSx = {
-    background: '#6366f1',
+    background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
     textTransform: 'none',
     fontWeight: 600,
+    borderRadius: '10px',
     boxShadow: 'none',
-    '&:hover': { background: '#4f46e5', boxShadow: 'none' },
+    '&:hover': { background: 'linear-gradient(135deg, #C62828 0%, #B71C1C 100%)', boxShadow: 'none' },
 };
 
 const TYPE_LABELS = {
@@ -220,7 +221,7 @@ export default function DocumentTemplateEditorDialog({ open, onClose, documentTy
                             Manage Template — {typeLabel}
                         </Typography>
                         {currentVersion && (
-                            <Typography variant="caption" sx={{ color: '#6366f1' }}>
+                            <Typography variant="caption" sx={{ color: '#C62828' }}>
                                 Current: v{currentVersion} (active) · Saving creates a new version
                             </Typography>
                         )}
@@ -236,7 +237,7 @@ export default function DocumentTemplateEditorDialog({ open, onClose, documentTy
             <DialogContent sx={{ flex: 1, overflowY: 'auto', py: 2.5 }}>
                 {loading ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-                        <CircularProgress size={28} sx={{ color: '#6366f1' }} />
+                        <CircularProgress size={28} sx={{ color: '#E53935' }} />
                     </Box>
                 ) : (
                     <Stack spacing={3}>
@@ -332,7 +333,18 @@ export default function DocumentTemplateEditorDialog({ open, onClose, documentTy
                                             background: '#fafafa',
                                         }}
                                     >
-                                        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 140px 140px auto auto auto', gap: 1, alignItems: 'flex-start' }}>
+                                        <Box
+                                            sx={{
+                                                display: 'grid',
+                                                gridTemplateColumns: {
+                                                    xs: 'minmax(0, 1fr)',
+                                                    sm: 'repeat(2, minmax(0, 1fr))',
+                                                    lg: 'minmax(0, 1fr) minmax(0, 1fr) 140px 140px auto auto auto',
+                                                },
+                                                gap: 1,
+                                                alignItems: 'flex-start',
+                                            }}
+                                        >
                                             <TextField
                                                 size="small"
                                                 label="Label"

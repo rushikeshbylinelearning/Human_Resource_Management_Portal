@@ -24,7 +24,7 @@ import { usePermissions } from '../hooks/usePermissions';
 import './Sidebar.css';
 
 const Logo = () => (
-    <img src="/BL.svg" alt="Company Logo" style={{ height: '40px' }} />
+    <img src="/BL.svg" alt="Company Logo" style={{ height: '40px' }} width="40" height="40" />
 );
 
 // Updated to accept notification props and mobile menu props

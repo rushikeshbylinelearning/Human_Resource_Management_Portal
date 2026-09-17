@@ -1,23 +1,27 @@
 // frontend/src/components/MainLayout.jsx
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { Suspense, useState, useEffect, useRef, useCallback } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Snackbar } from '@mui/material';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
-import NewNotificationDrawer from './NewNotificationDrawer';
-import EarlyCheckoutApprovalModal from './EarlyCheckoutApprovalModal';
-import NotificationPermissionPrompt from './NotificationPermissionPrompt';
 import PageTransition from './PageTransition';
 import useNewNotifications from '../hooks/useNewNotifications';
 import OnboardingOrchestrator from './onboarding/OnboardingOrchestrator';
-import HRQueryFloatingChat from './HRQueryFloatingChat';
 import { useAuth } from '../context/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
+import HRQueryChatLauncher from './HRQueryChatLauncher';
 import '../styles/MainLayout.css';
+import '../styles/AdminResponsive.css';
+
+const NewNotificationDrawer = lazyWithRetry(() => import('./NewNotificationDrawer'));
+const EarlyCheckoutApprovalModal = lazyWithRetry(() => import('./EarlyCheckoutApprovalModal'));
+const NotificationPermissionPrompt = lazyWithRetry(() => import('./NotificationPermissionPrompt'));
 
 const MainLayout = () => {
     const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+    const [drawerMounted, setDrawerMounted] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
     const [ecrModal, setEcrModal] = useState({ open: false, requestId: null });
     const [toast, setToast] = useState({ open: false, message: '' });
@@ -28,6 +32,32 @@ const MainLayout = () => {
     const { fetchNotifications } = useNewNotifications();
     const { user } = useAuth();
     const { canAccess } = usePermissions();
+    const isAdminView = ['Admin', 'HR', 'Manager'].includes(user?.role);
+
+    useEffect(() => {
+        setIsMobileSidebarOpen(false);
+    }, [location.pathname]);
+
+    useEffect(() => {
+        document.body.classList.toggle('admin-shell-active', isAdminView);
+        return () => document.body.classList.remove('admin-shell-active');
+    }, [isAdminView]);
+
+    useEffect(() => {
+        if (!isMobileSidebarOpen) return undefined;
+
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+        const handleKeyDown = (event) => {
+            if (event.key === 'Escape') setIsMobileSidebarOpen(false);
+        };
+        window.addEventListener('keydown', handleKeyDown);
+
+        return () => {
+            document.body.style.overflow = previousOverflow;
+            window.removeEventListener('keydown', handleKeyDown);
+        };
+    }, [isMobileSidebarOpen]);
 
     // Preserve scroll position when navigating
     useEffect(() => {
@@ -58,6 +88,7 @@ const MainLayout = () => {
     }, [location.pathname]);
 
     const handleNotificationIconClick = () => {
+        setDrawerMounted(true);
         setIsDrawerOpen(true);
     };
 
@@ -87,7 +118,7 @@ const MainLayout = () => {
     };
 
     return (
-        <div className="app-container">
+        <div className={`app-container ${isAdminView ? 'admin-view' : 'employee-view'}`}>
             {/* Onboarding flow — manages policy modal, tour, and profile prompt */}
             <OnboardingOrchestrator />
             <Topbar 
@@ -103,7 +134,7 @@ const MainLayout = () => {
             <div
                 className={`mobile-sidebar-overlay ${isMobileSidebarOpen ? 'active' : ''}`}
                 onClick={handleOverlayClick}
-                aria-hidden="true"
+                aria-hidden={!isMobileSidebarOpen}
             />
             
             <main className="main-content" ref={mainContentRef}>
@@ -112,18 +143,29 @@ const MainLayout = () => {
                 </PageTransition>
             </main>
             
-            <NewNotificationDrawer 
-                open={isDrawerOpen} 
-                onClose={handleDrawerClose}
-                onOpenECRModal={handleOpenECRModal}
-            />
-            
-            <EarlyCheckoutApprovalModal
-                open={ecrModal.open}
-                requestId={ecrModal.requestId}
-                onClose={handleECRModalClose}
-                onSuccess={handleECRSuccess}
-            />
+            <Suspense fallback={null}>
+                {drawerMounted && (
+                    <NewNotificationDrawer 
+                        open={isDrawerOpen} 
+                        onClose={handleDrawerClose}
+                        onOpenECRModal={handleOpenECRModal}
+                    />
+                )}
+                {ecrModal.open && (
+                    <EarlyCheckoutApprovalModal
+                        open={ecrModal.open}
+                        requestId={ecrModal.requestId}
+                        onClose={handleECRModalClose}
+                        onSuccess={handleECRSuccess}
+                    />
+                )}
+                {(user?.role === 'Admin' || user?.role === 'HR' || canAccess?.manageHRQueries?.()) && (
+                    <HRQueryChatLauncher />
+                )}
+                <NotificationPermissionPrompt 
+                    onPermissionChange={handleNotificationPermissionChange}
+                />
+            </Suspense>
             
             <Snackbar
                 open={toast.open}
@@ -133,14 +175,6 @@ const MainLayout = () => {
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             />
             
-            <NotificationPermissionPrompt 
-                onPermissionChange={handleNotificationPermissionChange}
-            />
-            
-            {/* HR Query Floating Chat - Visible for Admin, HR, and users with canManageHRQueries permission */}
-            {(user?.role === 'Admin' || user?.role === 'HR' || canAccess?.manageHRQueries?.()) && (
-                <HRQueryFloatingChat />
-            )}
         </div>
     );
 };

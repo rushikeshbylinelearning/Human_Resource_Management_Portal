@@ -12,15 +12,17 @@ const jwtUtils = require('../utils/jwtUtils');
 
 function requireAuth(req, res, next) {
   try {
-    // Extract token from multiple sources (priority order):
-    // 1. Cookie (most secure for browser requests)
-    // 2. Authorization header (for API clients)
-    const token = 
-      req.cookies?.token || 
-      req.cookies?.ams_token ||
-      (req.headers.authorization?.startsWith('Bearer ') 
-        ? req.headers.authorization.split(' ')[1] 
-        : null);
+    // Prefer the Authorization header (live AMS access token from AuthContext).
+    // Cookies may still hold a stale SSO/legacy JWT from another app on this host.
+    // Using the cookie first verifies the wrong token, returns 401 INVALID_TOKEN,
+    // and the frontend interceptor treats that as a session failure (logout).
+    const bearer = req.headers.authorization?.startsWith('Bearer ')
+      ? req.headers.authorization.split(' ')[1]
+      : null;
+    const token =
+      bearer ||
+      req.cookies?.token ||
+      req.cookies?.ams_token;
 
     // No token found - return 401 JSON (never redirect)
     if (!token) {

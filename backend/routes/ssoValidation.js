@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const jwtUtils = require('../utils/jwtUtils');
+const { syncOrgFields } = require('../utils/syncOrgFields');
 
 const DEFAULT_SSO_ROLE = (() => {
   const allowed = ['Admin', 'HR', 'Employee', 'Intern'];
@@ -125,14 +126,19 @@ router.post('/validate-sso', async (req, res) => {
                 console.log(`[SSOValidation] Hashed password for new user: ${appEmail}`);
             }
             
+            const orgFields = syncOrgFields({
+                department: userDepartment || 'Unknown',
+                domain: decoded.domain || userDepartment || 'Unknown',
+                designation: userDesignation || 'Employee',
+            });
             user = new User({
                 email: appEmail, // Use appEmail
                 fullName: userName,
                 employeeCode: employeeCode || `SSO_${Date.now()}`,
                 role: DEFAULT_SSO_ROLE,
-                department: userDepartment || 'Unknown',
-                designation: userDesignation || 'Employee',
-                domain: decoded.domain || 'Unknown',
+                department: orgFields.department,
+                designation: orgFields.designation,
+                domain: orgFields.domain,
                 passwordHash: passwordHash,
                 joiningDate: new Date(),
                 isActive: true,
@@ -200,7 +206,15 @@ router.post('/validate-sso', async (req, res) => {
                     authMethod: 'SSO'
                 };
 
-                if (userDepartment) updateData.department = userDepartment;
+                if (userDepartment) {
+                    const orgFields = syncOrgFields({
+                        department: userDepartment,
+                        domain: user.domain,
+                        designation: userDesignation || user.designation,
+                    });
+                    updateData.department = orgFields.department;
+                    updateData.domain = orgFields.domain;
+                }
                 if (userDesignation) updateData.designation = userDesignation;
                 if (employeeCode) updateData.employeeCode = employeeCode;
 

@@ -1,6 +1,8 @@
-import { memo, useState, useEffect } from 'react';
+import { memo, useState, useEffect, Suspense } from 'react';
 import HRQueryChat from '../HRQueryChat';
-import DocumentCenterModal from './DocumentCenterModal';
+import { lazyWithRetry } from '../../utils/lazyWithRetry';
+
+const DocumentCenterModal = lazyWithRetry(() => import('./DocumentCenterModal'));
 
 const ProfilePolicies = memo(({
     policies,
@@ -110,14 +112,16 @@ const ProfilePolicies = memo(({
                 </button>
             </div>
 
-            <DocumentCenterModal
-                open={centerOpen}
-                onClose={handleCloseCenter}
-                documents={documents}
-                initialDocumentId={initialDocumentId}
-                onDocumentsUpdated={onDocumentsUpdated}
-                hasPersonalEmail={hasPersonalEmail}
-            />
+            <Suspense fallback={null}>
+                <DocumentCenterModal
+                    open={centerOpen}
+                    onClose={handleCloseCenter}
+                    documents={documents}
+                    initialDocumentId={initialDocumentId}
+                    onDocumentsUpdated={onDocumentsUpdated}
+                    hasPersonalEmail={hasPersonalEmail}
+                />
+            </Suspense>
 
             {/* HR Query Chat */}
             <div className="policies-section">

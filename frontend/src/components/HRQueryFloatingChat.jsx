@@ -8,25 +8,18 @@ import {
     TextField,
     IconButton,
     Avatar,
-    List,
-    ListItem,
-    ListItemAvatar,
-    ListItemText,
-    ListItemButton,
     Divider,
     Paper,
-    Stack,
     Chip,
     InputAdornment,
     CircularProgress,
     Tooltip,
-    Fade,
-    Slide,
     Button,
     Select,
     MenuItem,
     FormControl,
     InputLabel,
+    Alert,
 } from '@mui/material';
 import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
 import CloseIcon from '@mui/icons-material/Close';
@@ -34,15 +27,80 @@ import SendIcon from '@mui/icons-material/Send';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PersonIcon from '@mui/icons-material/Person';
 import SearchIcon from '@mui/icons-material/Search';
-import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import InventoryIcon from '@mui/icons-material/Inventory';
 import ComputerIcon from '@mui/icons-material/Computer';
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import api from '../api/axios';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatISTDate, formatISTDateTime } from '../utils/istTime';
+import useDraggableFab from '../hooks/useDraggableFab';
+import {
+    RED, RED_DARK, RED_BG, RED_LIGHT, TEXT, MUTED, BORDER, SURFACE,
+    FONT, SUCCESS_BG, SUCCESS_TEXT, WARN_BG, WARN_TEXT, INFO_BG, INFO_TEXT,
+    fieldSx, primaryBtnSx, iconBoxSx,
+} from '../theme/policiesPageTheme';
 
-const HRQueryFloatingChat = () => {
-    const [isOpen, setIsOpen] = useState(false);
+const relativeTime = (value) => {
+    const ms = Date.now() - new Date(value).getTime();
+    if (Number.isNaN(ms)) return '';
+    const minutes = Math.floor(ms / 60000);
+    if (minutes < 1) return 'just now';
+    if (minutes < 60) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 7) return `${days} day${days === 1 ? '' : 's'} ago`;
+    return formatISTDate(value, { month: 'short', day: 'numeric' });
+};
+
+const STATUS_COLORS = {
+    open: { bg: WARN_BG, color: WARN_TEXT },
+    'in-progress': { bg: INFO_BG, color: INFO_TEXT },
+    resolved: { bg: SUCCESS_BG, color: SUCCESS_TEXT },
+    closed: { bg: SURFACE, color: MUTED },
+    pending: { bg: WARN_BG, color: WARN_TEXT },
+    fulfilled: { bg: SUCCESS_BG, color: SUCCESS_TEXT },
+    rejected: { bg: RED_BG, color: RED_DARK },
+    cancelled: { bg: SURFACE, color: MUTED },
+};
+
+const statusKey = (status) => (status || '').toLowerCase().replace(/\s+/g, '-');
+
+const statusChipSx = (status) => {
+    const s = STATUS_COLORS[statusKey(status)] || STATUS_COLORS.closed;
+    return {
+        height: 22,
+        fontSize: '0.65rem',
+        fontWeight: 700,
+        letterSpacing: '0.02em',
+        textTransform: 'capitalize',
+        backgroundColor: s.bg,
+        color: s.color,
+        borderRadius: '6px',
+        border: 'none',
+    };
+};
+
+const categoryChipSx = {
+    height: 22,
+    fontSize: '0.65rem',
+    fontWeight: 600,
+    background: SURFACE,
+    color: MUTED,
+    border: `1px solid ${BORDER}`,
+    borderRadius: '6px',
+};
+
+const scrollSx = {
+    '&::-webkit-scrollbar': { width: 6 },
+    '&::-webkit-scrollbar-thumb': {
+        backgroundColor: '#D1D5DB',
+        borderRadius: 8,
+    },
+};
+
+const HRQueryFloatingChat = ({ defaultOpen = false }) => {
+    const [isOpen, setIsOpen] = useState(defaultOpen);
     const [queries, setQueries] = useState([]);
     const [selectedQuery, setSelectedQuery] = useState(null);
     const [newMessage, setNewMessage] = useState('');
@@ -50,35 +108,15 @@ const HRQueryFloatingChat = () => {
     const [loading, setLoading] = useState(false);
     const [sending, setSending] = useState(false);
     const [totalUnread, setTotalUnread] = useState(0);
-    const messagesEndRef = useRef(null);
     const messageListRef = useRef(null);
+    const { isDragging, wrapClick, dragHandlers, positionSx } = useDraggableFab();
 
-    // Theme colors matching application
-    const theme = {
-        primary: '#2C3E50',
-        primaryDark: '#1a252f',
-        primaryLight: '#34495e',
-        success: '#27ae60',
-        warning: '#f39c12',
-        error: '#e74c3c',
-        info: '#3498db',
-        border: '#e0e0e0',
-        borderStrong: '#bdc3c7',
-        subtle: '#ecf0f1',
-        subtleStrong: '#dfe6e9',
-        background: '#f8f9fa',
-        textPrimary: '#2c3e50',
-        textSecondary: '#7f8c8d'
-    };
-
-    // Fetch queries on mount and when drawer opens
     useEffect(() => {
         if (isOpen) {
             fetchQueries();
         }
     }, [isOpen]);
 
-    // Auto-refresh queries every 30 seconds when drawer is open
     useEffect(() => {
         if (isOpen) {
             const interval = setInterval(fetchQueries, 30000);
@@ -86,19 +124,16 @@ const HRQueryFloatingChat = () => {
         }
     }, [isOpen]);
 
-    // Always fetch unread count (even when drawer is closed)
     useEffect(() => {
         fetchUnreadCount();
         const interval = setInterval(fetchUnreadCount, 30000);
         return () => clearInterval(interval);
     }, []);
 
-    // Scroll to bottom when messages change
     useEffect(() => {
-        if (selectedQuery && messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-        }
-    }, [selectedQuery?.messages]);
+        const el = messageListRef.current;
+        if (el) el.scrollTop = el.scrollHeight;
+    }, [selectedQuery?._id, selectedQuery?.messages]);
 
     const fetchUnreadCount = async () => {
         try {
@@ -114,13 +149,11 @@ const HRQueryFloatingChat = () => {
         setLoading(true);
         try {
             const response = await api.get('/hr-queries/admin/all');
-            // Sort by last message time (most recent first)
-            const sortedQueries = response.data.sort((a, b) => 
+            const sortedQueries = response.data.sort((a, b) =>
                 new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
             );
             setQueries(sortedQueries);
-            
-            // Calculate total unread
+
             const unreadCount = sortedQueries.reduce((sum, query) => sum + (query.unreadCount || 0), 0);
             setTotalUnread(unreadCount);
         } catch (error) {
@@ -134,15 +167,13 @@ const HRQueryFloatingChat = () => {
         try {
             const response = await api.get(`/hr-queries/${queryId}`);
             setSelectedQuery(response.data);
-            
-            // Update query in list to reflect read status
+
             setQueries(prevQueries =>
                 prevQueries.map(q =>
                     q._id === queryId ? { ...q, unreadCount: 0 } : q
                 )
             );
-            
-            // Update total unread count
+
             setTotalUnread(prev => Math.max(0, prev - (queries.find(q => q._id === queryId)?.unreadCount || 0)));
         } catch (error) {
             console.error('Failed to fetch query details:', error);
@@ -158,7 +189,6 @@ const HRQueryFloatingChat = () => {
                 message: newMessage.trim()
             });
 
-            // Refresh query details
             await fetchQueryDetails(selectedQuery._id);
             setNewMessage('');
         } catch (error) {
@@ -169,13 +199,11 @@ const HRQueryFloatingChat = () => {
     };
 
     const handleQueryClick = (query) => {
-        setSelectedQuery(null); // Reset first
-        
-        // Handle resource requests differently - they don't have messages
+        setSelectedQuery(null);
+
         if (query.itemType === 'resource_request') {
             setTimeout(() => {
                 setSelectedQuery(query);
-                // Clear unread count for this resource request
                 setQueries(prevQueries =>
                     prevQueries.map(q =>
                         q._id === query._id ? { ...q, unreadCount: 0 } : q
@@ -184,41 +212,26 @@ const HRQueryFloatingChat = () => {
                 setTotalUnread(prev => Math.max(0, prev - (query.unreadCount || 0)));
             }, 0);
         } else {
-            // For HR queries, fetch full details
             setTimeout(() => fetchQueryDetails(query._id), 0);
         }
     };
 
     const handleBack = () => {
         setSelectedQuery(null);
-        fetchQueries(); // Refresh list
+        fetchQueries();
     };
 
-    const getStatusColor = (status) => {
-        const colors = {
-            open: theme.warning,
-            'in-progress': theme.info,
-            resolved: theme.success,
-            closed: theme.textSecondary,
-            pending: theme.warning,
-            fulfilled: theme.success,
-            rejected: theme.error,
-            cancelled: theme.textSecondary
-        };
-        return colors[status] || theme.textSecondary;
-    };
-    
     const getItemIcon = (query) => {
         if (query.itemType === 'resource_request') {
             if (query.category?.toLowerCase().includes('hardware') || query.category?.toLowerCase().includes('it')) {
-                return <ComputerIcon sx={{ fontSize: '1.3rem' }} />;
-            } else if (query.category?.toLowerCase().includes('stationery')) {
-                return <AssignmentIcon sx={{ fontSize: '1.3rem' }} />;
-            } else {
-                return <InventoryIcon sx={{ fontSize: '1.3rem' }} />;
+                return <ComputerIcon sx={{ fontSize: 18 }} />;
             }
+            if (query.category?.toLowerCase().includes('stationery')) {
+                return <AssignmentIcon sx={{ fontSize: 18 }} />;
+            }
+            return <InventoryIcon sx={{ fontSize: 18 }} />;
         }
-        return <PersonIcon sx={{ fontSize: '1.3rem' }} />;
+        return null;
     };
 
     const filteredQueries = queries.filter(query => {
@@ -231,28 +244,28 @@ const HRQueryFloatingChat = () => {
         );
     });
 
+    const isResource = selectedQuery?.itemType === 'resource_request';
+
     return (
         <>
-            {/* Floating Action Button */}
-            <Tooltip title="HR Queries" placement="left">
+            <Tooltip title="HR Queries" placement="left" disableHoverListener={isDragging}>
                 <Fab
                     color="primary"
-                    aria-label="hr-queries"
-                    onClick={() => setIsOpen(true)}
+                    aria-label={totalUnread > 0 ? `HR Queries, ${totalUnread} unread` : 'HR Queries'}
+                    onClick={wrapClick(() => setIsOpen(true))}
+                    {...dragHandlers}
                     sx={{
-                        position: 'fixed',
-                        bottom: 24,
-                        right: 24,
-                        zIndex: 1200,
-                        background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryLight} 100%)`,
+                        ...positionSx,
+                        display: isOpen ? 'none' : 'inline-flex',
+                        background: `linear-gradient(135deg, ${RED} 0%, ${RED_DARK} 100%)`,
                         color: 'white',
-                        boxShadow: '0 8px 24px rgba(44, 62, 80, 0.3)',
+                        boxShadow: isDragging
+                            ? '0 16px 32px rgba(198, 40, 40, 0.4)'
+                            : '0 8px 24px rgba(198, 40, 40, 0.28)',
                         '&:hover': {
-                            background: `linear-gradient(135deg, ${theme.primaryDark} 0%, ${theme.primary} 100%)`,
-                            boxShadow: '0 12px 32px rgba(44, 62, 80, 0.4)',
-                            transform: 'translateY(-2px)',
+                            background: `linear-gradient(135deg, ${RED_DARK} 0%, #B71C1C 100%)`,
+                            boxShadow: '0 12px 28px rgba(198, 40, 40, 0.35)',
                         },
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     }}
                 >
                     <Badge badgeContent={totalUnread} color="error" max={99}>
@@ -261,7 +274,6 @@ const HRQueryFloatingChat = () => {
                 </Fab>
             </Tooltip>
 
-            {/* Drawer */}
             <Drawer
                 anchor="right"
                 open={isOpen}
@@ -269,497 +281,454 @@ const HRQueryFloatingChat = () => {
                 className="hr-query-drawer"
                 PaperProps={{
                     sx: {
-                        width: { xs: '100%', sm: 420 },
+                        width: { xs: '100%', sm: 440 },
                         maxWidth: '100%',
+                        fontFamily: FONT,
+                        background: '#fff',
+                        borderLeft: `1px solid ${BORDER}`,
+                        boxShadow: '-8px 0 32px rgba(16, 24, 40, 0.08)',
                     }
                 }}
             >
-                <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                <Box sx={{
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
+                    fontFamily: FONT,
+                    background: SURFACE,
+                }}>
                     {/* Header */}
                     <Box
                         sx={{
-                            p: 2.5,
-                            background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryLight} 100%)`,
-                            color: 'white',
+                            px: 2.25,
+                            py: 1.75,
+                            background: '#fff',
+                            borderBottom: `1px solid ${BORDER}`,
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 1.5,
-                            boxShadow: '0 2px 12px rgba(44, 62, 80, 0.2)'
+                            gap: 1.25,
+                            flexShrink: 0,
                         }}
                     >
                         {selectedQuery && (
-                            <IconButton 
-                                onClick={handleBack} 
-                                sx={{ 
-                                    color: 'white',
-                                    '&:hover': {
-                                        backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                                    }
+                            <IconButton
+                                onClick={handleBack}
+                                size="small"
+                                sx={{
+                                    color: MUTED,
+                                    '&:hover': { background: RED_LIGHT, color: RED_DARK },
                                 }}
                             >
-                                <ArrowBackIcon />
+                                <ArrowBackIcon fontSize="small" />
                             </IconButton>
                         )}
-                        <Box sx={{ flex: 1 }}>
+                        {!selectedQuery && (
+                            <Box sx={iconBoxSx}>
+                                <QuestionAnswerIcon sx={{ fontSize: 18 }} />
+                            </Box>
+                        )}
+                        <Box sx={{ flex: 1, minWidth: 0 }}>
                             {!selectedQuery ? (
                                 <>
-                                    <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.1rem', letterSpacing: '0.3px' }}>
-                                        HR QUERY CENTER
+                                    <Typography sx={{
+                                        fontWeight: 700,
+                                        fontSize: '0.95rem',
+                                        letterSpacing: '-0.02em',
+                                        color: TEXT,
+                                        fontFamily: FONT,
+                                        lineHeight: 1.3,
+                                    }}>
+                                        HR Query Center
                                     </Typography>
-                                    <Typography variant="caption" sx={{ opacity: 0.9, fontSize: '0.75rem' }}>
-                                        Manage employee queries
+                                    <Typography sx={{ fontSize: '0.75rem', color: MUTED, mt: 0.15 }}>
+                                        Reply to employee tickets from one place
                                     </Typography>
                                 </>
                             ) : (
                                 <>
-                                    <Typography variant="h6" sx={{ fontWeight: 600, fontSize: '1rem', mb: 0.25 }}>
+                                    <Typography sx={{
+                                        fontWeight: 700,
+                                        fontSize: '0.9rem',
+                                        color: TEXT,
+                                        fontFamily: FONT,
+                                        overflow: 'hidden',
+                                        textOverflow: 'ellipsis',
+                                        whiteSpace: 'nowrap',
+                                    }}>
                                         {selectedQuery.subject}
                                     </Typography>
-                                    <Typography variant="caption" sx={{ opacity: 0.9, fontSize: '0.75rem' }}>
+                                    <Typography sx={{ fontSize: '0.75rem', color: MUTED }}>
                                         {selectedQuery.employeeId?.fullName || 'Anonymous'}
+                                        {selectedQuery.employeeId?.employeeId
+                                            ? ` · ${selectedQuery.employeeId.employeeId}`
+                                            : ''}
                                     </Typography>
                                 </>
                             )}
                         </Box>
-                        {!selectedQuery && (
-                            <Badge badgeContent={totalUnread} color="error" max={99}
+                        {!selectedQuery && totalUnread > 0 && (
+                            <Chip
+                                label={`${totalUnread} unread`}
+                                size="small"
                                 sx={{
-                                    '& .MuiBadge-badge': {
-                                        fontWeight: 700,
-                                        fontSize: '0.7rem'
-                                    }
+                                    height: 22,
+                                    fontSize: '0.68rem',
+                                    fontWeight: 700,
+                                    background: RED_BG,
+                                    color: RED_DARK,
+                                    borderRadius: '6px',
                                 }}
-                            >
-                                <QuestionAnswerIcon sx={{ fontSize: '1.5rem' }} />
-                            </Badge>
+                            />
                         )}
-                        <IconButton 
-                            onClick={() => setIsOpen(false)} 
-                            sx={{ 
-                                color: 'white',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                                }
+                        <IconButton
+                            onClick={() => setIsOpen(false)}
+                            size="small"
+                            sx={{
+                                color: MUTED,
+                                '&:hover': { background: SURFACE, color: TEXT },
                             }}
                         >
-                            <CloseIcon />
+                            <CloseIcon fontSize="small" />
                         </IconButton>
                     </Box>
 
                     {/* Query List View */}
                     {!selectedQuery && (
                         <>
-                            {/* Search Bar */}
-                            <Box sx={{ p: 2, borderBottom: `1px solid ${theme.border}`, bgcolor: 'white' }}>
+                            <Box sx={{
+                                px: 2,
+                                py: 1.5,
+                                borderBottom: `1px solid ${BORDER}`,
+                                bgcolor: '#fff',
+                                flexShrink: 0,
+                            }}>
                                 <TextField
                                     fullWidth
                                     size="small"
-                                    placeholder="Search queries..."
+                                    placeholder="Search by name, subject, or category"
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     InputProps={{
                                         startAdornment: (
                                             <InputAdornment position="start">
-                                                <SearchIcon fontSize="small" sx={{ color: theme.textSecondary }} />
+                                                <SearchIcon fontSize="small" sx={{ color: MUTED }} />
                                             </InputAdornment>
                                         )
                                     }}
-                                    sx={{
-                                        '& .MuiOutlinedInput-root': {
-                                            '&:hover fieldset': {
-                                                borderColor: theme.primary,
-                                            },
-                                            '&.Mui-focused fieldset': {
-                                                borderColor: theme.primary,
-                                            }
-                                        }
-                                    }}
+                                    sx={fieldSx}
                                 />
                             </Box>
 
-                            {/* Query List */}
-                            <Box sx={{ flex: 1, overflow: 'auto' }}>
+                            <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', ...scrollSx }}>
                                 {loading ? (
-                                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                                        <CircularProgress />
+                                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                                        <CircularProgress size={28} sx={{ color: RED }} />
                                     </Box>
                                 ) : filteredQueries.length === 0 ? (
-                                    <Box sx={{ 
-                                        p: 4, 
-                                        textAlign: 'center', 
-                                        color: 'text.secondary',
+                                    <Box sx={{
+                                        p: 4,
+                                        textAlign: 'center',
                                         display: 'flex',
                                         flexDirection: 'column',
                                         alignItems: 'center',
-                                        gap: 2,
-                                        mt: 4
+                                        gap: 1.5,
+                                        mt: 6,
                                     }}>
-                                        <QuestionAnswerIcon sx={{ fontSize: 64, opacity: 0.2 }} />
+                                        <Box sx={{ ...iconBoxSx, width: 56, height: 56, borderRadius: '14px' }}>
+                                            <QuestionAnswerIcon sx={{ fontSize: 26 }} />
+                                        </Box>
                                         <Box>
-                                            <Typography variant="h6" sx={{ mb: 1, fontWeight: 600, color: theme.textPrimary }}>
-                                                {searchTerm ? 'No queries found' : 'No HR queries yet'}
+                                            <Typography sx={{ mb: 0.5, fontWeight: 700, color: TEXT, fontSize: '0.95rem' }}>
+                                                {searchTerm ? 'No matching queries' : 'No HR queries yet'}
                                             </Typography>
-                                            <Typography variant="body2" sx={{ color: theme.textSecondary }}>
-                                                {searchTerm ? 'Try adjusting your search terms' : 'Employee queries will appear here'}
+                                            <Typography sx={{ color: MUTED, fontSize: '0.8rem' }}>
+                                                {searchTerm ? 'Try a different name or subject' : 'Employee tickets will show up here'}
                                             </Typography>
                                         </Box>
                                     </Box>
                                 ) : (
-                                    <List sx={{ p: 0 }}>
-                                        {filteredQueries.map((query, index) => (
-                                            <React.Fragment key={query._id}>
-                                                <ListItemButton
-                                                    onClick={() => handleQueryClick(query)}
-                                                    sx={{
-                                                        py: 2,
-                                                        px: 2.5,
-                                                        backgroundColor: query.unreadCount > 0 ? theme.subtle : 'transparent',
-                                                        borderLeft: query.unreadCount > 0 ? `4px solid ${theme.primary}` : '4px solid transparent',
-                                                        '&:hover': {
-                                                            backgroundColor: query.unreadCount > 0 ? theme.subtleStrong : theme.subtle,
-                                                            borderLeftColor: theme.primary
-                                                        },
-                                                        transition: 'all 0.2s ease'
-                                                    }}
-                                                >
-                                                    <ListItemAvatar>
-                                                        <Avatar sx={{ 
-                                                            bgcolor: getStatusColor(query.status),
-                                                            width: 44,
-                                                            height: 44,
-                                                            boxShadow: '0 2px 8px rgba(0,0,0,0.12)'
+                                    filteredQueries.map((query) => {
+                                        const unread = query.unreadCount > 0;
+                                        const initial = query.employeeId?.fullName?.charAt(0) || '?';
+                                        const itemIcon = getItemIcon(query);
+                                        return (
+                                            <Box
+                                                key={query._id}
+                                                onClick={() => handleQueryClick(query)}
+                                                sx={{
+                                                    display: 'flex',
+                                                    gap: 1.5,
+                                                    px: 2,
+                                                    py: 1.75,
+                                                    cursor: 'pointer',
+                                                    background: unread ? RED_LIGHT : '#fff',
+                                                    borderBottom: `1px solid ${BORDER}`,
+                                                    borderLeft: unread ? `3px solid ${RED}` : '3px solid transparent',
+                                                    transition: 'background 0.15s ease',
+                                                    '&:hover': {
+                                                        background: unread ? RED_LIGHT : SURFACE,
+                                                    },
+                                                }}
+                                            >
+                                                <Avatar sx={{
+                                                    width: 40,
+                                                    height: 40,
+                                                    bgcolor: RED_BG,
+                                                    color: RED_DARK,
+                                                    fontWeight: 700,
+                                                    fontSize: '0.9rem',
+                                                    border: '1px solid rgba(198, 40, 40, 0.12)',
+                                                    flexShrink: 0,
+                                                }}>
+                                                    {itemIcon || initial}
+                                                </Avatar>
+                                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                                    <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 0.35 }}>
+                                                        <Typography sx={{
+                                                            flex: 1,
+                                                            minWidth: 0,
+                                                            fontWeight: unread ? 700 : 600,
+                                                            color: TEXT,
+                                                            fontSize: '0.875rem',
+                                                            fontFamily: FONT,
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                            whiteSpace: 'nowrap',
                                                         }}>
-                                                            {getItemIcon(query)}
-                                                        </Avatar>
-                                                    </ListItemAvatar>
-                                                    <ListItemText
-                                                        primary={
-                                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                                                                <Typography 
-                                                                    variant="subtitle2" 
-                                                                    sx={{ 
-                                                                        flex: 1, 
-                                                                        fontWeight: query.unreadCount > 0 ? 700 : 600,
-                                                                        color: theme.textPrimary,
-                                                                        fontSize: '0.95rem'
-                                                                    }}
-                                                                >
-                                                                    {query.employeeId?.fullName || 'Anonymous'}
-                                                                </Typography>
-                                                                {query.unreadCount > 0 && (
-                                                                    <Box
-                                                                        sx={{
-                                                                            minWidth: 24,
-                                                                            height: 24,
-                                                                            borderRadius: '12px',
-                                                                            backgroundColor: '#e74c3c',
-                                                                            color: 'white',
-                                                                            display: 'flex',
-                                                                            alignItems: 'center',
-                                                                            justifyContent: 'center',
-                                                                            fontSize: '0.7rem',
-                                                                            fontWeight: 700,
-                                                                            px: 0.75
-                                                                        }}
-                                                                    >
-                                                                        {query.unreadCount > 99 ? '99+' : query.unreadCount}
-                                                                    </Box>
-                                                                )}
+                                                            {query.employeeId?.fullName || 'Anonymous'}
+                                                        </Typography>
+                                                        <Typography sx={{
+                                                            color: MUTED,
+                                                            fontSize: '0.7rem',
+                                                            flexShrink: 0,
+                                                            whiteSpace: 'nowrap',
+                                                        }}>
+                                                            {query.lastMessageAt
+                                                                ? relativeTime(query.lastMessageAt)
+                                                                : ''}
+                                                        </Typography>
+                                                    </Box>
+                                                    <Typography sx={{
+                                                        fontWeight: unread ? 600 : 400,
+                                                        color: unread ? TEXT : MUTED,
+                                                        mb: 0.85,
+                                                        overflow: 'hidden',
+                                                        textOverflow: 'ellipsis',
+                                                        whiteSpace: 'nowrap',
+                                                        fontSize: '0.8rem',
+                                                        lineHeight: 1.4,
+                                                    }}>
+                                                        {query.subject}
+                                                    </Typography>
+                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
+                                                        <Chip
+                                                            label={(query.status || 'open').replace('-', ' ')}
+                                                            size="small"
+                                                            sx={statusChipSx(query.status)}
+                                                        />
+                                                        {query.category && (
+                                                            <Chip
+                                                                label={query.category}
+                                                                size="small"
+                                                                sx={categoryChipSx}
+                                                            />
+                                                        )}
+                                                        {query.itemType === 'resource_request' && (
+                                                            <Chip label="Request" size="small" sx={{
+                                                                ...categoryChipSx,
+                                                                background: INFO_BG,
+                                                                color: INFO_TEXT,
+                                                                border: 'none',
+                                                            }} />
+                                                        )}
+                                                        {unread && (
+                                                            <Box
+                                                                sx={{
+                                                                    ml: 'auto',
+                                                                    minWidth: 20,
+                                                                    height: 20,
+                                                                    px: 0.6,
+                                                                    borderRadius: '10px',
+                                                                    background: RED,
+                                                                    color: '#fff',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    fontSize: '0.65rem',
+                                                                    fontWeight: 700,
+                                                                }}
+                                                            >
+                                                                {query.unreadCount > 99 ? '99+' : query.unreadCount}
                                                             </Box>
-                                                        }
-                                                        secondary={
-                                                            <Box>
-                                                                <Typography
-                                                                    variant="body2"
-                                                                    sx={{
-                                                                        fontWeight: query.unreadCount > 0 ? 600 : 400,
-                                                                        color: query.unreadCount > 0 ? theme.textPrimary : theme.textSecondary,
-                                                                        mb: 0.75,
-                                                                        overflow: 'hidden',
-                                                                        textOverflow: 'ellipsis',
-                                                                        whiteSpace: 'nowrap',
-                                                                        fontSize: '0.85rem'
-                                                                    }}
-                                                                >
-                                                                    {query.subject}
-                                                                </Typography>
-                                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                                                                    <Chip
-                                                                        label={query.status.replace('-', ' ').toUpperCase()}
-                                                                        size="small"
-                                                                        sx={{
-                                                                            height: 22,
-                                                                            fontSize: '0.65rem',
-                                                                            backgroundColor: getStatusColor(query.status),
-                                                                            color: 'white',
-                                                                            fontWeight: 700,
-                                                                            letterSpacing: '0.3px'
-                                                                        }}
-                                                                    />
-                                                                    <Chip
-                                                                        label={query.category}
-                                                                        size="small"
-                                                                        variant="outlined"
-                                                                        sx={{ 
-                                                                            height: 22, 
-                                                                            fontSize: '0.65rem',
-                                                                            borderColor: theme.primary,
-                                                                            color: theme.primary,
-                                                                            fontWeight: 600,
-                                                                            borderWidth: '1.5px'
-                                                                        }}
-                                                                    />
-                                                                    <Typography variant="caption" sx={{ 
-                                                                        color: theme.textSecondary,
-                                                                        fontSize: '0.7rem',
-                                                                        ml: 'auto'
-                                                                    }}>
-                                                                        {formatDistanceToNow(new Date(query.lastMessageAt), { addSuffix: true })}
-                                                                    </Typography>
-                                                                </Box>
-                                                            </Box>
-                                                        }
-                                                    />
-                                                </ListItemButton>
-                                                {index < filteredQueries.length - 1 && <Divider />}
-                                            </React.Fragment>
-                                        ))}
-                                    </List>
+                                                        )}
+                                                    </Box>
+                                                </Box>
+                                            </Box>
+                                        );
+                                    })
                                 )}
                             </Box>
                         </>
                     )}
 
                     {/* Chat View */}
-                    {selectedQuery && selectedQuery.itemType === 'hr_query' && (
+                    {selectedQuery && !isResource && (
                         <>
-                            {/* Query Info */}
-                            <Box sx={{ 
-                                p: 2, 
-                                borderBottom: `1px solid ${theme.border}`, 
-                                backgroundColor: 'white'
+                            <Box sx={{
+                                px: 2.25,
+                                py: 1.5,
+                                borderBottom: `1px solid ${BORDER}`,
+                                background: '#fff',
+                                flexShrink: 0,
                             }}>
-                                <Box sx={{ display: 'flex', gap: 1, mb: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
+                                <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
                                     <Chip
-                                        label={selectedQuery.status.replace('-', ' ').toUpperCase()}
+                                        label={(selectedQuery.status || 'open').replace('-', ' ')}
                                         size="small"
-                                        sx={{
-                                            backgroundColor: getStatusColor(selectedQuery.status),
-                                            color: 'white',
-                                            fontWeight: 600,
-                                            fontSize: '0.7rem',
-                                            height: 24,
-                                            textTransform: 'uppercase',
-                                            letterSpacing: '0.5px'
-                                        }}
+                                        sx={statusChipSx(selectedQuery.status)}
                                     />
-                                    <Chip 
-                                        label={selectedQuery.category} 
-                                        size="small" 
-                                        variant="outlined" 
-                                        sx={{ 
-                                            borderColor: theme.primary,
-                                            color: theme.primary,
-                                            fontWeight: 600,
-                                            fontSize: '0.7rem',
-                                            height: 24,
-                                            borderWidth: '1.5px'
-                                        }}
-                                    />
+                                    {selectedQuery.category && (
+                                        <Chip
+                                            label={selectedQuery.category}
+                                            size="small"
+                                            sx={categoryChipSx}
+                                        />
+                                    )}
                                     {selectedQuery.priority && selectedQuery.priority !== 'medium' && (
                                         <Chip
-                                            label={selectedQuery.priority.toUpperCase()}
+                                            label={selectedQuery.priority}
                                             size="small"
-                                            sx={{ 
-                                                backgroundColor: selectedQuery.priority === 'urgent' ? '#e74c3c' : 
-                                                                 selectedQuery.priority === 'high' ? '#f39c12' : '#95a5a6',
-                                                color: 'white',
-                                                fontWeight: 600,
-                                                fontSize: '0.7rem',
-                                                height: 24
-                                            }}
+                                            sx={statusChipSx(
+                                                selectedQuery.priority === 'urgent' || selectedQuery.priority === 'high'
+                                                    ? 'open'
+                                                    : 'closed'
+                                            )}
                                         />
                                     )}
                                 </Box>
-                                <Typography variant="caption" sx={{ 
-                                    color: theme.textSecondary,
-                                    fontSize: '0.75rem',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 0.5
-                                }}>
-                                    <PersonIcon sx={{ fontSize: '0.9rem' }} />
-                                    Employee ID: {selectedQuery.employeeId?.employeeId || 'N/A'}
-                                </Typography>
                             </Box>
 
-                            {/* Messages */}
                             <Box
                                 ref={messageListRef}
                                 sx={{
                                     flex: 1,
-                                    overflow: 'auto',
+                                    minHeight: 0,
+                                    overflowY: 'auto',
                                     p: 2,
-                                    backgroundColor: '#f5f7fa',
                                     display: 'flex',
                                     flexDirection: 'column',
-                                    gap: 1.5
+                                    gap: 1.5,
+                                    ...scrollSx,
                                 }}
                             >
                                 {selectedQuery.messages?.map((msg, index) => {
                                     const isEmployee = msg.sender === 'employee';
                                     return (
-                                        <Fade in key={index} timeout={300}>
-                                            <Box
+                                        <Box
+                                            key={index}
+                                            sx={{
+                                                display: 'flex',
+                                                justifyContent: isEmployee ? 'flex-start' : 'flex-end',
+                                            }}
+                                        >
+                                            <Paper
+                                                elevation={0}
                                                 sx={{
-                                                    display: 'flex',
-                                                    justifyContent: isEmployee ? 'flex-end' : 'flex-start',
-                                                    mb: 0.5
+                                                    p: 1.5,
+                                                    maxWidth: '78%',
+                                                    backgroundColor: isEmployee ? '#fff' : RED_LIGHT,
+                                                    color: TEXT,
+                                                    borderRadius: '12px',
+                                                    border: `1px solid ${isEmployee ? BORDER : 'rgba(198, 40, 40, 0.18)'}`,
                                                 }}
                                             >
-                                                <Paper
-                                                    elevation={0}
-                                                    sx={{
-                                                        p: 1.5,
-                                                        maxWidth: '75%',
-                                                        backgroundColor: isEmployee ? theme.primary : 'white',
-                                                        color: isEmployee ? 'white' : theme.textPrimary,
-                                                        borderRadius: 2.5,
-                                                        border: isEmployee ? 'none' : `1px solid ${theme.border}`,
-                                                        boxShadow: isEmployee 
-                                                            ? '0 2px 8px rgba(44, 62, 80, 0.15)' 
-                                                            : '0 1px 3px rgba(0,0,0,0.08)',
-                                                        position: 'relative'
-                                                    }}
-                                                >
-                                                    <Typography 
-                                                        variant="caption" 
-                                                        sx={{ 
-                                                            fontWeight: 700, 
-                                                            opacity: isEmployee ? 0.95 : 0.8,
-                                                            color: isEmployee ? 'white' : theme.primary,
-                                                            fontSize: '0.7rem',
-                                                            textTransform: 'uppercase',
-                                                            letterSpacing: '0.3px',
-                                                            display: 'block',
-                                                            mb: 0.5
-                                                        }}
-                                                    >
-                                                        {msg.senderName}
-                                                    </Typography>
-                                                    <Typography 
-                                                        variant="body2" 
-                                                        sx={{ 
-                                                            whiteSpace: 'pre-wrap', 
-                                                            wordBreak: 'break-word',
-                                                            lineHeight: 1.5,
-                                                            fontSize: '0.9rem'
-                                                        }}
-                                                    >
-                                                        {msg.message}
-                                                    </Typography>
-                                                    <Typography
-                                                        variant="caption"
-                                                        sx={{
-                                                            display: 'block',
-                                                            mt: 0.75,
-                                                            opacity: 0.7,
-                                                            fontSize: '0.65rem',
-                                                            textAlign: 'right'
-                                                        }}
-                                                    >
-                                                        {format(new Date(msg.timestamp), 'MMM dd, hh:mm a')}
-                                                    </Typography>
-                                                </Paper>
-                                            </Box>
-                                        </Fade>
+                                                <Typography sx={{
+                                                    fontWeight: 700,
+                                                    color: isEmployee ? MUTED : RED_DARK,
+                                                    fontSize: '0.68rem',
+                                                    letterSpacing: '0.04em',
+                                                    textTransform: 'uppercase',
+                                                    display: 'block',
+                                                    mb: 0.5,
+                                                }}>
+                                                    {msg.senderName}
+                                                </Typography>
+                                                <Typography sx={{
+                                                    whiteSpace: 'pre-wrap',
+                                                    wordBreak: 'break-word',
+                                                    lineHeight: 1.55,
+                                                    fontSize: '0.85rem',
+                                                    color: TEXT,
+                                                }}>
+                                                    {msg.message}
+                                                </Typography>
+                                                <Typography sx={{
+                                                    display: 'block',
+                                                    mt: 0.75,
+                                                    color: MUTED,
+                                                    fontSize: '0.65rem',
+                                                    textAlign: 'right',
+                                                }}>
+                                                    {formatISTDateTime(msg.timestamp)}
+                                                </Typography>
+                                            </Paper>
+                                        </Box>
                                     );
                                 })}
-                                <div ref={messagesEndRef} />
                             </Box>
 
-                            {/* Message Input */}
-                            <Box sx={{ 
-                                p: 2.5, 
-                                borderTop: `1px solid ${theme.border}`, 
-                                backgroundColor: 'white',
-                                boxShadow: '0 -2px 12px rgba(0,0,0,0.04)'
-                            }}>
-                                <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-end' }}>
-                                    <TextField
-                                        fullWidth
-                                        multiline
-                                        maxRows={4}
-                                        placeholder="Type your message..."
-                                        value={newMessage}
-                                        onChange={(e) => setNewMessage(e.target.value)}
-                                        onKeyPress={(e) => {
-                                            if (e.key === 'Enter' && !e.shiftKey) {
-                                                e.preventDefault();
-                                                handleSendMessage();
-                                            }
-                                        }}
-                                        disabled={sending}
-                                        sx={{
-                                            '& .MuiOutlinedInput-root': {
-                                                borderRadius: '12px',
-                                                backgroundColor: theme.background,
-                                                '& fieldset': {
-                                                    borderColor: theme.border,
-                                                },
-                                                '&:hover fieldset': {
-                                                    borderColor: theme.primary,
-                                                },
-                                                '&.Mui-focused fieldset': {
-                                                    borderColor: theme.primary,
-                                                    borderWidth: '2px'
-                                                },
-                                                '& .MuiInputBase-input': {
-                                                    padding: '12px 14px',
-                                                    fontSize: '0.9rem'
+                            {selectedQuery.status !== 'closed' && (
+                                <Box sx={{
+                                    p: 2,
+                                    borderTop: `1px solid ${BORDER}`,
+                                    backgroundColor: '#fff',
+                                    flexShrink: 0,
+                                }}>
+                                    <Box sx={{ display: 'flex', gap: 1, alignItems: 'flex-end' }}>
+                                        <TextField
+                                            fullWidth
+                                            multiline
+                                            maxRows={4}
+                                            placeholder="Type your response…"
+                                            value={newMessage}
+                                            onChange={(e) => setNewMessage(e.target.value)}
+                                            onKeyPress={(e) => {
+                                                if (e.key === 'Enter' && !e.shiftKey) {
+                                                    e.preventDefault();
+                                                    handleSendMessage();
                                                 }
-                                            }
-                                        }}
-                                    />
-                                    <Box
-                                        onClick={handleSendMessage}
-                                        sx={{
-                                            width: '48px',
-                                            height: '48px',
-                                            borderRadius: '50%',
-                                            backgroundColor: !newMessage.trim() || sending ? theme.subtleStrong : theme.primary,
-                                            color: !newMessage.trim() || sending ? theme.textSecondary : 'white',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            cursor: !newMessage.trim() || sending ? 'not-allowed' : 'pointer',
-                                            boxShadow: !newMessage.trim() || sending ? 'none' : '0 4px 12px rgba(44, 62, 80, 0.2)',
-                                            transition: 'all 0.2s ease',
-                                            flexShrink: 0,
-                                            '&:hover': !newMessage.trim() || sending ? {} : {
-                                                backgroundColor: theme.primaryDark,
-                                                boxShadow: '0 6px 16px rgba(44, 62, 80, 0.3)',
-                                                transform: 'translateY(-1px)'
-                                            },
-                                            '&:active': !newMessage.trim() || sending ? {} : {
-                                                transform: 'translateY(0px)',
-                                                boxShadow: '0 2px 8px rgba(44, 62, 80, 0.2)'
-                                            }
-                                        }}
-                                    >
-                                        {sending ? <CircularProgress size={24} sx={{ color: 'white' }} /> : <SendIcon />}
+                                            }}
+                                            disabled={sending}
+                                            sx={fieldSx}
+                                        />
+                                        <IconButton
+                                            onClick={handleSendMessage}
+                                            disabled={!newMessage.trim() || sending}
+                                            sx={{
+                                                ...primaryBtnSx,
+                                                width: 44,
+                                                height: 44,
+                                                borderRadius: '10px',
+                                                flexShrink: 0,
+                                                color: '#fff',
+                                                '&.Mui-disabled': {
+                                                    background: SURFACE,
+                                                    color: MUTED,
+                                                },
+                                            }}
+                                        >
+                                            {sending ? <CircularProgress size={18} sx={{ color: '#fff' }} /> : <SendIcon fontSize="small" />}
+                                        </IconButton>
                                     </Box>
                                 </Box>
-                            </Box>
+                            )}
                         </>
                     )}
-                    
-                    {/* Resource Request Detail View */}
-                    {selectedQuery && selectedQuery.itemType === 'resource_request' && (
-                        <ResourceRequestDetailView 
+
+                    {isResource && (
+                        <ResourceRequestDetailView
                             request={selectedQuery}
-                            theme={theme}
-                            getStatusColor={getStatusColor}
                             onStatusUpdate={fetchQueries}
                         />
                     )}
@@ -769,248 +738,166 @@ const HRQueryFloatingChat = () => {
     );
 };
 
-// Resource Request Detail View Component
-const ResourceRequestDetailView = ({ request, theme, getStatusColor, onStatusUpdate }) => {
+const ResourceRequestDetailView = ({ request, onStatusUpdate }) => {
     const [status, setStatus] = useState(request.status);
     const [adminNotes, setAdminNotes] = useState(request.resourceRequestData?.adminNotes || '');
     const [updating, setUpdating] = useState(false);
+    const [feedback, setFeedback] = useState('');
+    const [error, setError] = useState('');
 
     const handleUpdateStatus = async () => {
         setUpdating(true);
+        setError('');
+        setFeedback('');
         try {
             await api.patch(`/hr-queries/admin/resource-request/${request._id}/status`, {
                 status,
                 adminNotes
             });
-            
-            // Refresh the list
+
             if (onStatusUpdate) {
                 await onStatusUpdate();
             }
-            
-            alert('Resource request updated successfully');
-        } catch (error) {
-            console.error('Failed to update resource request:', error);
-            alert('Failed to update resource request');
+            setFeedback('Request updated');
+        } catch (err) {
+            console.error('Failed to update resource request:', err);
+            setError(err.response?.data?.error || 'Failed to update resource request');
         } finally {
             setUpdating(false);
         }
     };
 
     return (
-        <>
-            {/* Request Info */}
-            <Box sx={{ 
-                p: 2, 
-                borderBottom: `1px solid ${theme.border}`, 
-                backgroundColor: 'white'
+        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2, ...scrollSx }}>
+            <Paper elevation={0} sx={{
+                p: 2.25,
+                mb: 2,
+                borderRadius: '14px',
+                border: `1px solid ${BORDER}`,
+                background: '#fff',
             }}>
-                <Box sx={{ display: 'flex', gap: 1, mb: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 2 }}>
+                    <Box sx={iconBoxSx}>
+                        <Inventory2OutlinedIcon sx={{ fontSize: 18 }} />
+                    </Box>
+                    <Box>
+                        <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                            Resource request
+                        </Typography>
+                        <Typography sx={{ fontWeight: 700, color: TEXT, fontSize: '1rem', letterSpacing: '-0.015em' }}>
+                            {request.resourceRequestData?.title || request.subject}
+                        </Typography>
+                    </Box>
+                </Box>
+
+                <Box sx={{ display: 'flex', gap: 0.75, mb: 2, flexWrap: 'wrap' }}>
                     <Chip
-                        label={status.replace('-', ' ').toUpperCase()}
+                        label={(status || 'pending').replace('-', ' ')}
                         size="small"
-                        sx={{
-                            backgroundColor: getStatusColor(status.toLowerCase().replace(' ', '-')),
-                            color: 'white',
-                            fontWeight: 600,
-                            fontSize: '0.7rem',
-                            height: 24,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px'
-                        }}
+                        sx={statusChipSx(status)}
                     />
-                    <Chip 
-                        label={request.category} 
-                        size="small" 
-                        variant="outlined" 
-                        sx={{ 
-                            borderColor: theme.primary,
-                            color: theme.primary,
-                            fontWeight: 600,
-                            fontSize: '0.7rem',
-                            height: 24,
-                            borderWidth: '1.5px'
-                        }}
-                    />
-                    {request.priority && request.priority !== 'medium' && (
-                        <Chip
-                            label={request.priority.toUpperCase()}
-                            size="small"
-                            sx={{ 
-                                backgroundColor: request.priority === 'high' ? '#f39c12' : '#95a5a6',
-                                color: 'white',
-                                fontWeight: 600,
-                                fontSize: '0.7rem',
-                                height: 24
-                            }}
-                        />
+                    {request.category && (
+                        <Chip label={request.category} size="small" sx={categoryChipSx} />
                     )}
                 </Box>
-                <Typography variant="caption" sx={{ 
-                    color: theme.textSecondary,
-                    fontSize: '0.75rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5
-                }}>
-                    <PersonIcon sx={{ fontSize: '0.9rem' }} />
-                    {request.employeeId?.fullName} ({request.employeeId?.employeeId || 'N/A'})
+
+                <Typography sx={{ fontSize: '0.75rem', color: MUTED, display: 'flex', alignItems: 'center', gap: 0.5, mb: 2 }}>
+                    <PersonIcon sx={{ fontSize: '0.95rem' }} />
+                    {request.employeeId?.fullName} · {request.employeeId?.employeeId || 'N/A'}
                 </Typography>
-            </Box>
 
-            {/* Request Details */}
-            <Box sx={{ flex: 1, overflow: 'auto', p: 2.5, backgroundColor: '#f5f7fa' }}>
-                <Paper elevation={0} sx={{ p: 2.5, mb: 2, borderRadius: 2 }}>
-                    <Typography variant="h6" sx={{ 
-                        fontWeight: 600, 
-                        mb: 2, 
-                        color: theme.textPrimary,
-                        fontSize: '1.1rem'
-                    }}>
-                        {request.resourceRequestData?.title || request.subject}
-                    </Typography>
-                    
-                    <Box sx={{ mb: 2 }}>
-                        <Typography variant="caption" sx={{ 
-                            fontWeight: 700, 
-                            color: theme.textSecondary, 
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            fontSize: '0.7rem'
-                        }}>
-                            Description
-                        </Typography>
-                        <Typography variant="body2" sx={{ 
-                            mt: 0.5, 
-                            color: theme.textPrimary,
-                            lineHeight: 1.6,
-                            whiteSpace: 'pre-wrap'
-                        }}>
-                            {request.resourceRequestData?.description || request.description}
-                        </Typography>
-                    </Box>
-                    
-                    <Divider sx={{ my: 2 }} />
-                    
-                    <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
-                        <Box>
-                            <Typography variant="caption" sx={{ 
-                                fontWeight: 700, 
-                                color: theme.textSecondary,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px',
-                                fontSize: '0.7rem'
-                            }}>
-                                Quantity
+                <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase', mb: 0.5 }}>
+                    Description
+                </Typography>
+                <Typography sx={{ color: TEXT, lineHeight: 1.6, whiteSpace: 'pre-wrap', fontSize: '0.85rem', mb: 2 }}>
+                    {request.resourceRequestData?.description || request.description || 'No description provided.'}
+                </Typography>
+
+                <Divider sx={{ my: 2, borderColor: BORDER }} />
+
+                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+                    {[
+                        { label: 'Quantity', value: request.quantity || 1 },
+                        { label: 'Requested', value: request.createdAt ? formatISTDate(request.createdAt, { month: 'short', day: 'numeric', year: 'numeric' }) : '—' },
+                    ].map((row) => (
+                        <Box key={row.label} sx={{ p: 1.25, borderRadius: '10px', background: SURFACE, border: `1px solid ${BORDER}` }}>
+                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                                {row.label}
                             </Typography>
-                            <Typography variant="body2" sx={{ 
-                                mt: 0.5, 
-                                color: theme.textPrimary,
-                                fontWeight: 600
-                            }}>
-                                {request.quantity || 1}
+                            <Typography sx={{ fontWeight: 600, color: TEXT, mt: 0.35, fontSize: '0.85rem' }}>
+                                {row.value}
                             </Typography>
                         </Box>
-                        
-                        <Box>
-                            <Typography variant="caption" sx={{ 
-                                fontWeight: 700, 
-                                color: theme.textSecondary,
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px',
-                                fontSize: '0.7rem'
-                            }}>
-                                Requested On
-                            </Typography>
-                            <Typography variant="body2" sx={{ 
-                                mt: 0.5, 
-                                color: theme.textPrimary 
-                            }}>
-                                {format(new Date(request.createdAt), 'MMM dd, yyyy')}
-                            </Typography>
-                        </Box>
-                    </Box>
-                    
-                    {request.resourceRequestData?.reviewedByName && (
-                        <>
-                            <Divider sx={{ my: 2 }} />
-                            <Box>
-                                <Typography variant="caption" sx={{ 
-                                    fontWeight: 700, 
-                                    color: theme.textSecondary,
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.5px',
-                                    fontSize: '0.7rem'
-                                }}>
-                                    Reviewed By
-                                </Typography>
-                                <Typography variant="body2" sx={{ 
-                                    mt: 0.5, 
-                                    color: theme.textPrimary 
-                                }}>
-                                    {request.resourceRequestData.reviewedByName} on{' '}
-                                    {format(new Date(request.resourceRequestData.reviewedAt), 'MMM dd, yyyy')}
-                                </Typography>
-                            </Box>
-                        </>
-                    )}
-                </Paper>
+                    ))}
+                </Box>
 
-                {/* Update Status Section */}
-                <Paper elevation={0} sx={{ p: 2.5, borderRadius: 2 }}>
-                    <Typography variant="subtitle2" sx={{ 
-                        fontWeight: 700, 
-                        mb: 2, 
-                        color: theme.textPrimary 
-                    }}>
-                        Update Status
+                {request.resourceRequestData?.reviewedByName && (
+                    <Typography sx={{ mt: 2, fontSize: '0.75rem', color: MUTED }}>
+                        Last reviewed by {request.resourceRequestData.reviewedByName}
+                        {request.resourceRequestData.reviewedAt
+                            ? ` on ${formatISTDate(request.resourceRequestData.reviewedAt, { month: 'short', day: 'numeric', year: 'numeric' })}`
+                            : ''}
                     </Typography>
-                    
-                    <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-                        <InputLabel>Status</InputLabel>
-                        <Select
-                            value={status}
-                            onChange={(e) => setStatus(e.target.value)}
-                            label="Status"
-                        >
-                            <MenuItem value="Pending">Pending</MenuItem>
-                            <MenuItem value="In Progress">In Progress</MenuItem>
-                            <MenuItem value="Fulfilled">Fulfilled</MenuItem>
-                            <MenuItem value="Rejected">Rejected</MenuItem>
-                        </Select>
-                    </FormControl>
-                    
-                    <TextField
-                        fullWidth
-                        multiline
-                        rows={3}
-                        label="Admin Notes"
-                        value={adminNotes}
-                        onChange={(e) => setAdminNotes(e.target.value)}
-                        placeholder="Add notes about this request..."
-                        sx={{ mb: 2 }}
-                    />
-                    
-                    <Button
-                        fullWidth
-                        variant="contained"
-                        onClick={handleUpdateStatus}
-                        disabled={updating}
-                        sx={{
-                            backgroundColor: theme.primary,
-                            '&:hover': {
-                                backgroundColor: theme.primaryDark
-                            },
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            py: 1.2
-                        }}
+                )}
+            </Paper>
+
+            <Paper elevation={0} sx={{
+                p: 2.25,
+                borderRadius: '14px',
+                border: `1px solid ${BORDER}`,
+                background: '#fff',
+            }}>
+                <Typography sx={{ fontWeight: 700, mb: 1.75, color: TEXT, fontSize: '0.9rem' }}>
+                    Update request
+                </Typography>
+
+                {error && (
+                    <Alert severity="error" sx={{ mb: 1.5, borderRadius: '10px' }} onClose={() => setError('')}>
+                        {error}
+                    </Alert>
+                )}
+                {feedback && (
+                    <Alert severity="success" sx={{ mb: 1.5, borderRadius: '10px' }} onClose={() => setFeedback('')}>
+                        {feedback}
+                    </Alert>
+                )}
+
+                <FormControl fullWidth size="small" sx={{ mb: 1.75, ...fieldSx }}>
+                    <InputLabel>Status</InputLabel>
+                    <Select
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value)}
+                        label="Status"
                     >
-                        {updating ? <CircularProgress size={24} /> : 'Update Request'}
-                    </Button>
-                </Paper>
-            </Box>
-        </>
+                        <MenuItem value="Pending">Pending</MenuItem>
+                        <MenuItem value="In Progress">In Progress</MenuItem>
+                        <MenuItem value="Fulfilled">Fulfilled</MenuItem>
+                        <MenuItem value="Rejected">Rejected</MenuItem>
+                    </Select>
+                </FormControl>
+
+                <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    label="Admin notes"
+                    value={adminNotes}
+                    onChange={(e) => setAdminNotes(e.target.value)}
+                    placeholder="Add notes about this request…"
+                    sx={{ mb: 2, ...fieldSx }}
+                />
+
+                <Button
+                    fullWidth
+                    variant="contained"
+                    onClick={handleUpdateStatus}
+                    disabled={updating}
+                    sx={primaryBtnSx}
+                >
+                    {updating ? 'Saving…' : 'Update request'}
+                </Button>
+            </Paper>
+        </Box>
     );
 };
 

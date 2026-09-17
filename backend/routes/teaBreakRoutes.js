@@ -60,6 +60,15 @@ router.get('/active', authenticateToken, async (req, res) => {
         markTeaBreakEnded(announcement._id, req.user.userId);
         return res.json({ active: false, reason: 'joined_after_allowance' });
       }
+
+      const alreadyEnded = await TeaBreakReturn.exists({
+        announcementId: announcement._id,
+        userId: req.user.userId,
+      });
+      if (alreadyEnded) {
+        markTeaBreakEnded(announcement._id, req.user.userId);
+        return res.json({ active: false, reason: 'already_ended' });
+      }
     }
 
     res.json(buildTeaBreakActivePayload(announcement, timing));

@@ -9,9 +9,6 @@ import {
   MoreVert,
   Search
 } from '@mui/icons-material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getAttendanceStatus } from '../utils/saturdayUtils';
@@ -450,15 +447,14 @@ const EmployeeMusterRollPage = () => {
   }
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Box sx={{ backgroundColor: '#f8f9fa', minHeight: '100vh', p: 3 }}>
+    <Box sx={{ backgroundColor: '#f8f9fa', minHeight: '100vh', p: { xs: 0, sm: 2, lg: 3 } }}>
         {/* Header */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} sx={{ backgroundColor: '#2C3E50', borderRadius: '12px', p: 2 }}>
-          <Box display="flex" alignItems="center" gap={2}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3} sx={{ backgroundColor: '#2C3E50', borderRadius: '12px', p: 2, flexWrap: 'wrap', gap: 1.5 }}>
+          <Box display="flex" alignItems="center" gap={2} sx={{ minWidth: 0 }}>
             <IconButton onClick={() => navigate(-1)} size="small" sx={{ color: '#FFFFFF' }}>
               <ArrowBack />
             </IconButton>
-            <Typography variant="h4" component="h1" sx={{ color: '#FFFFFF', fontWeight: 'bold' }}>Employee Muster Roll</Typography>
+            <Typography variant="h4" component="h1" sx={{ color: '#FFFFFF', fontWeight: 'bold', fontSize: { xs: '1.25rem', sm: '2.125rem' } }}>Employee Muster Roll</Typography>
           </Box>
           <Box display="flex" gap={2}>
             <Button variant="contained" startIcon={<Download />} onClick={handleExport} sx={{ backgroundColor: '#dc3545', '&:hover': { backgroundColor: '#c82333' } }}>Export</Button>
@@ -554,7 +550,7 @@ const EmployeeMusterRollPage = () => {
                           left: 0,
                           zIndex: 10,
                           backgroundColor: '#f8f9fa',
-                          minWidth: '250px',
+                          minWidth: { xs: '140px', sm: '250px' },
                           fontWeight: 'bold',
                           color: '#dc3545',
                           borderRight: '2px solid #dee2e6'
@@ -568,7 +564,7 @@ const EmployeeMusterRollPage = () => {
                         <TableCell 
                           key={day.toISOString()}
                           sx={{ 
-                            minWidth: '80px',
+                            minWidth: { xs: '64px', sm: '80px' },
                             textAlign: 'center',
                             fontWeight: 'bold',
                             color: '#dc3545',
@@ -626,7 +622,7 @@ const EmployeeMusterRollPage = () => {
                             zIndex: 5,
                             backgroundColor: '#ffffff',
                             borderRight: '2px solid #dee2e6',
-                            minWidth: '250px'
+                            minWidth: { xs: '140px', sm: '250px' }
                           }}
                         >
                           <Box display="flex" alignItems="center" gap={2}>
@@ -656,7 +652,7 @@ const EmployeeMusterRollPage = () => {
                                 textAlign: 'center',
                                 backgroundColor: status.bgColor,
                                 border: `1px solid ${status.color}20`,
-                                minWidth: '80px'
+                                minWidth: { xs: '64px', sm: '80px' }
                               }}
                             >
                               <Typography 
@@ -718,7 +714,7 @@ const EmployeeMusterRollPage = () => {
                           zIndex: 5,
                           backgroundColor: '#f8f9fa',
                           borderRight: '2px solid #dee2e6',
-                          minWidth: '250px',
+                          minWidth: { xs: '140px', sm: '250px' },
                           fontWeight: 'bold',
                           color: '#dc3545'
                         }}
@@ -740,7 +736,7 @@ const EmployeeMusterRollPage = () => {
                               textAlign: 'center',
                               backgroundColor: '#f8f9fa',
                               border: '1px solid #dee2e6',
-                              minWidth: '80px',
+                              minWidth: { xs: '64px', sm: '80px' },
                               fontWeight: 'bold'
                             }}
                           >
@@ -833,7 +829,6 @@ const EmployeeMusterRollPage = () => {
           </CardContent>
         </Card>
       </Box>
-    </LocalizationProvider>
   );
 };
 

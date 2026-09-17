@@ -3,7 +3,7 @@
 // Loads the active template, auto-fills employee fields from their profile,
 // lets admin override/complete remaining fields, previews the PDF, and on
 // confirm generates + stores + assigns the document.
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Button, Typography, Box, Stack, Alert, CircularProgress,
@@ -15,18 +15,15 @@ import PreviewOutlinedIcon from '@mui/icons-material/PreviewOutlined';
 import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import api from '../../api/axios';
-import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
+import { PdfDocument, PdfPage } from '../lazy/LazyPdfComponents';
 
 const primaryBtnSx = {
-    background: '#6366f1',
+    background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
     textTransform: 'none',
     fontWeight: 600,
+    borderRadius: '10px',
     boxShadow: 'none',
-    '&:hover': { background: '#4f46e5', boxShadow: 'none' },
+    '&:hover': { background: 'linear-gradient(135deg, #C62828 0%, #B71C1C 100%)', boxShadow: 'none' },
 };
 
 const TYPE_LABELS = {
@@ -252,7 +249,7 @@ export default function TemplateAssignDialog({
         >
             <DialogTitle sx={{ fontWeight: 700, pb: 1, borderBottom: '1px solid #e2e8f0' }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <AssignmentOutlinedIcon sx={{ color: '#6366f1' }} />
+                    <AssignmentOutlinedIcon sx={{ color: '#C62828' }} />
                     <Box>
                         <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
                             Assign {typeLabel}
@@ -269,7 +266,7 @@ export default function TemplateAssignDialog({
             <DialogContent sx={{ flex: 1, overflowY: 'auto', py: 2.5 }}>
                 {loadingTemplate ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-                        <CircularProgress size={28} sx={{ color: '#6366f1' }} />
+                        <CircularProgress size={28} sx={{ color: '#E53935' }} />
                     </Box>
                 ) : templateError ? (
                     <Alert
@@ -316,10 +313,10 @@ export default function TemplateAssignDialog({
                         {selectedEmployees.length > 0 && Object.keys(autoFilledValues).length > 0 && (
                             <Box>
                                 <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b', mb: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                    <LockOutlinedIcon sx={{ fontSize: 15, color: '#6366f1' }} />
+                                    <LockOutlinedIcon sx={{ fontSize: 15, color: '#C62828' }} />
                                     Auto-Filled from Employee Profile
                                     {loadingContext && (
-                                        <CircularProgress size={12} sx={{ ml: 1, color: '#6366f1' }} />
+                                        <CircularProgress size={12} sx={{ ml: 1, color: '#E53935' }} />
                                     )}
                                 </Typography>
                                 <Box sx={{
@@ -357,7 +354,7 @@ export default function TemplateAssignDialog({
                                 <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
                                     Additional Fields
                                     {loadingContext && (
-                                        <CircularProgress size={14} sx={{ ml: 1, color: '#6366f1', verticalAlign: 'middle' }} />
+                                        <CircularProgress size={14} sx={{ ml: 1, color: '#E53935', verticalAlign: 'middle' }} />
                                     )}
                                 </Typography>
                                 <Stack spacing={1.5}>
@@ -466,7 +463,7 @@ export default function TemplateAssignDialog({
                     /* ── Preview step ─────────────────────────────────── */
                     <Box sx={{ height: '100%' }}>
                         <Box sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <PreviewOutlinedIcon sx={{ color: '#6366f1', fontSize: 18 }} />
+                            <PreviewOutlinedIcon sx={{ color: '#C62828', fontSize: 18 }} />
                             <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b' }}>
                                 Preview — {typeLabel}
                                 {selectedEmployees.length > 0 && (
@@ -479,7 +476,7 @@ export default function TemplateAssignDialog({
 
                         {previewLoading && (
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8, gap: 2 }}>
-                                <CircularProgress size={32} sx={{ color: '#6366f1' }} />
+                                <CircularProgress size={32} sx={{ color: '#E53935' }} />
                                 <Typography variant="body2" sx={{ color: '#64748b' }}>
                                     Generating preview…
                                 </Typography>
@@ -499,7 +496,8 @@ export default function TemplateAssignDialog({
                                 flexDirection: 'column',
                                 alignItems: 'center',
                             }}>
-                                <Document
+                                <Suspense fallback={<CircularProgress />}>
+                                <PdfDocument
                                     file={previewBlob}
                                     onLoadSuccess={({ numPages }) => setPreviewNumPages(numPages)}
                                     onLoadError={() => setPreviewError('Failed to render PDF preview.')}
@@ -507,7 +505,7 @@ export default function TemplateAssignDialog({
                                 >
                                     {Array.from(new Array(previewNumPages || 0), (_, i) => (
                                         <Box key={`page_${i + 1}`} sx={{ mb: 1 }}>
-                                            <Page
+                                            <PdfPage
                                                 pageNumber={i + 1}
                                                 scale={1.2}
                                                 renderTextLayer
@@ -515,7 +513,8 @@ export default function TemplateAssignDialog({
                                             />
                                         </Box>
                                     ))}
-                                </Document>
+                                </PdfDocument>
+                                </Suspense>
                             </Box>
                         )}
 

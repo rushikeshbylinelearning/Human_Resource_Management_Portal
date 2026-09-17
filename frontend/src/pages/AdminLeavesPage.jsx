@@ -16,9 +16,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import CloseIcon from '@mui/icons-material/Close';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AssessmentIcon from '@mui/icons-material/Assessment';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import LazyDatePicker from '../components/lazy/LazyDatePicker';
 import { eachDayOfInterval } from 'date-fns';
 import AdminLeaveForm from '../components/AdminLeaveForm';
 import EnhancedLeaveRequestModal from '../components/EnhancedLeaveRequestModal';
@@ -974,8 +972,7 @@ const LeaveCountSummaryTab = memo(({ refetchRef, employees: employeesProp = [], 
                             <Grid item xs={12}>
                                 <Grid container spacing={2.5}>
                                     <Grid item xs={12} sm={6} md={4}>
-                                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                            <DatePicker
+                                        <LazyDatePicker
                                                 label="Select Month"
                                                 views={['year', 'month']}
                                                 value={selectedMonth}
@@ -987,27 +984,22 @@ const LeaveCountSummaryTab = memo(({ refetchRef, employees: employeesProp = [], 
                                                 }}
                                                 slotProps={datePickerSlotProps}
                                             />
-                                        </LocalizationProvider>
                                     </Grid>
                                     <Grid item xs={12} sm={6} md={4}>
-                                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                            <DatePicker
+                                        <LazyDatePicker
                                                 label="Custom Start Date"
                                                 value={dateRange.start}
                                                 onChange={(newValue) => setDateRange(prev => ({ ...prev, start: newValue }))}
                                                 slotProps={datePickerSlotProps}
                                             />
-                                        </LocalizationProvider>
                                     </Grid>
                                     <Grid item xs={12} sm={6} md={4}>
-                                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                            <DatePicker
+                                        <LazyDatePicker
                                                 label="Custom End Date"
                                                 value={dateRange.end}
                                                 onChange={(newValue) => setDateRange(prev => ({ ...prev, end: newValue }))}
                                                 slotProps={datePickerSlotProps}
                                             />
-                                        </LocalizationProvider>
                                     </Grid>
                                 </Grid>
                             </Grid>
@@ -2069,8 +2061,7 @@ const InternLeaveCountSummaryTab = memo(({ refetchRef, employees: employeesProp 
                             <Grid item xs={12}>
                                 <Grid container spacing={2.5}>
                                     <Grid item xs={12} sm={6} md={4}>
-                                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                            <DatePicker
+                                        <LazyDatePicker
                                                 label="Select Month"
                                                 views={['year', 'month']}
                                                 value={selectedMonth}
@@ -2082,27 +2073,22 @@ const InternLeaveCountSummaryTab = memo(({ refetchRef, employees: employeesProp 
                                                 }}
                                                 slotProps={datePickerSlotProps}
                                             />
-                                        </LocalizationProvider>
                                     </Grid>
                                     <Grid item xs={12} sm={6} md={4}>
-                                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                            <DatePicker
+                                        <LazyDatePicker
                                                 label="Custom Start Date"
                                                 value={dateRange.start}
                                                 onChange={(newValue) => setDateRange(prev => ({ ...prev, start: newValue }))}
                                                 slotProps={datePickerSlotProps}
                                             />
-                                        </LocalizationProvider>
                                     </Grid>
                                     <Grid item xs={12} sm={6} md={4}>
-                                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                                            <DatePicker
+                                        <LazyDatePicker
                                                 label="Custom End Date"
                                                 value={dateRange.end}
                                                 onChange={(newValue) => setDateRange(prev => ({ ...prev, end: newValue }))}
                                                 slotProps={datePickerSlotProps}
                                             />
-                                        </LocalizationProvider>
                                     </Grid>
                                 </Grid>
                             </Grid>
@@ -2771,9 +2757,7 @@ const HolidayManagerModal = memo(({ open, onClose }) => {
                 <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
                     <Grid item xs={12} sm={6}><TextField label="Holiday Name" size="small" fullWidth value={newHoliday.name} onChange={(e) => setNewHoliday(p => ({ ...p, name: e.target.value }))} /></Grid>
                     <Grid item xs={12} sm={4}>
-                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                            <DatePicker label="Holiday Date" value={newHoliday.date} onChange={(d) => setNewHoliday(p => ({ ...p, date: d }))} slotProps={{ textField: { size: 'small', fullWidth: true } }} />
-                        </LocalizationProvider>
+                        <LazyDatePicker label="Holiday Date" value={newHoliday.date} onChange={(d) => setNewHoliday(p => ({ ...p, date: d }))} slotProps={{ textField: { size: 'small', fullWidth: true } }} />
                     </Grid>
                     <Grid item xs={12} sm={2}><Button variant="contained" fullWidth onClick={handleAddHoliday}>Add</Button></Grid>
                 </Grid>
@@ -2889,14 +2873,14 @@ const RequestRow = memo(({ request, index, onEdit, onDelete, onStatusChange, onV
             onClick={() => onViewDetails(request)}
             style={{ cursor: 'pointer' }}
         >
-            <TableCell>{index + 1}</TableCell>
-            <TableCell>
+            <TableCell data-label="#">{index + 1}</TableCell>
+            <TableCell data-label="Employee">
                 <Typography className="employee-name">{request.employee?.fullName || 'N/A'}</Typography>
                 <Typography variant="body2" className="employee-code">{request.employee?.employeeCode || ''}</Typography>
             </TableCell>
-            <TableCell>{formatLeaveRequestType(request.requestType)}</TableCell>
-            <TableCell>{request.leaveType}</TableCell>
-            <TableCell>
+            <TableCell data-label="Request Type">{formatLeaveRequestType(request.requestType)}</TableCell>
+            <TableCell data-label="Leave Type">{request.leaveType}</TableCell>
+            <TableCell data-label="Dates">
                 {request.requestType === 'Compensatory' && request.alternateDate ? (
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                         <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
@@ -2932,7 +2916,7 @@ const RequestRow = memo(({ request, index, onEdit, onDelete, onStatusChange, onV
                     </Box>
                 )}
             </TableCell>
-            <TableCell>
+            <TableCell data-label="Status">
                 <Chip label={request.status === 'Returned' ? 'Needs correction' : request.status} color={statusColors[request.status] || 'default'} size="small" />
                 {request.dayTypeAllocations?.length > 0 && (
                     <Typography variant="caption" display="block" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -2940,7 +2924,7 @@ const RequestRow = memo(({ request, index, onEdit, onDelete, onStatusChange, onV
                     </Typography>
                 )}
             </TableCell>
-            <TableCell align="center" onClick={(e) => e.stopPropagation()}>
+            <TableCell data-label="Actions" align="center" onClick={(e) => e.stopPropagation()}>
                 <div className="actions-cell">
                     <Tooltip title="View Details"><IconButton size="small" onClick={() => onViewDetails(request)}><InfoOutlinedIcon fontSize="small" /></IconButton></Tooltip>
                     <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(request)}><EditOutlinedIcon fontSize="small" /></IconButton></Tooltip>

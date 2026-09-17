@@ -138,7 +138,7 @@ const SaturdaySchedule = ({ policy, requests = [], count = 4, variant }) => {
                                 variant="caption" 
                                 sx={{ 
                                     fontWeight: 400, 
-                                    color: '#9ca3af', 
+                                    color: '#4b5563', 
                                     fontSize: '0.6875rem',
                                     lineHeight: 1.3
                                 }}

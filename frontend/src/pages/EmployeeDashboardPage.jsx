@@ -67,6 +67,9 @@ const BreakModalTransition = forwardRef(function Transition(props, ref) {
     return <Fade ref={ref} {...props} timeout={400} />;
 });
 
+// Skip echo socket refetches for this user's own just-completed attendance mutation.
+const OWN_MUTATION_REFETCH_SUPPRESS_MS = 2500;
+
 // CRITICAL: Use IST timezone for date string to match backend
 // This ensures the frontend sends the same date as the backend expects
 const getLocalDateString = (date = new Date()) => {
@@ -85,7 +88,7 @@ const EmployeeDashboardPage = () => {
     const { user: contextUser, updateUserContext, loading: authLoading } = useAuth();
     const { showTour } = useOnboarding();
     const tourPreview = showTour;
-    const { uiBreakState, startUiBreak, endUiBreak, setUiBreakState, reconcileFromBackend } = useBreakUI();
+    const { uiBreakState, startUiBreak, endUiBreak, setUiBreakState, reconcileFromBackend, applyLocallyEndedOverlay, clearLocallyEndedBreak } = useBreakUI();
     const { teaBreakData, clearTeaBreak } = useTeaBreak();
     const { canAccess, breakLimits, privilegeLevel } = usePermissions();
     const location = useLocation();
@@ -121,19 +124,26 @@ const EmployeeDashboardPage = () => {
     const clockInActionInFlightRef = useRef(false);
     const clockOutActionInFlightRef = useRef(false);
     const fetchInFlightRef = useRef(false);
+    const fetchSeqRef = useRef(0);
+    const refetchQueuedRef = useRef(false);
+    const refetchQueuedForceRef = useRef(false);
+    const lastMutationFetchAtRef = useRef(0);
     // When we last received calculatedLogoutTime from the server (used for real-time projection during break).
     const lastLogoutBaselineReceivedAtRef = useRef(0);
     const lastFetchTimeRef = useRef(0);
+
+    const markOwnMutationRefetch = () => {
+        lastMutationFetchAtRef.current = Date.now();
+    };
 
     const isOnBreakUI = !!uiBreakState;
     const isClockedInForWork = dailyData?.status === 'Clocked In' || isOnBreakUI;
     // Tea break state is only applied server-side for clocked-in employees; gate UI defensively too.
     const isOnTeaBreak = !!teaBreakData && isClockedInForWork;
     const isShowingBreakTimer = isOnBreakUI || isOnTeaBreak;
-    const displayStatus = isShowingBreakTimer ? 'On Break' : dailyData?.status;
-    const statusForUi = isShowingBreakTimer ? 'On Break' : dailyData?.status;
     const breaksForUi = useMemo(() => {
-        const base = Array.isArray(dailyData?.breaks) ? dailyData.breaks : [];
+        const raw = Array.isArray(dailyData?.breaks) ? dailyData.breaks : [];
+        const base = applyLocallyEndedOverlay(raw);
         if (!uiBreakState) return base;
         const hasActive = base.some(b => b && !b.endTime);
         if (hasActive) return base;
@@ -146,11 +156,21 @@ const EmployeeDashboardPage = () => {
                 endTime: null,
             },
         ];
-    }, [dailyData?.breaks, uiBreakState]);
+    }, [dailyData?.breaks, uiBreakState, applyLocallyEndedOverlay]);
+    const hasActiveBreakForUi = useMemo(
+        () => !!uiBreakState || (breaksForUi || []).some(b => b && !b.endTime),
+        [uiBreakState, breaksForUi]
+    );
+    // After a local end, dailyData.status can linger as 'On Break' until a fetch lands.
+    const resolvedStatus = (dailyData?.status === 'On Break' && !hasActiveBreakForUi && !isOnTeaBreak)
+        ? 'Clocked In'
+        : dailyData?.status;
+    const displayStatus = isShowingBreakTimer ? 'On Break' : resolvedStatus;
+    const statusForUi = isShowingBreakTimer ? 'On Break' : resolvedStatus;
 
     // Only show timer when actually in a work session (not merely logged in while clocked out).
     const isClockedInSession = Boolean(
-        dailyData && (dailyData.status === 'Clocked In' || isOnBreakUI || isOnTeaBreak)
+        dailyData && (dailyData.status === 'Clocked In' || dailyData.status === 'On Break' || dailyData.status === 'On Auto-Break' || isOnBreakUI || isOnTeaBreak)
     );
 
     const showTourPreviewUi = tourPreview && !isClockedInSession;
@@ -183,7 +203,6 @@ const EmployeeDashboardPage = () => {
     const uiDailyData = tourPreviewDailyData || dailyData;
     const effectiveIsClockedInSession = isClockedInSession || showTourPreviewUi;
     const effectiveCanCheckout = showTourPreviewUi ? false : canCheckout;
-    const effectiveRemainingTime = showTourPreviewUi ? 7200 : remainingTime;
 
     const dataReady = !!dailyData;
     const timeTrackingReady = dataReady && !loading && hasInitialLoadFinished;
@@ -256,7 +275,22 @@ const EmployeeDashboardPage = () => {
     };
     
     fetchAllDataRef.current = async (isInitialLoad = false, forceRefresh = false) => {
+        // Don't drop post-action refetches: queue a follow-up if a poll is already in flight.
+        if (fetchInFlightRef.current && !isInitialLoad) {
+            refetchQueuedRef.current = true;
+            if (forceRefresh) refetchQueuedForceRef.current = true;
+            // Invalidate the in-flight response so it cannot overwrite newer intended state.
+            fetchSeqRef.current += 1;
+            return;
+        }
+
         const localDate = getLocalDateString();
+        const seq = ++fetchSeqRef.current;
+
+        const applyIfLatest = (payload, initial) => {
+            if (seq !== fetchSeqRef.current) return;
+            _applyDashboardPayload(payload, initial);
+        };
 
         // --- Cache check (only for non-forced calls) ---
         if (!forceRefresh) {
@@ -266,19 +300,24 @@ const EmployeeDashboardPage = () => {
 
             if (cached && fresh) {
                 // Fresh cache: apply immediately, skip network call
-                _applyDashboardPayload(cached.data, isInitialLoad);
+                applyIfLatest(cached.data, isInitialLoad);
+                if (refetchQueuedRef.current) {
+                    refetchQueuedRef.current = false;
+                    const queuedForce = refetchQueuedForceRef.current;
+                    refetchQueuedForceRef.current = false;
+                    void fetchAllDataRef.current?.(false, queuedForce);
+                }
                 return;
             }
 
             if (cached && servable) {
                 // Stale-but-servable: show data immediately, then refresh in background
-                _applyDashboardPayload(cached.data, isInitialLoad);
+                applyIfLatest(cached.data, isInitialLoad);
                 // Fall through to background fetch (do NOT return)
             }
             // If no servable cache: fall through to fetch with loading state
         }
 
-        if (fetchInFlightRef.current && !isInitialLoad) return;
         fetchInFlightRef.current = true;
 
         if (isInitialLoad && !getEmployeeDashboardCache()) {
@@ -290,11 +329,14 @@ const EmployeeDashboardPage = () => {
             const dashboardRes = await api.get(`/attendance/dashboard/employee?date=${localDate}`);
             const payload = dashboardRes.data;
 
-            // Write fresh data to cache
-            setEmployeeDashboardCache(payload);
-            lastFetchTimeRef.current = Date.now();
+            // Write fresh data to cache only if this request is still the latest —
+            // otherwise a stale payload would poison the cache for the next read.
+            if (seq === fetchSeqRef.current) {
+                setEmployeeDashboardCache(payload);
+                lastFetchTimeRef.current = Date.now();
+            }
 
-            _applyDashboardPayload(payload, isInitialLoad);
+            applyIfLatest(payload, isInitialLoad);
         } catch (err) {
             console.error("Dashboard fetch error:", err);
             if (isInitialLoad && !getEmployeeDashboardCache()) {
@@ -305,6 +347,12 @@ const EmployeeDashboardPage = () => {
             }
         } finally {
             fetchInFlightRef.current = false;
+            if (refetchQueuedRef.current) {
+                refetchQueuedRef.current = false;
+                const queuedForce = refetchQueuedForceRef.current;
+                refetchQueuedForceRef.current = false;
+                void fetchAllDataRef.current?.(false, queuedForce);
+            }
         }
     };
     
@@ -388,7 +436,6 @@ const EmployeeDashboardPage = () => {
             if (socketDebounceRef.current) clearTimeout(socketDebounceRef.current);
             socketDebounceRef.current = setTimeout(() => {
                 socketDebounceRef.current = null;
-                if (fetchInFlightRef.current) return;
                 if (fetchAllDataRef.current) {
                     fetchAllDataRef.current(false).catch(err => {
                         console.error('Failed to refresh after socket update:', err);
@@ -401,7 +448,12 @@ const EmployeeDashboardPage = () => {
             const isRelevant = !data?.userId || [contextUser.id, contextUser._id].some(
                 id => id != null && String(data.userId) === String(id)
             );
-            if (isRelevant) scheduleRefetch();
+            if (!isRelevant) return;
+            // Own just-completed mutation already issued a refetch; skip the echo socket.
+            if (Date.now() - lastMutationFetchAtRef.current < OWN_MUTATION_REFETCH_SUPPRESS_MS) {
+                return;
+            }
+            scheduleRefetch();
         };
 
         const handleLeaveRequestUpdate = (data) => {
@@ -499,7 +551,8 @@ const EmployeeDashboardPage = () => {
         });
     }, [uiDailyData?.sessions, uiDailyData?.calculatedLogoutTime, breaksForUi, tickNow, scheduledShiftMinutes, paidBreakAllowance]);
 
-    // Real-time checkout availability: update canCheckout every second when clocked in
+    // Real-time checkout availability: only write canCheckout when the boolean actually flips.
+    // Remaining time is derived during render so we do not trigger a second dashboard commit every second.
     useEffect(() => {
         const isClockedInOrBreak = statusForUi === 'Clocked In' || statusForUi === 'On Break';
         if (!isClockedInOrBreak || pendingEarlyCheckoutRequest) {
@@ -507,34 +560,30 @@ const EmployeeDashboardPage = () => {
             return;
         }
 
-        // Use unifiedState required logout time (most accurate, updates in real-time)
-        // Fallback to server requiredLogoutAt if unifiedState not available
-        const requiredLogoutTime = unifiedState?.requiredLogoutTime 
+        const requiredLogoutTime = unifiedState?.requiredLogoutTime
             ? new Date(unifiedState.requiredLogoutTime)
             : (requiredLogoutAt ? new Date(requiredLogoutAt) : null);
 
         if (!requiredLogoutTime) {
-            // No required logout time means checkout is allowed (flexible shift or no enforcement)
-            setCanCheckout(true);
+            setCanCheckout((prev) => (prev === true ? prev : true));
             return;
         }
 
-        // Check if current time >= required logout time
-        const now = tickNow;
-        const canCheckoutNow = now >= requiredLogoutTime;
-
-        // Update canCheckout state in real-time
-        setCanCheckout(canCheckoutNow);
-
-        // Also update remainingTime for display (if needed) - store in seconds for precision
-        if (!canCheckoutNow) {
-            const remainingMs = requiredLogoutTime.getTime() - now.getTime();
-            const remainingSecs = Math.max(0, Math.ceil(remainingMs / 1000));
-            setRemainingTime(remainingSecs > 0 ? remainingSecs : null);
-        } else {
-            setRemainingTime(null);
-        }
+        const canCheckoutNow = tickNow >= requiredLogoutTime;
+        setCanCheckout((prev) => (prev === canCheckoutNow ? prev : canCheckoutNow));
     }, [tickNow, unifiedState?.requiredLogoutTime, requiredLogoutAt, statusForUi, pendingEarlyCheckoutRequest]);
+
+    const effectiveRemainingTime = useMemo(() => {
+        if (showTourPreviewUi) return 7200;
+        const isClockedInOrBreak = statusForUi === 'Clocked In' || statusForUi === 'On Break';
+        if (!isClockedInOrBreak || pendingEarlyCheckoutRequest) return remainingTime;
+        const requiredLogoutTime = unifiedState?.requiredLogoutTime
+            ? new Date(unifiedState.requiredLogoutTime)
+            : (requiredLogoutAt ? new Date(requiredLogoutAt) : null);
+        if (!requiredLogoutTime) return remainingTime;
+        const remainingSecs = Math.ceil((requiredLogoutTime.getTime() - tickNow.getTime()) / 1000);
+        return remainingSecs > 0 ? remainingSecs : null;
+    }, [showTourPreviewUi, statusForUi, pendingEarlyCheckoutRequest, remainingTime, unifiedState?.requiredLogoutTime, requiredLogoutAt, tickNow]);
 
     const hasExhaustedPaidBreak = (serverCalculated.paidMinutesTaken || 0) >= paidBreakAllowance;
     const hasTakenUnpaidBreak = useMemo(() => dailyData?.breaks?.some(b => b.breakType === 'Unpaid'), [dailyData?.breaks]);
@@ -612,9 +661,10 @@ const EmployeeDashboardPage = () => {
 
                 // Refresh data from server (non-blocking for UI)
                 invalidateEmployeeDashboardCache();
+                markOwnMutationRefetch();
                 window.dispatchEvent(new CustomEvent('dashboard-refresh-requested'));
                 if (fetchAllDataRef.current) {
-                    fetchAllDataRef.current(false).catch(err => {
+                    fetchAllDataRef.current(false, true).catch(err => {
                         console.error('Failed to refresh data after clock-in:', err);
                     });
                 }
@@ -649,7 +699,8 @@ const EmployeeDashboardPage = () => {
             await api.post('/attendance/clock-out');
             clearTeaBreak();
             invalidateEmployeeDashboardCache();
-            if (fetchAllDataRef.current) fetchAllDataRef.current(false).catch(() => {});
+            markOwnMutationRefetch();
+            if (fetchAllDataRef.current) fetchAllDataRef.current(false, true).catch(() => {});
         } catch (err) {
             setDailyData(previousDailyData);
             setError(err.response?.data?.error || 'Failed to clock out. Please try again.');
@@ -695,7 +746,8 @@ const EmployeeDashboardPage = () => {
             setPendingEarlyCheckoutRequest(prev => prev || { status: 'Pending', _id: 'pending' });
             setCanCheckout(false);
             invalidateEmployeeDashboardCache();
-            if (fetchAllDataRef.current) fetchAllDataRef.current(false).catch(() => {});
+            markOwnMutationRefetch();
+            if (fetchAllDataRef.current) fetchAllDataRef.current(false, true).catch(() => {});
         } catch (err) {
             setError(err.response?.data?.error || 'Failed. Please try again.');
             setSnackbar({ open: true, message: err.response?.data?.error || 'Request failed. Please try again.' });
@@ -753,8 +805,9 @@ const EmployeeDashboardPage = () => {
             }
             // Refresh data from server (non-blocking for UI)
             invalidateEmployeeDashboardCache();
+            markOwnMutationRefetch();
             if (fetchAllDataRef.current) {
-                fetchAllDataRef.current(false).catch(err => {
+                fetchAllDataRef.current(false, true).catch(err => {
                     console.error('Failed to refresh data after break start:', err);
                 });
             }
@@ -778,6 +831,7 @@ const EmployeeDashboardPage = () => {
             clearTeaBreak();
             setSnackbar({ open: true, message: 'Tea break ended successfully!' });
             invalidateEmployeeDashboardCache();
+            markOwnMutationRefetch();
             if (fetchAllDataRef.current) {
                 await fetchAllDataRef.current(true, true);
             }
@@ -811,14 +865,16 @@ const EmployeeDashboardPage = () => {
                 await api.post('/breaks/end');
             }
             invalidateEmployeeDashboardCache();
+            markOwnMutationRefetch();
             if (fetchAllDataRef.current) {
-                fetchAllDataRef.current(false).catch(err => {
+                fetchAllDataRef.current(false, true).catch(err => {
                     console.error('Failed to refresh data after break end:', err);
                 });
             }
         } catch (err) {
             setDailyData(previousDailyData);
             setUiBreakState(previousUiBreakState);
+            clearLocallyEndedBreak();
             setError(err.response?.data?.error || 'Failed to end break. Please try again.');
             setSnackbar({ open: true, message: 'Failed to end break. Please try again.' });
         } finally {
@@ -839,8 +895,9 @@ const EmployeeDashboardPage = () => {
             setSnackbar({ open: true, message: 'Request sent for approval.' });
             handleCloseReasonModal();
             invalidateEmployeeDashboardCache();
+            markOwnMutationRefetch();
             if (fetchAllDataRef.current) {
-                await fetchAllDataRef.current(false);
+                await fetchAllDataRef.current(false, true);
             }
         } catch (err) {
             setError(err.response?.data?.error || 'Failed to send request.');
@@ -907,9 +964,9 @@ const EmployeeDashboardPage = () => {
                         <Stack spacing={3}>
                             <Paper className="dashboard-card-base action-card" data-tour="attendance-card">
                                 <Box>
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 600, fontSize: '0.9375rem', color: '#111827' }} className="theme-text-black">Time Tracking</Typography>
+                                    <Typography component="h1" variant="subtitle2" sx={{ fontWeight: 600, fontSize: '0.9375rem', color: '#111827' }} className="theme-text-black">Time Tracking</Typography>
                                     {attendanceUiReady ? (
-                                        <Typography variant="body2" sx={{ mb: 2.5, fontWeight: 400, color: '#9ca3af', fontSize: '0.8125rem', lineHeight: 1.4 }}>
+                                        <Typography variant="body2" sx={{ mb: 2.5, fontWeight: 400, color: '#4b5563', fontSize: '0.8125rem', lineHeight: 1.4 }}>
                                             {showTourPreviewUi
                                                 ? 'Status: Clocked In (Tour Preview)'
                                                 : uiDailyData.status === 'Not Clocked In' || uiDailyData.status === 'Clocked Out'
@@ -1076,7 +1133,7 @@ const EmployeeDashboardPage = () => {
                                         }}
                                     />
                                 </Box>
-                                <Typography variant="subtitle1" className="theme-text-black" sx={{ fontWeight: 600, mb: 0.5, fontSize: '1rem', color: '#111827' }}>{contextUser.fullName || contextUser.name}</Typography>
+                                <Typography component="p" variant="subtitle1" className="theme-text-black" sx={{ fontWeight: 600, mb: 0.5, fontSize: '1rem', color: '#111827' }}>{contextUser.fullName || contextUser.name}</Typography>
                                 <Typography variant="body2" sx={{ color: '#1f2937', mb: 1, fontWeight: 500, fontSize: '0.8125rem' }}>Employee Code: {contextUser.employeeCode || 'N/A'}</Typography>
                                 <Divider sx={{ my: 1, borderColor: 'var(--theme-red)', borderWidth: '1px', width: '50px', marginX: 'auto' }} />
                                 <Chip
@@ -1084,10 +1141,10 @@ const EmployeeDashboardPage = () => {
                                     size="small"
                                     sx={{ mt: 1, mb: 2, bgcolor: 'var(--theme-red-light)', color: 'var(--theme-red)', fontWeight: 500, fontSize: '0.75rem' }}
                                 />
-                                <Typography variant="body2" sx={{ fontWeight: 400, color: '#9ca3af', fontSize: '0.8125rem' }}>{formatISTDate(getISTNow(), { month: 'long', day: 'numeric', year: 'numeric' })}</Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 400, color: '#4b5563', fontSize: '0.8125rem' }}>{formatISTDate(getISTNow(), { month: 'long', day: 'numeric', year: 'numeric' })}</Typography>
                             </Paper>
                             <Paper className="dashboard-card-base shift-info-card">
-                                <Typography variant="subtitle2" className="theme-text-black" sx={{ fontWeight: 600, fontSize: '0.9375rem', mb: 1.25, color: '#111827' }}>Today's Shift</Typography>
+                                <Typography component="h2" variant="subtitle2" className="theme-text-black" sx={{ fontWeight: 600, fontSize: '0.9375rem', mb: 1.25, color: '#111827' }}>Today's Shift</Typography>
                                 <Divider sx={{ mb: 1.5 }} />
                                 <Stack spacing={3} divider={<Divider flexItem />} sx={{ flexGrow: 1, minHeight: 260 }}>
                                     {dataReady || showTourPreviewUi ? (
@@ -1118,7 +1175,7 @@ const EmployeeDashboardPage = () => {
                                 </Box>
                             </Paper>
                             <Paper className="dashboard-card-base saturday-schedule-card" sx={{ display: 'flex', flexDirection: 'column' }}>
-                                <Typography variant="subtitle2" className="theme-text-black" sx={{ fontWeight: 600, fontSize: '0.9375rem', mb: 1.25, color: '#111827' }}>Upcoming Saturdays</Typography>
+                                <Typography component="h2" variant="subtitle2" className="theme-text-black" sx={{ fontWeight: 600, fontSize: '0.9375rem', mb: 1.25, color: '#111827' }}>Upcoming Saturdays</Typography>
                                 <Divider sx={{ mb: 1.5 }} />
                                 <Box sx={{ flexGrow: 1, overflowY: 'auto' }}>
                                     {dataReady ? (

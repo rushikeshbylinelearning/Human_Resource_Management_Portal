@@ -7,54 +7,46 @@ const {
   TEA_BREAK_DURATION_MS,
 } = require('../teaBreakService');
 
-function assert(condition, message) {
-  if (!condition) throw new Error(message);
-}
-
 const breakStart = new Date('2026-07-20T10:00:00+05:30');
 const allowanceEnd = getTeaBreakAllowanceEnd(breakStart);
 
-assert(
-  allowanceEnd.getTime() === breakStart.getTime() + TEA_BREAK_DURATION_MS,
-  'allowance end should be 10 minutes after break start'
-);
+describe('tea break eligibility', () => {
+  test('allowance end is 10 minutes after break start', () => {
+    expect(allowanceEnd.getTime()).toBe(breakStart.getTime() + TEA_BREAK_DURATION_MS);
+  });
 
-// Checked in before break — eligible
-assert(
-  isEmployeeEligibleForTeaBreakByFirstCheckIn(
-    new Date('2026-07-20T09:50:00+05:30'),
-    breakStart
-  ),
-  'early check-in should be eligible'
-);
+  test('check-in before break is eligible', () => {
+    expect(
+      isEmployeeEligibleForTeaBreakByFirstCheckIn(
+        new Date('2026-07-20T09:50:00+05:30'),
+        breakStart
+      )
+    ).toBe(true);
+  });
 
-// Checked in during break window — eligible
-assert(
-  isEmployeeEligibleForTeaBreakByFirstCheckIn(
-    new Date('2026-07-20T10:05:00+05:30'),
-    breakStart
-  ),
-  'check-in during break window should be eligible'
-);
+  test('check-in during break window is eligible', () => {
+    expect(
+      isEmployeeEligibleForTeaBreakByFirstCheckIn(
+        new Date('2026-07-20T10:05:00+05:30'),
+        breakStart
+      )
+    ).toBe(true);
+  });
 
-// Checked in exactly at allowance end — not eligible
-assert(
-  !isEmployeeEligibleForTeaBreakByFirstCheckIn(allowanceEnd, breakStart),
-  'check-in at allowance end should not be eligible'
-);
+  test('check-in at allowance end is not eligible', () => {
+    expect(isEmployeeEligibleForTeaBreakByFirstCheckIn(allowanceEnd, breakStart)).toBe(false);
+  });
 
-// Checked in after allowance — not eligible
-assert(
-  !isEmployeeEligibleForTeaBreakByFirstCheckIn(
-    new Date('2026-07-20T10:12:00+05:30'),
-    breakStart
-  ),
-  'late check-in after break should not be eligible'
-);
+  test('check-in after allowance is not eligible', () => {
+    expect(
+      isEmployeeEligibleForTeaBreakByFirstCheckIn(
+        new Date('2026-07-20T10:12:00+05:30'),
+        breakStart
+      )
+    ).toBe(false);
+  });
 
-assert(
-  !isEmployeeEligibleForTeaBreakByFirstCheckIn(null, breakStart),
-  'missing check-in should not be eligible'
-);
-
-console.log('teaBreakEligibility.test.js: all assertions passed');
+  test('missing check-in is not eligible', () => {
+    expect(isEmployeeEligibleForTeaBreakByFirstCheckIn(null, breakStart)).toBe(false);
+  });
+});

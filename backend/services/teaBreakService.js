@@ -2,7 +2,7 @@ const AttendanceLog = require('../models/AttendanceLog');
 const AttendanceSession = require('../models/AttendanceSession');
 const BreakLog = require('../models/BreakLog');
 const { getISTDateString, getISTNow } = require('../utils/istTime');
-const { hasTeaBreakEnded, markTeaBreakEnded } = require('./teaBreakState');
+const { markTeaBreakEnded, hasEmployeeEndedTeaBreak } = require('./teaBreakState');
 
 const TEA_BREAK_REASON_PREFIX = 'tea_break:';
 const TEA_BREAK_DURATION_MS = 10 * 60 * 1000;
@@ -81,7 +81,7 @@ async function autoDismissTeaBreakIfIneligible(employeeId) {
 
   if (!announcement?.teaBreakStartedAt) return { dismissed: false };
 
-  if (hasTeaBreakEnded(announcement._id, employeeId)) {
+  if (await hasEmployeeEndedTeaBreak(announcement._id, employeeId)) {
     return { dismissed: false, reason: 'already_ended' };
   }
 
@@ -375,7 +375,7 @@ async function applyTeaBreakOverrun(employeeId, teaBreakStartedAt, announcementI
     return { applied: false, overrunMinutes: 0, skippedReason: 'tea_break_stopped' };
   }
 
-  if (hasTeaBreakEnded(announcementId, employeeId)) {
+  if (await hasEmployeeEndedTeaBreak(announcementId, employeeId)) {
     return { applied: false, overrunMinutes: 0, skippedReason: 'already_ended' };
   }
 

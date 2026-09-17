@@ -45,11 +45,4 @@ async function getGracePeriodMinutes() {
     }
 }
 
-// Call this when an admin updates the grace period setting
-// so the cache is invalidated immediately instead of waiting for TTL
-function invalidateGracePeriodCache() {
-    _cachedValue = null;
-    _cacheExpiresAt = 0;
-}
-
-module.exports = { getGracePeriodMinutes, invalidateGracePeriodCache, FALLBACK_GRACE_MINUTES };
+module.exports = { getGracePeriodMinutes };

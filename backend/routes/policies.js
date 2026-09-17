@@ -133,7 +133,9 @@ router.get('/file/:filename', requireAuth, async (req, res) => {
 // Get all policies (accessible by all authenticated users)
 router.get('/', requireAuth, async (req, res) => {
     try {
-        const policies = await Policy.find()
+        const policies = await Policy.find({
+            sourceKind: { $ne: 'consent_template' },
+        })
             .sort({ effectiveFrom: -1, createdAt: -1 })
             .select('-__v')
             .lean();
@@ -148,7 +150,10 @@ router.get('/', requireAuth, async (req, res) => {
 // Get active policies only
 router.get('/active', requireAuth, async (req, res) => {
     try {
-        const policies = await Policy.find({ status: 'Active' })
+        const policies = await Policy.find({
+            status: 'Active',
+            sourceKind: { $ne: 'consent_template' },
+        })
             .sort({ effectiveFrom: -1 })
             .select('-__v')
             .lean();

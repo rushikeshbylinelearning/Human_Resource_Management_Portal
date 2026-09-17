@@ -10,10 +10,8 @@ import {
   Alert,
   Autocomplete
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import api from '../../api/axios';
+import LazyDatePicker from '../lazy/LazyDatePicker';
 import { CIF_CATEGORIES, CIF_SEVERITIES, CIF_STATUSES, STATUS_TRANSITIONS } from '../../constants/cifConstants';
 
 const CATEGORIES = CIF_CATEGORIES;
@@ -297,8 +295,7 @@ const CIFDrawer = ({ open, onClose, mode, record, onSaveSuccess, hideEmployeeFie
           </TextField>
 
           {/* Incident Date */}
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
+          <LazyDatePicker
               label="Incident Date"
               value={formData.incidentDate}
               onChange={(date) => setFormData({ ...formData, incidentDate: date })}
@@ -313,7 +310,6 @@ const CIFDrawer = ({ open, onClose, mode, record, onSaveSuccess, hideEmployeeFie
                 }
               }}
             />
-          </LocalizationProvider>
 
           {/* Description */}
           <TextField
@@ -374,8 +370,7 @@ const CIFDrawer = ({ open, onClose, mode, record, onSaveSuccess, hideEmployeeFie
           />
 
           {/* Follow-up Date */}
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <DatePicker
+          <LazyDatePicker
               label="Follow-up Date"
               value={formData.followUpDate}
               onChange={(date) => setFormData({ ...formData, followUpDate: date })}
@@ -386,7 +381,6 @@ const CIFDrawer = ({ open, onClose, mode, record, onSaveSuccess, hideEmployeeFie
                 }
               }}
             />
-          </LocalizationProvider>
 
           {/* Status */}
           <TextField

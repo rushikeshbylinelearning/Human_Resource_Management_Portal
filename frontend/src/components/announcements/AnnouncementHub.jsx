@@ -1,13 +1,16 @@
-import { useState, useEffect } from "react";
-import { Megaphone, X } from "lucide-react";
+import { useState, useEffect, Suspense } from "react";
+import Megaphone from "lucide-react/dist/esm/icons/megaphone";
+import X from "lucide-react/dist/esm/icons/x";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/axios";
 import AnnouncementChannel from "../AnnouncementChannel";
-import PollCreateForm from "./PollCreateForm";
 import AnnouncementInsights from "./AnnouncementInsights";
 import AnnouncementReadReceipts from "./AnnouncementReadReceipts";
+import { lazyWithRetry } from "../../utils/lazyWithRetry";
 import "../../styles/AnnouncementModal.css";
 import "../../styles/AnnouncementDropdown.css";
+
+const PollCreateForm = lazyWithRetry(() => import("./PollCreateForm"));
 
 const AnnouncementHub = ({ onClose, initialTab = "feed", initialAnnouncementId = null }) => {
   const { user } = useAuth();
@@ -101,7 +104,9 @@ const AnnouncementHub = ({ onClose, initialTab = "feed", initialAnnouncementId =
             />
           )}
           {tab === "poll" && isAdminOrHr && (
-            <PollCreateForm onCreated={handlePollCreated} />
+            <Suspense fallback={<div className="announcement-hub-loading">Loading poll editor…</div>}>
+              <PollCreateForm onCreated={handlePollCreated} />
+            </Suspense>
           )}
           {tab === "insights" && isAdminOrHr && (
             <AnnouncementInsights

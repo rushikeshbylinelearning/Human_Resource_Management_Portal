@@ -2,8 +2,7 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Box } from '@mui/material';
-import { PageSkeleton } from './SkeletonLoaders';
+import PageFallbackSkeleton from './PageFallbackSkeleton';
 
 const ProtectedRoute = ({ children }) => {
     const { isAuthenticated, authStatus } = useAuth();
@@ -12,15 +11,7 @@ const ProtectedRoute = ({ children }) => {
     // This allows UI to render immediately while auth resolves in background
     // Backend is source of truth - we wait for /api/auth/me response
     if (authStatus === 'unknown') {
-        return (
-            <Box sx={{ 
-                width: '100%', 
-                minHeight: '100vh',
-                p: 3 
-            }}>
-                <PageSkeleton type="default" />
-            </Box>
-        );
+        return <PageFallbackSkeleton />;
     }
 
     // Backend confirmed: user is not authenticated - redirect to login

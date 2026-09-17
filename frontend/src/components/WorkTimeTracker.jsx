@@ -5,6 +5,17 @@ import { Typography, Box, Stack } from '@mui/material';
 
 const formatTimeUnit = (value) => String(value).padStart(2, '0');
 
+const TimeBlock = memo(function TimeBlock({ value, label, valueColor = 'var(--theme-black)' }) {
+    return (
+        <Box sx={{ textAlign: 'center', backgroundColor: 'rgba(0, 0, 0, 0.04)', borderRadius: 1, px: 1.5, py: 0.5 }}>
+            <Typography variant="h4" component="div" sx={{ fontWeight: 500, color: valueColor }}>
+                {formatTimeUnit(value)}
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 400, letterSpacing: '0.025em' }}>{label}</Typography>
+        </Box>
+    );
+});
+
 const WorkTimeTracker = ({ sessions, breaks, status, unifiedState: unifiedStateProp }) => {
     const [time, setTime] = useState({ hours: 0, minutes: 0, seconds: 0 });
     const intervalRef = useRef(null);
@@ -68,40 +79,20 @@ const WorkTimeTracker = ({ sessions, breaks, status, unifiedState: unifiedStateP
         };
     }, [status, calculateWorkTime, unifiedStateProp]);
 
-    const TimeBlock = ({ value, label }) => (
-        <Box sx={{ textAlign: 'center', backgroundColor: 'rgba(0, 0, 0, 0.04)', borderRadius: 1, px: 1.5, py: 0.5 }}>
-            <Typography variant="h4" component="div" sx={{ fontWeight: 500, color: 'var(--theme-black)' }}>
-                {formatTimeUnit(value)}
-            </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 400, letterSpacing: '0.025em' }}>{label}</Typography>
-        </Box>
-    );
-
-    // Unified model: main timer = elapsedShiftTime (HH:MM:SS).
-    if (unifiedStateProp) {
-        const u = unifiedStateProp;
-        const totalSeconds = Math.floor(u.elapsedShiftTime * 60);
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-        return (
-            <Stack direction="row" justifyContent="center" alignItems="center" spacing={1}>
-                <TimeBlock value={hours} label="Hours" />
-                <Typography variant="h4" sx={{ color: 'text.secondary', fontWeight: 400 }}>:</Typography>
-                <TimeBlock value={minutes} label="Minutes" />
-                <Typography variant="h4" sx={{ color: 'text.secondary', fontWeight: 400 }}>:</Typography>
-                <TimeBlock value={seconds} label="Seconds" />
-            </Stack>
-        );
-    }
+    const totalSeconds = unifiedStateProp
+        ? Math.floor(unifiedStateProp.elapsedShiftTime * 60)
+        : null;
+    const hours = totalSeconds != null ? Math.floor(totalSeconds / 3600) : time.hours;
+    const minutes = totalSeconds != null ? Math.floor((totalSeconds % 3600) / 60) : time.minutes;
+    const seconds = totalSeconds != null ? totalSeconds % 60 : time.seconds;
 
     return (
         <Stack direction="row" justifyContent="center" alignItems="center" spacing={1}>
-            <TimeBlock value={time.hours} label="Hours" />
-            <Typography variant="h4" sx={{ color: 'text.secondary', fontWeight: 400 }}>:</Typography>
-            <TimeBlock value={time.minutes} label="Minutes" />
-            <Typography variant="h4" sx={{ color: 'text.secondary', fontWeight: 400 }}>:</Typography>
-            <TimeBlock value={time.seconds} label="Seconds" />
+            <TimeBlock value={hours} label="Hours" />
+            <Typography variant="h4" component="span" sx={{ color: 'text.secondary', fontWeight: 400 }}>:</Typography>
+            <TimeBlock value={minutes} label="Minutes" />
+            <Typography variant="h4" component="span" sx={{ color: 'text.secondary', fontWeight: 400 }}>:</Typography>
+            <TimeBlock value={seconds} label="Seconds" />
         </Stack>
     );
 };

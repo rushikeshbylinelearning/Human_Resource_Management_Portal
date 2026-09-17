@@ -7,7 +7,7 @@
    - Cards: white, red top stripe, 16px radius
    ============================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+/* Google Fonts are loaded once from index.html with display=swap. */
 
 /* ── CSS Variables (mirrors ProfilePage.css) ─────────────── */
 .public-form-root {

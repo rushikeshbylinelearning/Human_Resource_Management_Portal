@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useState, useMemo, useRef, Suspense } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useSearchParams } from 'react-router-dom';
 import api from '../api/axios';
@@ -6,10 +6,12 @@ import socket from '../socket';
 import ProfileMain from '../components/Profile/ProfileMain';
 import ProfilePolicies from '../components/Profile/ProfilePolicies';
 import ProfileSidebar from '../components/Profile/ProfileSidebar';
-import CustomPdfViewer from '../components/CustomPdfViewer';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 import ProfileCompletionBanner from '../components/onboarding/ProfileCompletionBanner';
 import { useOnboarding } from '../context/OnboardingContext';
 import '../styles/ProfilePage.css';
+
+const CustomPdfViewer = lazyWithRetry(() => import('../components/CustomPdfViewer'));
 
 /**
  * ROOT CAUSE FIX #1: Prevent re-renders from causing layout mutations
@@ -376,13 +378,15 @@ const ProfilePage = () => {
 
             {/* FIX: PDF Viewer now handles its own modal - removed redundant wrapper */}
             {policyModalOpen && selectedPolicy && (
-                <CustomPdfViewer
-                    pdfUrl={getPdfUrl(selectedPolicy)}
-                    title={selectedPolicy.name || 'Company Policy'}
-                    version={selectedPolicy.version || '1.0'}
-                    effectiveDate={selectedPolicy.effectiveFrom}
-                    onClose={handleClosePolicyModal}
-                />
+                <Suspense fallback={null}>
+                    <CustomPdfViewer
+                        pdfUrl={getPdfUrl(selectedPolicy)}
+                        title={selectedPolicy.name || 'Company Policy'}
+                        version={selectedPolicy.version || '1.0'}
+                        effectiveDate={selectedPolicy.effectiveFrom}
+                        onClose={handleClosePolicyModal}
+                    />
+                </Suspense>
             )}
         </div>
     );

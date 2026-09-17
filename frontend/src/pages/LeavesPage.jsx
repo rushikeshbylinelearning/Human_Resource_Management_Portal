@@ -1,10 +1,21 @@
 // src/pages/LeavesPage.jsx
 import React, { useState, useEffect, useCallback, memo, useMemo, useRef } from 'react';
 import { Typography, Button, Alert, Chip, Box, Snackbar, Paper, Divider, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TablePagination, Dialog, DialogTitle, DialogContent, DialogActions, Grid, TextField, Radio, RadioGroup, FormControlLabel, FormControl, FormLabel, Menu, MenuItem, ListItemIcon, ListItemText, Skeleton } from '@mui/material';
-import { ArrowForward as ForwardIcon, WorkOutline, BeachAccess, AttachMoney, Sick, CheckCircle } from '@mui/icons-material';
+import ForwardIcon from '@mui/icons-material/ArrowForward';
+import WorkOutline from '@mui/icons-material/WorkOutline';
+import BeachAccess from '@mui/icons-material/BeachAccess';
+import AttachMoney from '@mui/icons-material/AttachMoney';
+import Sick from '@mui/icons-material/Sick';
+import CheckCircle from '@mui/icons-material/CheckCircle';
 import { useAuth } from '../context/AuthContext';
 import api from '../api/axios';
-import { Calendar, Plus, FileText, Heart, Umbrella, Calendar as CalendarIcon, XCircle, Clock } from 'lucide-react';
+import Calendar from 'lucide-react/dist/esm/icons/calendar';
+import Plus from 'lucide-react/dist/esm/icons/plus';
+import FileText from 'lucide-react/dist/esm/icons/file-text';
+import Heart from 'lucide-react/dist/esm/icons/heart';
+import Umbrella from 'lucide-react/dist/esm/icons/umbrella';
+import XCircle from 'lucide-react/dist/esm/icons/x-circle';
+import Clock from 'lucide-react/dist/esm/icons/clock';
 import LeaveRequestForm from '../components/LeaveRequestForm';
 import EmployeeLeaveDetailsModal from '../components/EmployeeLeaveDetailsModal';
 import SaturdaySchedule from '../components/SaturdaySchedule';
@@ -487,7 +498,7 @@ const LeavesPage = () => {
                     </Paper>
                     <Paper className="leave-kpi-card planned-leave">
                         <Box className="kpi-icon-wrapper">
-                            <CalendarIcon className="kpi-icon" size={22} />
+                            <Calendar className="kpi-icon" size={22} />
                         </Box>
                         <Box className="kpi-content">
                             <Typography className="kpi-value">{leaveBalances.paid || 0}</Typography>

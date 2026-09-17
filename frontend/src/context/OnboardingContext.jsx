@@ -37,22 +37,29 @@ export const OnboardingProvider = ({ children }) => {
     const [pendingPolicies, setPendingPolicies] = useState([]);
     const [standalonePolicyModalOpen, setStandalonePolicyModalOpen] = useState(false);
     const [currentStandalonePolicy, setCurrentStandalonePolicy] = useState(null);
+    const [hasTemplate, setHasTemplate] = useState(false);
+    const [pendingTour, setPendingTour] = useState(false);
+    const [flow, setFlow] = useState({
+        requirePolicy: true,
+        requireTour: true,
+        requireProfile: true,
+    });
 
     // Determine which step the user is at based on their onboarding object.
     // This is purely derived — never stores its own copy of user data.
     // Caller must only invoke this for employees eligible for onboarding
     // (created after the feature start date, or admin-forced).
-    const computeStep = useCallback((onboarding, policy) => {
+    const computeStep = useCallback((onboarding, policy, flowSettings) => {
         if (!onboarding) return STEP.DONE;
-
         if (onboarding.completed) return STEP.DONE;
 
-        // If there is no mandatory policy, skip the policy step
-        const hasMandatoryPolicy = !!policy;
+        const requirePolicy = flowSettings?.requirePolicy !== false;
+        const requireTour = flowSettings?.requireTour !== false;
+        const requireProfile = flowSettings?.requireProfile !== false;
 
-        if (!onboarding.policyAccepted && hasMandatoryPolicy) return STEP.POLICY;
-        if (!onboarding.tourCompleted) return STEP.TOUR;
-        if (!onboarding.profileCompleted) return STEP.PROFILE;
+        if (requirePolicy && !onboarding.policyAccepted && policy) return STEP.POLICY;
+        if ((requireTour || onboarding.tourRequired) && !onboarding.tourCompleted) return STEP.TOUR;
+        if (requireProfile && !onboarding.profileCompleted) return STEP.PROFILE;
         return STEP.DONE;
     }, []);
 
@@ -70,26 +77,25 @@ export const OnboardingProvider = ({ children }) => {
         try {
             const { data } = await api.get('/onboarding/status');
             setMandatoryPolicy(data.mandatoryPolicy || null);
+            setPendingTour(Boolean(data.pendingTour));
+            const flowSettings = data.flow || { requirePolicy: true, requireTour: true, requireProfile: true };
+            setFlow(flowSettings);
 
-            // Check for pending standalone policy acknowledgements (for all employees)
-            loadPendingPolicies();
-
-            // Pre-feature / non-eligible employees never see acknowledgement,
-            // even if they were wrongly enrolled earlier.
             if (!data.isNewOnboardingEmployee) {
-                setStep(STEP.DONE);
+                setStep(data.pendingTour ? STEP.TOUR : STEP.DONE);
+                loadPendingPolicies();
                 return;
             }
 
             let ob = data.onboarding || user.onboarding || {};
 
-            // Eligible new employee — enroll on first login if not yet recorded
             if (!ob.firstLoginCompleted && !firstLoginApiCalled.current) {
                 firstLoginApiCalled.current = true;
                 try {
                     const { data: fl } = await api.post('/onboarding/first-login');
                     if (fl.isNewOnboardingEmployee === false) {
-                        setStep(STEP.DONE);
+                        setStep(data.pendingTour ? STEP.TOUR : STEP.DONE);
+                        loadPendingPolicies();
                         return;
                     }
                     ob = fl.onboarding || ob;
@@ -99,7 +105,11 @@ export const OnboardingProvider = ({ children }) => {
                 }
             }
 
-            setStep(computeStep(ob, data.mandatoryPolicy));
+            const nextStep = computeStep(ob, data.mandatoryPolicy, flowSettings);
+            setStep(nextStep);
+            if (nextStep !== STEP.POLICY) {
+                loadPendingPolicies();
+            }
         } catch (e) {
             console.error('[Onboarding] Failed to load status:', e.message);
             // On error, don't block the user — let them proceed normally
@@ -133,11 +143,11 @@ export const OnboardingProvider = ({ children }) => {
                 return;
             }
             updateUserContext({ onboarding: data.onboarding });
-            setStep(computeStep(data.onboarding, mandatoryPolicy));
+            setStep(computeStep(data.onboarding, mandatoryPolicy, flow));
         } catch (e) {
             console.error('[Onboarding] recordFirstLogin failed:', e.message);
         }
-    }, [updateUserContext, computeStep, mandatoryPolicy]);
+    }, [updateUserContext, computeStep, mandatoryPolicy, flow]);
 
     // Called when employee starts reading the policy
     const recordReadingStart = useCallback(async () => {
@@ -154,7 +164,7 @@ export const OnboardingProvider = ({ children }) => {
         try {
             const { data } = await api.post('/onboarding/policy/accept', payload);
             updateUserContext({ onboarding: data.onboarding });
-            setStep(STEP.TOUR);
+            setStep(computeStep(data.onboarding, mandatoryPolicy, flow));
             return { success: true };
         } catch (e) {
             const msg = e.response?.data?.error || 'Failed to accept policy.';
@@ -162,7 +172,7 @@ export const OnboardingProvider = ({ children }) => {
         } finally {
             setPolicyAcceptancePending(false);
         }
-    }, [updateUserContext]);
+    }, [updateUserContext, computeStep, mandatoryPolicy, flow]);
 
     // Called when employee finishes the tour
     const completeTour = useCallback(async () => {
@@ -170,13 +180,14 @@ export const OnboardingProvider = ({ children }) => {
         try {
             const { data } = await api.post('/onboarding/tour/complete');
             updateUserContext({ onboarding: data.onboarding });
-            setStep(STEP.PROFILE);
+            setPendingTour(false);
+            setStep(computeStep(data.onboarding, mandatoryPolicy, flow));
         } catch (e) {
             console.error('[Onboarding] completeTour failed:', e.message);
         } finally {
             setTourPending(false);
         }
-    }, [updateUserContext]);
+    }, [updateUserContext, computeStep, mandatoryPolicy, flow]);
 
     // Called only after all required profile fields are saved
     const completeProfile = useCallback(async () => {
@@ -200,23 +211,41 @@ export const OnboardingProvider = ({ children }) => {
     // ─── Standalone Policy Acknowledgement Functions ─────────────────────────────
 
     // Load pending policies for existing employees
-    const loadPendingPolicies = useCallback(async () => {
+    const loadPendingPolicies = useCallback(async (opts = {}) => {
         if (!user || authStatus !== 'authenticated') return;
         if (user.role === 'Admin' || user.role === 'HR') return;
 
         try {
             const { data } = await api.get('/onboarding/pending-policies');
-            setPendingPolicies(data.pendingPolicies || []);
-            
-            // Auto-show modal if there are pending policies
-            if (data.pendingPolicies && data.pendingPolicies.length > 0 && !standalonePolicyModalOpen) {
-                setCurrentStandalonePolicy(data.pendingPolicies[0]);
+            const next = data.pendingPolicies || [];
+            setPendingPolicies(next);
+
+            if (next.length > 0 && (!standalonePolicyModalOpen || opts.forceOpen)) {
+                const firstPolicy = next[0];
+                setCurrentStandalonePolicy(firstPolicy);
+                setHasTemplate(firstPolicy.hasTemplate || false);
                 setStandalonePolicyModalOpen(true);
+            } else if (next.length === 0) {
+                setStandalonePolicyModalOpen(false);
+                setCurrentStandalonePolicy(null);
+                setHasTemplate(false);
+                if (pendingTour) setStep(STEP.TOUR);
             }
         } catch (e) {
             console.error('[Onboarding] Failed to load pending policies:', e.message);
         }
-    }, [user, authStatus, standalonePolicyModalOpen]);
+    }, [user, authStatus, standalonePolicyModalOpen, pendingTour]);
+
+    // Check if a policy has an active template (for conditional rendering)
+    const checkPolicyHasTemplate = useCallback(async (policyName) => {
+        try {
+            await api.get(`/policy-templates/active?name=${encodeURIComponent(policyName)}`);
+            setHasTemplate(true);
+        } catch (e) {
+            // 404 means no template exists - use PDF viewer
+            setHasTemplate(false);
+        }
+    }, []);
 
     // Record reading start for standalone policy
     const recordStandaloneReadingStart = useCallback(async (logId) => {
@@ -243,6 +272,7 @@ export const OnboardingProvider = ({ children }) => {
             } else {
                 setStandalonePolicyModalOpen(false);
                 setCurrentStandalonePolicy(null);
+                if (pendingTour) setStep(STEP.TOUR);
             }
             
             return { success: true };
@@ -252,14 +282,15 @@ export const OnboardingProvider = ({ children }) => {
         } finally {
             setPolicyAcceptancePending(false);
         }
-    }, [pendingPolicies]);
+    }, [pendingPolicies, pendingTour]);
 
     // Manually open standalone policy modal
     const openStandalonePolicyModal = useCallback((policyData = null) => {
-        if (policyData) {
-            setCurrentStandalonePolicy(policyData);
-        } else if (pendingPolicies.length > 0) {
-            setCurrentStandalonePolicy(pendingPolicies[0]);
+        const policy = policyData || (pendingPolicies.length > 0 ? pendingPolicies[0] : null);
+        if (policy) {
+            setCurrentStandalonePolicy(policy);
+            // Use the hasTemplate flag from the policy object (already set by API)
+            setHasTemplate(policy.hasTemplate || false);
         }
         setStandalonePolicyModalOpen(true);
     }, [pendingPolicies]);
@@ -292,6 +323,7 @@ export const OnboardingProvider = ({ children }) => {
         pendingPolicies,
         standalonePolicyModalOpen,
         currentStandalonePolicy,
+        hasTemplate, // NEW: flag for conditional rendering
         loadPendingPolicies,
         recordStandaloneReadingStart,
         acceptStandalonePolicy,

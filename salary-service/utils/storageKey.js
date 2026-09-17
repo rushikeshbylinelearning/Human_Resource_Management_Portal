@@ -7,7 +7,6 @@
 //
 // Key schema:
 //   payroll/Employees/{employeeId}/{year}/{month}/payslip.pdf
-//   payroll/Employees/{employeeId}/{year}/{month}/attachments/{filename}
 //   payroll/Shared/{adminFolder}/{filename}
 //   payroll/Folders/{adminFolder}/   ← zero-byte folder marker
 //
@@ -51,22 +50,6 @@ function buildPayslipKey(employeeId, year, month) {
 }
 
 /**
- * Builds the B2 key for an attachment within a payslip month folder.
- * @param {string} employeeId
- * @param {number|string} year
- * @param {number|string} month
- * @param {string} filename   — sanitised before use
- * @returns {string}
- */
-function buildAttachmentKey(employeeId, year, month, filename) {
-    const safeId = sanitizeSegment(employeeId);
-    const safeYear = sanitizeSegment(String(year));
-    const safeMonth = String(month).padStart(2, '0');
-    const safeName = sanitizeSegment(path.basename(filename));
-    return `${PREFIX}Employees/${safeId}/${safeYear}/${safeMonth}/attachments/${safeName}`;
-}
-
-/**
  * Builds the zero-byte marker key for an ad-hoc shared folder.
  * @param {string} folderName  — user-supplied folder name, sanitised
  * @returns {string}  e.g. "payroll/Shared/MyFolder/"
@@ -90,25 +73,10 @@ function buildSharedFileKey(folderName, filename) {
     return `${PREFIX}Shared/${safeName}/${safeFile}`;
 }
 
-/**
- * Returns the full B2 prefix for an employee's document folder.
- * Used for ListObjectsV2Command to browse an employee's payslips.
- */
-function buildEmployeePrefix(employeeId, year, month) {
-    const safeId = sanitizeSegment(employeeId);
-    if (!year) return `${PREFIX}Employees/${safeId}/`;
-    const safeYear = sanitizeSegment(String(year));
-    if (!month) return `${PREFIX}Employees/${safeId}/${safeYear}/`;
-    const safeMonth = String(month).padStart(2, '0');
-    return `${PREFIX}Employees/${safeId}/${safeYear}/${safeMonth}/`;
-}
-
 module.exports = {
     sanitizeSegment,
     buildPayslipKey,
-    buildAttachmentKey,
     buildSharedFolderMarkerKey,
     buildSharedFileKey,
-    buildEmployeePrefix,
     PREFIX,
 };

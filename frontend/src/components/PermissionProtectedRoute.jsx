@@ -4,8 +4,8 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usePermissions } from '../hooks/usePermissions';
 import { Box, Typography, Button, Paper } from '@mui/material';
-import { Lock as LockIcon } from '@mui/icons-material';
-import { PageSkeleton } from './SkeletonLoaders';
+import LockIcon from '@mui/icons-material/Lock';
+import PageFallbackSkeleton from './PageFallbackSkeleton';
 
 const PermissionProtectedRoute = ({ 
   children, 
@@ -21,15 +21,7 @@ const PermissionProtectedRoute = ({
   // NON-BLOCKING: authStatus === 'unknown' shows skeleton, NOT redirect
   // This allows UI to render immediately while auth resolves in background
   if (authStatus === 'unknown') {
-    return (
-      <Box sx={{ 
-        width: '100%', 
-        minHeight: '60vh',
-        p: 3 
-      }}>
-        <PageSkeleton type="default" />
-      </Box>
-    );
+    return <PageFallbackSkeleton />;
   }
 
   // Backend confirmed: user is not authenticated - redirect to login

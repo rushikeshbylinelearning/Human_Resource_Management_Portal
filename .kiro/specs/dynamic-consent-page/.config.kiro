@@ -1,0 +1,73 @@
+{
+  "name": "dynamic-consent-page",
+  "version": "1.0.0",
+  "description": "Structured 5-step consent wizard with inline HR editing, guardian identity capture, and multi-checkbox consent outcomes — extending existing Policy Management system",
+  "author": "System Architect",
+  "created": "2026-08-26",
+  "status": "draft",
+  "phases": [
+    {
+      "id": 1,
+      "name": "Data Models",
+      "description": "PolicyTemplate model (new) + PolicyAcceptanceLog extensions",
+      "estimatedHours": 8
+    },
+    {
+      "id": 2,
+      "name": "PDF Extraction and Template CRUD",
+      "description": "Backend services for PDF text extraction, LLM-powered clause extraction, template CRUD endpoints",
+      "estimatedHours": 16
+    },
+    {
+      "id": 3,
+      "name": "Admin Template Editor UI",
+      "description": "Visual editor with stepper, hero banner editor, per-layout step editors (card_grid, column_grid, clause_list, consent_form)",
+      "estimatedHours": 24
+    },
+    {
+      "id": 4,
+      "name": "Consent Submission API",
+      "description": "Three consent endpoints (submit, continue-without-consent, request-alternative) with validation",
+      "estimatedHours": 12
+    },
+    {
+      "id": 5,
+      "name": "Employee-Facing Consent Wizard UI",
+      "description": "5-step wizard with guardian fields, individually-required checkboxes, variable substitution",
+      "estimatedHours": 24
+    },
+    {
+      "id": 6,
+      "name": "Integration and Migration",
+      "description": "Conditional rendering, migration script, worked example policy, documentation",
+      "estimatedHours": 16
+    }
+  ],
+  "totalEstimatedHours": 100,
+  "dependencies": {
+    "backend": [
+      "pdf-parse@^1.1.1"
+    ],
+    "frontend": []
+  },
+  "risks": [
+    {
+      "description": "LLM extraction quality varies by PDF structure",
+      "mitigation": "HR manual review + edit step required before publish; extraction is a seed, not final content"
+    },
+    {
+      "description": "Large PDFs (>50 pages) may exceed LLM token limits",
+      "mitigation": "30s timeout + fallback to manual authoring; chunk PDFs if needed"
+    },
+    {
+      "description": "Backwards compatibility with existing policies",
+      "mitigation": "All changes are additive; hasTemplate flag controls conditional rendering; no auto-migration"
+    }
+  ],
+  "successMetrics": [
+    "One policy migrated end-to-end (PDF → template → publish → employee consent)",
+    "Admin can edit template content inline without re-uploading PDF",
+    "Employee can complete wizard in <5 minutes",
+    "Zero breaking changes to existing Policy or PolicyAcceptanceLog documents"
+  ]
+}

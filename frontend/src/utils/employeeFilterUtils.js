@@ -52,23 +52,3 @@ export const filterEmployeesByRole = (employees, role) => {
     });
 };
 
-/**
- * Counts active employees (excluding Admin and inactive users).
- * 
- * @param {Array} employees - Array of employee objects
- * @returns {number} Count of active employees
- */
-export const countActiveEmployees = (employees) => {
-    return filterActiveEmployees(employees).length;
-};
-
-/**
- * Counts active employees by role (excluding Admin and inactive users).
- * 
- * @param {Array} employees - Array of employee objects
- * @param {string} role - 'Employee' or 'Intern' to count
- * @returns {number} Count of active employees with specified role
- */
-export const countActiveEmployeesByRole = (employees, role) => {
-    return filterEmployeesByRole(employees, role).length;
-};

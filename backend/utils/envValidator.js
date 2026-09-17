@@ -12,22 +12,6 @@ const requiredVars = [
   'JWT_PUBLIC_KEY_PATH',
 ];
 
-const optionalVars = [
-  'NODE_ENV',
-  'PORT',
-  'FRONTEND_URL',
-  'SESSION_SECRET',
-  'JWT_ALGORITHM',
-  'MAIL_HOST',
-  'MAIL_PORT',
-  'MAIL_USER',
-  'MAIL_PASS',
-  'MAIL_FROM',
-  'SSO_ENABLED',
-  'REDIS_HOST',
-  'REDIS_PORT',
-];
-
 /**
  * Validate environment variables
  * @returns {Object} - Validation result
@@ -187,10 +171,6 @@ function validateAndExit() {
 }
 
 module.exports = {
-  validateEnv,
-  printValidationResults,
-  getEnvironmentInfo,
-  printEnvironmentInfo,
   validateAndExit,
 };
 

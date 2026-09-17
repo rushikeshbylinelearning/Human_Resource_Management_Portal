@@ -42,24 +42,6 @@ if (process.env.NODE_ENV !== 'production') {
   }));
 }
 
-// Performance monitoring helper
-const performanceLogger = {
-  startTimer: (operation) => {
-    const start = Date.now();
-    return {
-      end: (additionalData = {}) => {
-        const duration = Date.now() - start;
-        logger.info('Performance', {
-          operation,
-          duration: `${duration}ms`,
-          ...additionalData
-        });
-        return duration;
-      }
-    };
-  }
-};
-
 // Request logging middleware - only log errors and slow requests in production
 const requestLogger = (req, res, next) => {
   // Skip logging in production for health checks and static assets
@@ -105,22 +87,10 @@ const logError = (error, context = {}) => {
   });
 };
 
-// Database query logging
-const logDatabaseQuery = (operation, model, query, duration) => {
-  logger.debug('Database Query', {
-    operation,
-    model: model.modelName,
-    query: JSON.stringify(query),
-    duration: `${duration}ms`
-  });
-};
-
 module.exports = {
   logger,
-  performanceLogger,
   requestLogger,
-  logError,
-  logDatabaseQuery
+  logError
 };
 
 

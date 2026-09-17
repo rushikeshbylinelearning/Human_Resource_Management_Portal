@@ -15,24 +15,30 @@
 
 .baa-root {
     position: fixed;
-    right: 24px;
-    bottom: 20px;
+    width: 56px;
+    height: 56px;
     z-index: 1400;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 10px;
+    overflow: visible;
     pointer-events: none;
 }
 
-/* Adjust position when stacked above HR Query FAB */
-.baa-root.baa-root--stacked {
-    bottom: 96px;
+.baa-root.baa-root--dragging {
+    user-select: none;
+}
+
+.baa-root.baa-root--dragging,
+.baa-root.baa-root--dragging * {
+    cursor: grabbing !important;
 }
 
 .baa-fab {
-    width: 52px;
-    height: 52px;
+    position: absolute;
+    inset: 0;
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    min-height: 56px;
+    padding: 0;
     border: none;
     border-radius: 50%;
     display: inline-flex;
@@ -43,12 +49,25 @@
     box-shadow: 0 6px 20px rgba(211, 47, 47, 0.4);
     cursor: pointer;
     pointer-events: auto;
+    touch-action: none;
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.baa-fab svg {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
 }
 
 .baa-fab:hover {
     transform: scale(1.05);
     box-shadow: 0 8px 24px rgba(211, 47, 47, 0.48);
+}
+
+.baa-root--dragging .baa-fab,
+.baa-root--dragging .baa-fab:hover {
+    transform: none;
+    transition: none;
 }
 
 .baa-fab--open {
@@ -66,6 +85,9 @@ body:has(.hr-query-drawer.MuiDrawer-root .MuiDrawer-paper) .baa-root {
 }
 
 .baa-panel {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 10px);
     width: min(300px, calc(100vw - 40px));
     pointer-events: auto;
     display: flex;
@@ -80,6 +102,11 @@ body:has(.hr-query-drawer.MuiDrawer-root .MuiDrawer-paper) .baa-root {
         0 4px 6px rgba(15, 23, 42, 0.04),
         0 16px 40px rgba(15, 23, 42, 0.12);
     animation: baa-slide-up 0.18s ease-out;
+}
+
+.baa-panel--wide {
+    width: min(340px, calc(100vw - 40px));
+    max-height: min(78vh, 560px);
 }
 
 @keyframes baa-slide-up {
@@ -102,6 +129,8 @@ body:has(.hr-query-drawer.MuiDrawer-root .MuiDrawer-paper) .baa-root {
     background: #fafbfc;
     border-bottom: 1px solid #eef2f6;
     flex-shrink: 0;
+    cursor: grab;
+    touch-action: none;
 }
 
 .baa-panel__title-wrap {
@@ -314,15 +343,6 @@ body:has(.hr-query-drawer.MuiDrawer-root .MuiDrawer-paper) .baa-root {
 }
 
 @media (max-width: 600px) {
-    .baa-root {
-        right: 24px;
-        bottom: 14px;
-    }
-    
-    .baa-root.baa-root--stacked {
-        bottom: 90px;
-    }
-
     .baa-panel {
         width: calc(100vw - 28px);
     }
@@ -429,4 +449,74 @@ body:has(.hr-query-drawer.MuiDrawer-root .MuiDrawer-paper) .baa-root {
     font-size: 0.78rem;
     color: #6b7280;
     text-align: center;
+}
+
+.baa-action-item__icon--slate {
+    background: #f1f5f9;
+    color: #334155;
+}
+
+.baa-overrun-badge--neutral {
+    color: #334155;
+    background: #e2e8f0;
+}
+
+.baa-time-field {
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+}
+
+.baa-time-field label {
+    display: block;
+    font-size: 0.78rem;
+    color: #6b7280;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.baa-time-field__row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.baa-time-field input[type="time"] {
+    flex: 1;
+    min-width: 0;
+    height: 36px;
+    padding: 0 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    background: #fff;
+    color: #111827;
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: inherit;
+}
+
+.baa-time-field input[type="time"]:focus {
+    outline: none;
+    border-color: #d32f2f;
+    box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.12);
+}
+
+.baa-time-field input[type="time"]:disabled {
+    opacity: 0.6;
+}
+
+.baa-time-field__preview {
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #d32f2f;
+}
+
+.baa-time-field__hint {
+    margin: 6px 0 0;
+    font-size: 0.7rem;
+    line-height: 1.35;
+    color: #6b7280;
 }

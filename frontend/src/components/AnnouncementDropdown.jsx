@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from "react";
-import { Megaphone } from "lucide-react";
+import { useState, useEffect, useRef, Suspense } from "react";
+import Megaphone from "lucide-react/dist/esm/icons/megaphone";
 import AnnouncementModal from "./announcements/AnnouncementModal";
-import AnnouncementHub from "./announcements/AnnouncementHub";
+import { lazyWithRetry } from "../utils/lazyWithRetry";
 import api from "../api/axios";
 import socket from "../socket";
 import { useAuth } from "../context/AuthContext";
@@ -9,6 +9,8 @@ import soundManager from "../services/NotificationSoundManager";
 import useDesktopNotification from "../hooks/useDesktopNotification";
 import { OPEN_ANNOUNCEMENT_HUB_EVENT } from "../utils/announcementHubEvents";
 import "../styles/AnnouncementDropdown.css";
+
+const AnnouncementHub = lazyWithRetry(() => import("./announcements/AnnouncementHub"));
 
 const AnnouncementDropdown = () => {
   const [open, setOpen] = useState(false);
@@ -344,11 +346,13 @@ const AnnouncementDropdown = () => {
         onClose={handleClose}
         ariaLabel="Company announcements"
       >
-        <AnnouncementHub
-          onClose={handleClose}
-          initialTab={hubState.tab}
-          initialAnnouncementId={hubState.announcementId}
-        />
+        <Suspense fallback={<div className="announcement-hub-loading">Loading announcements…</div>}>
+          <AnnouncementHub
+            onClose={handleClose}
+            initialTab={hubState.tab}
+            initialAnnouncementId={hubState.announcementId}
+          />
+        </Suspense>
       </AnnouncementModal>
     </div>
   );

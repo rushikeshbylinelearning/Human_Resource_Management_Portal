@@ -19,6 +19,7 @@ import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
 import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined';
 import FolderCopyOutlinedIcon from '@mui/icons-material/FolderCopyOutlined';
 import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
+import PolicyIcon from '@mui/icons-material/Policy';
 import PageHeroHeader from '../components/PageHeroHeader';
 import PolicyUploadForm from '../components/PolicyUploadForm';
 import PolicyViewer from '../components/PolicyViewer';
@@ -26,17 +27,24 @@ import AnonymousMessagesList from '../components/AnonymousMessagesList';
 import PolicyListCompact from '../components/PolicyListCompact';
 import ComplianceDashboard from '../components/onboarding/ComplianceDashboard';
 import EmployeeDocumentsDashboard from '../components/employeeDocuments/EmployeeDocumentsDashboard';
-import PolicyAssignmentModal from '../components/admin/PolicyAssignmentModal';
+import OnboardingControlPanel from '../components/admin/OnboardingControlPanel';
 import HRQueryManagement from '../components/admin/HRQueryManagement';
+import PolicyTemplateList from '../components/admin/PolicyTemplateList';
 import api from '../api/axios';
 import '../styles/AdminPoliciesPage.css';
-
-const cardBaseSx = {
-    background: '#fff',
-    borderRadius: '16px',
-    padding: '24px',
-    boxShadow: '0 4px 14px rgba(0,0,0,0.08)'
-};
+import {
+    cardSx,
+    primaryBtnSx,
+    tabBarSx,
+    TEXT,
+    MUTED,
+    SURFACE,
+    SUCCESS_BG,
+    SUCCESS_TEXT,
+    INFO_BG,
+    INFO_TEXT,
+    FONT,
+} from '../theme/policiesPageTheme';
 
 const scrollBoxSx = {
     overflowY: 'auto',
@@ -182,7 +190,7 @@ const AdminPoliciesPage = () => {
     };
 
     return (
-        <Box className="admin-policies-page" sx={{ width: '100%', minHeight: '100vh', background: '#f5f6fb' }}>
+        <Box className="admin-policies-page" sx={{ width: '100%', maxWidth: '100%', minHeight: '100%', background: '#F8F9FB', boxSizing: 'border-box', fontFamily: FONT }}>
             <PageHeroHeader
                 eyebrow="Operations Control"
                 title="Policies Management"
@@ -190,29 +198,20 @@ const AdminPoliciesPage = () => {
             />
 
             {/* Tab navigation */}
-            <Box sx={{ borderBottom: '1px solid #e2e8f0', mb: 3, background: '#fff', px: 3 }}>
+            <Box className="policies-tabs-wrap">
                 <Tabs
                     value={activeTab}
                     onChange={(_, v) => setActiveTab(v)}
-                    sx={{
-                        '& .MuiTab-root': {
-                            textTransform: 'none',
-                            fontWeight: 600,
-                            fontSize: '0.875rem',
-                            minHeight: 48,
-                            gap: 0.75,
-                            color: '#64748b',
-                        },
-                        '& .Mui-selected': { color: '#6366f1' },
-                        '& .MuiTab-iconWrapper': { marginRight: 0 },
-                        '& .MuiTabs-indicator': { backgroundColor: '#6366f1', height: 2 },
-                    }}
+                    variant="scrollable"
+                    scrollButtons="auto"
+                    sx={tabBarSx}
                 >
                     <Tab icon={<DescriptionOutlinedIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Policies" />
                     <Tab icon={<QuestionAnswerIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="HR Queries" />
                     <Tab icon={<ForumOutlinedIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Anonymous Messages" />
                     <Tab icon={<VerifiedUserOutlinedIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Onboarding Compliance" />
                     <Tab icon={<FolderCopyOutlinedIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Employee Documents" />
+                    <Tab icon={<PolicyIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Consent Templates" />
                 </Tabs>
             </Box>
 
@@ -226,15 +225,15 @@ const AdminPoliciesPage = () => {
                         gap: 3,
                         width: '100%'
                     }}>
-                        <Box sx={cardBaseSx}>
-                            <Typography variant="h6" fontWeight={700} color="#222" mb={3}>
+                        <Box sx={cardSx}>
+                            <Typography sx={{ fontWeight: 700, color: TEXT, fontSize: '1rem', letterSpacing: '-0.015em', mb: 2.5, fontFamily: FONT }}>
                                 Upload New Policy
                             </Typography>
                             <PolicyUploadForm onSubmit={handleUpload} submitting={submitting} />
 
                             <Divider sx={{ my: 3 }} />
 
-                            <Typography variant="h6" fontWeight={700} color="#222" mb={2}>
+                            <Typography sx={{ fontWeight: 700, color: TEXT, fontSize: '1rem', letterSpacing: '-0.015em', mb: 2, fontFamily: FONT }}>
                                 Existing Policies
                             </Typography>
                             <Box sx={{ maxHeight: '400px', ...scrollBoxSx }}>
@@ -250,38 +249,38 @@ const AdminPoliciesPage = () => {
                         </Box>
 
                         {/* Right column: quick stats */}
-                        <Box sx={cardBaseSx}>
-                            <Typography variant="h6" fontWeight={700} color="#222" mb={3}>
+                        <Box sx={cardSx}>
+                            <Typography sx={{ fontWeight: 700, color: TEXT, fontSize: '1rem', letterSpacing: '-0.015em', mb: 2.5, fontFamily: FONT }}>
                                 Policy Overview
                             </Typography>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5, background: '#f8fafc', borderRadius: 2 }}>
-                                    <Typography variant="body2" sx={{ color: '#475569' }}>Total Policies</Typography>
-                                    <Typography variant="body2" sx={{ fontWeight: 700 }}>{policies.length}</Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.25 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5, background: SURFACE, borderRadius: '10px', border: '1px solid #E5E7EB' }}>
+                                    <Typography variant="body2" sx={{ color: MUTED, fontWeight: 500 }}>Total Policies</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: TEXT }}>{policies.length}</Typography>
                                 </Box>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5, background: '#f0fdf4', borderRadius: 2 }}>
-                                    <Typography variant="body2" sx={{ color: '#166534' }}>Active</Typography>
-                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#16a34a' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5, background: SUCCESS_BG, borderRadius: '10px', border: '1px solid #C8E6C9' }}>
+                                    <Typography variant="body2" sx={{ color: SUCCESS_TEXT, fontWeight: 500 }}>Active</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: SUCCESS_TEXT }}>
                                         {policies.filter(p => p.status === 'Active').length}
                                     </Typography>
                                 </Box>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5, background: '#f8fafc', borderRadius: 2 }}>
-                                    <Typography variant="body2" sx={{ color: '#475569' }}>Archived</Typography>
-                                    <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5, background: SURFACE, borderRadius: '10px', border: '1px solid #E5E7EB' }}>
+                                    <Typography variant="body2" sx={{ color: MUTED, fontWeight: 500 }}>Archived</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: TEXT }}>
                                         {policies.filter(p => p.status === 'Archived').length}
                                     </Typography>
                                 </Box>
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5, background: '#eef2ff', borderRadius: 2 }}>
-                                    <Typography variant="body2" sx={{ color: '#3730a3' }}>Mandatory Onboarding</Typography>
-                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#4f46e5' }}>
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', p: 1.5, background: INFO_BG, borderRadius: '10px', border: '1px solid #BFDBFE' }}>
+                                    <Typography variant="body2" sx={{ color: INFO_TEXT, fontWeight: 500 }}>Mandatory Onboarding</Typography>
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: INFO_TEXT }}>
                                         {policies.filter(p => p.isMandatoryOnboarding).length}
                                     </Typography>
                                 </Box>
                             </Box>
                             <Box sx={{ mt: 3 }}>
-                                <Typography variant="body2" sx={{ color: '#94a3b8', fontSize: '0.8rem' }}>
+                                <Typography variant="body2" sx={{ color: MUTED, fontSize: '0.8rem' }}>
                                     To configure the mandatory onboarding policy, go to the
-                                    <strong style={{ color: '#6366f1', cursor: 'pointer' }} onClick={() => setActiveTab(3)}>
+                                    <strong style={{ color: '#C62828', cursor: 'pointer' }} onClick={() => setActiveTab(3)}>
                                         {' '}Onboarding Compliance
                                     </strong>{' '}tab.
                                 </Typography>
@@ -292,15 +291,15 @@ const AdminPoliciesPage = () => {
 
                 {/* ── Tab 1: HR Queries ─────────────────────────────────── */}
                 {activeTab === 1 && (
-                    <Box sx={{ px: { xs: 1, sm: 2 } }}>
+                    <Box sx={{ width: '100%', minWidth: 0, minHeight: 0 }}>
                         <HRQueryManagement />
                     </Box>
                 )}
 
                 {/* ── Tab 2: Anonymous Messages ────────────────────────────── */}
                 {activeTab === 2 && (
-                    <Box sx={cardBaseSx}>
-                        <Typography variant="h6" fontWeight={700} color="#222" mb={3}>
+                    <Box sx={cardSx}>
+                        <Typography sx={{ fontWeight: 700, color: TEXT, fontSize: '1rem', letterSpacing: '-0.015em', mb: 2.5, fontFamily: FONT }}>
                             Anonymous Messages
                         </Typography>
                         <Box sx={{ maxHeight: '700px', ...scrollBoxSx }}>
@@ -315,23 +314,28 @@ const AdminPoliciesPage = () => {
 
                 {/* ── Tab 3: Onboarding Compliance ─────────────────────────── */}
                 {activeTab === 3 && (
-                    <Box sx={cardBaseSx}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                            <Typography variant="h6" fontWeight={700} color="#222">
-                                Onboarding Compliance
-                            </Typography>
+                    <Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 2.5, gap: 2, flexWrap: 'wrap' }}>
+                            <Box>
+                                <Typography sx={{ fontWeight: 700, color: TEXT, fontSize: '1.05rem', letterSpacing: '-0.02em', fontFamily: FONT }}>
+                                    Onboarding Compliance
+                                </Typography>
+                                <Typography sx={{ fontSize: '0.8rem', color: MUTED, mt: 0.35 }}>
+                                    See who has finished notice, tour, and profile. Use the control panel to decide what people see on first login.
+                                </Typography>
+                            </Box>
                             <Button
                                 variant="contained"
-                                color="primary"
                                 onClick={() => setAssignmentModalOpen(true)}
-                                sx={{ textTransform: 'none' }}
+                                sx={primaryBtnSx}
                             >
-                                Assign Policy to Employees
+                                Onboarding control panel
                             </Button>
                         </Box>
                         <ComplianceDashboard
                             policies={policies}
                             onRefreshPolicies={loadPolicies}
+                            onOpenControl={() => setAssignmentModalOpen(true)}
                         />
                     </Box>
                 )}
@@ -340,6 +344,13 @@ const AdminPoliciesPage = () => {
                 {activeTab === 4 && (
                     <Box sx={{ px: { xs: 0, sm: 0.5 } }}>
                         <EmployeeDocumentsDashboard />
+                    </Box>
+                )}
+
+                {/* ── Tab 5: Consent Templates ──────────────────────────────── */}
+                {activeTab === 5 && (
+                    <Box sx={{ width: '100%' }}>
+                        <PolicyTemplateList />
                     </Box>
                 )}
             </Box>
@@ -385,14 +396,15 @@ const AdminPoliciesPage = () => {
             </Snackbar>
 
             {/* Policy Assignment Modal */}
-            <PolicyAssignmentModal
+            <OnboardingControlPanel
                 open={assignmentModalOpen}
                 onClose={() => setAssignmentModalOpen(false)}
-                onSuccess={(result) => {
+                onSaved={() => {
+                    loadPolicies();
                     setSnackbar({
                         open: true,
-                        message: `Policy assigned successfully to ${result.results?.success?.length || 0} employee(s)`,
-                        severity: 'success'
+                        message: 'Onboarding settings updated',
+                        severity: 'success',
                     });
                 }}
             />

@@ -1,10 +1,13 @@
 // frontend/src/components/onboarding/OnboardingPolicyModal.jsx
 // Fullscreen, undismissable policy compliance flow during onboarding.
-// Uses CustomPdfViewer in onboarding-policy mode with in-PDF acknowledgment page.
+// Uses ConsentWizard when a published template exists; otherwise the PDF viewer.
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useOnboarding } from '../../context/OnboardingContext';
-import CustomPdfViewer from '../CustomPdfViewer';
+import { lazyWithRetry } from '../../utils/lazyWithRetry';
+
+const CustomPdfViewer = lazyWithRetry(() => import('../CustomPdfViewer'));
+const ConsentWizard = lazyWithRetry(() => import('./ConsentWizard'));
 
 const OnboardingPolicyModal = () => {
     const {
@@ -12,12 +15,12 @@ const OnboardingPolicyModal = () => {
         recordReadingStart,
         acceptPolicy,
         policyAcceptancePending,
+        reloadStatus,
     } = useOnboarding();
 
     const [error, setError] = useState('');
     const [submitting, setSubmitting] = useState(false);
 
-    // Block navigation shortcuts while policy modal is open
     useEffect(() => {
         const blockNavigation = (e) => {
             if (e.key === 'Escape') e.preventDefault();
@@ -54,19 +57,39 @@ const OnboardingPolicyModal = () => {
 
     if (!mandatoryPolicy?._id) return null;
 
+    if (mandatoryPolicy.hasTemplate) {
+        return (
+            <Suspense fallback={null}>
+                <ConsentWizard
+                    open
+                    onClose={() => {}}
+                    policyId={mandatoryPolicy._id}
+                    policyName={mandatoryPolicy.name}
+                    logId={mandatoryPolicy.logId}
+                    requireConsent
+                    onSuccess={() => {
+                        if (reloadStatus) reloadStatus();
+                    }}
+                />
+            </Suspense>
+        );
+    }
+
     return (
-        <CustomPdfViewer
-            mode="onboarding-policy"
-            pdfUrl={`/policies-gridfs/${mandatoryPolicy._id}/file`}
-            title={mandatoryPolicy.name || 'Company Policy'}
-            version={mandatoryPolicy.version || '1.0'}
-            effectiveDate={mandatoryPolicy.effectiveFrom}
-            dismissable={false}
-            onReadingStart={recordReadingStart}
-            onAccept={handleAccept}
-            acceptancePending={submitting || policyAcceptancePending}
-            acceptError={error}
-        />
+        <Suspense fallback={null}>
+            <CustomPdfViewer
+                mode="onboarding-policy"
+                pdfUrl={`/policies-gridfs/${mandatoryPolicy._id}/file`}
+                title={mandatoryPolicy.name || 'Company Policy'}
+                version={mandatoryPolicy.version || '1.0'}
+                effectiveDate={mandatoryPolicy.effectiveFrom}
+                dismissable={false}
+                onReadingStart={recordReadingStart}
+                onAccept={handleAccept}
+                acceptancePending={submitting || policyAcceptancePending}
+                acceptError={error}
+            />
+        </Suspense>
     );
 };
 

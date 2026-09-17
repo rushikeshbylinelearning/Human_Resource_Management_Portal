@@ -91,8 +91,8 @@
   position: absolute;
   right: 0;
   top: calc(100% + 12px);
-  width: 450px;
-  height: 550px;
+  width: min(450px, calc(100vw - 16px));
+  height: min(550px, calc(100dvh - 72px));
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);

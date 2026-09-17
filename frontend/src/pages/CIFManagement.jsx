@@ -237,7 +237,7 @@ const CIFManagement = () => {
         description="Manage and track employee incident records, compliance violations, and HR documentation"
         icon={<FolderOpenIcon />}
         actionArea={
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap', width: '100%', minWidth: 0 }}>
             {/* Compact Search Bar */}
             <TextField
               placeholder="Search by employee name or code..."
@@ -252,7 +252,9 @@ const CIFManagement = () => {
                 )
               }}
               sx={{
-                minWidth: '320px',
+                width: { xs: '100%', sm: 'auto' },
+                minWidth: { xs: 0, sm: '320px' },
+                flex: { xs: '1 1 100%', sm: '1 1 320px' },
                 '& .MuiOutlinedInput-root': {
                   borderRadius: '12px',
                   bgcolor: 'white',

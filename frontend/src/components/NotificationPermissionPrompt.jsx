@@ -10,13 +10,11 @@ import {
     IconButton,
     Tooltip
 } from '@mui/material';
-import { 
-    Notifications, 
-    NotificationsOff, 
-    Close,
-    CheckCircle,
-    Error
-} from '@mui/icons-material';
+import Notifications from '@mui/icons-material/Notifications';
+import NotificationsOff from '@mui/icons-material/NotificationsOff';
+import Close from '@mui/icons-material/Close';
+import CheckCircle from '@mui/icons-material/CheckCircle';
+import Error from '@mui/icons-material/Error';
 
 const NotificationPermissionPrompt = ({ onPermissionChange }) => {
     const [permission, setPermission] = useState('default');

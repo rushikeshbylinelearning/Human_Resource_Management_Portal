@@ -71,32 +71,6 @@ function redirectToSSOLogin() {
   window.location.href = ssoLoginUrl;
 }
 
-/**
- * Check if current URL contains SSO token
- * @returns {boolean}
- */
-export function hasSsoToken() {
-  const params = new URLSearchParams(window.location.search);
-  return !!params.get('sso_token');
-}
-
-/**
- * Extract SSO token from URL
- * @returns {string|null}
- */
-export function getSsoToken() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get('sso_token');
-}
-
-/**
- * Extract return URL from URL parameters
- * @returns {string}
- */
-export function getReturnUrl() {
-  const params = new URLSearchParams(window.location.search);
-  return params.get('return_url') || '/dashboard';
-}
 
 
 

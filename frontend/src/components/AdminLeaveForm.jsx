@@ -2,9 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Grid, Select, MenuItem, InputLabel, FormControl, Stack, Divider, Box, Typography, Autocomplete, IconButton, Avatar, Alert, Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
 import { getWorkingLeaveDateKeys } from '../utils/leaveDayAllocations';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import LazyDatePicker from './lazy/LazyDatePicker';
 import { eachDayOfInterval } from 'date-fns';
 import EditCalendarOutlinedIcon from '@mui/icons-material/EditCalendarOutlined';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
@@ -491,8 +489,7 @@ const AdminLeaveForm = ({ open, onClose, onSave, request, employees, isSaving, e
                         </Grid>
                     </Grid>
                     {/* Start Date */}
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                        <DatePicker 
+                    <LazyDatePicker 
                             label="Start Date" 
                             value={formData.leaveDates[0]} 
                             onChange={handleDateChange}
@@ -530,12 +527,10 @@ const AdminLeaveForm = ({ open, onClose, onSave, request, employees, isSaving, e
                                 }
                             }}
                         />
-                    </LocalizationProvider>
 
                     {/* End Date (optional) - UI unified with Employee Leave Modal */}
                     {formData.requestType !== 'Compensatory' && (
-                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                            <DatePicker 
+                        <LazyDatePicker 
                                 label="End Date (optional)" 
                                 value={formData.leaveDates[1] || null} 
                                 onChange={(date) => {
@@ -577,13 +572,11 @@ const AdminLeaveForm = ({ open, onClose, onSave, request, employees, isSaving, e
                                     }
                                 }}
                             />
-                        </LocalizationProvider>
                     )}
 
                     {/* Alternate Date for Compensatory Leave */}
                     {formData.requestType === 'Compensatory' && (
-                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                            <DatePicker 
+                        <LazyDatePicker 
                                 label="Alternate Working Date (Saturday or Sunday)" 
                                 value={formData.alternateDate} 
                                 onChange={handleAlternateDateChange}
@@ -623,7 +616,6 @@ const AdminLeaveForm = ({ open, onClose, onSave, request, employees, isSaving, e
                                     }
                                 }}
                             />
-                        </LocalizationProvider>
                     )}
                     {formData.requestType === 'Loss of Pay' && workingDayKeys.length >= 2 && (
                         <Box sx={{ p: 2, border: '1px solid #E5E7EB', borderRadius: '8px', bgcolor: '#F9FAFB' }}>
@@ -706,8 +698,7 @@ const AdminLeaveForm = ({ open, onClose, onSave, request, employees, isSaving, e
                     />
                     
                     {/* Employee Applied Date - Admin only field, visible for both create and edit */}
-                    <LocalizationProvider dateAdapter={AdapterDateFns}>
-                        <DatePicker 
+                    <LazyDatePicker 
                             label="Employee Applied Date" 
                             value={formData.appliedDate} 
                             onChange={handleAppliedDateChange}
@@ -743,7 +734,6 @@ const AdminLeaveForm = ({ open, onClose, onSave, request, employees, isSaving, e
                                     }
                                 }}
                             />
-                        </LocalizationProvider>
 
                     {/* Status Dropdown - Admin only field */}
                     <FormControl fullWidth required sx={{

@@ -6,19 +6,14 @@ import './index.css'
 import './styles/PerformanceOptimizations.css' // Performance optimizations
 import './utils/quietConsole.js'
 
-// CRITICAL: Layout mutation audit system (DEV ONLY)
-import { auditLayoutMutations } from './utils/layoutMutationAudit.js'
+// Layout mutation audit is opt-in: run `auditLayoutMutations()` in the browser console.
+if (import.meta.env.DEV) {
+  window.auditLayoutMutations = () =>
+    import('./utils/layoutMutationAudit.js').then((mod) => mod.auditLayoutMutations());
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
   </StrictMode>,
 )
-
-// Start layout mutation audit in development
-if (import.meta.env.DEV) {
-  // Wait for initial render, then start audit
-  setTimeout(() => {
-    auditLayoutMutations();
-  }, 1000);
-}

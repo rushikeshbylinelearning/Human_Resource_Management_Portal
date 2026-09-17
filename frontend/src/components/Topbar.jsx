@@ -4,7 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Menu, MenuItem, Tooltip, IconButton, Badge, useMediaQuery, useTheme } from '@mui/material';
-import { NotificationsNone as NotificationsNoneIcon, Menu as MenuIcon, HelpOutline as HelpOutlineIcon } from '@mui/icons-material';
+import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
+import MenuIcon from '@mui/icons-material/Menu';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import useNewNotifications from '../hooks/useNewNotifications';
 import UserAvatar from './common/UserAvatar'; // CENTRALIZED AVATAR COMPONENT
 import AnnouncementDropdown from './AnnouncementDropdown';
@@ -56,7 +58,7 @@ const Topbar = ({ onNotificationClick, onHamburgerClick }) => {
                         <MenuIcon />
                     </IconButton>
                 )}
-                <img src="/BL.svg" alt="Company Logo" className="topbar-logo-img" />
+                <img src="/BL.svg" alt="Company Logo" className="topbar-logo-img" width="40" height="40" />
             </div>
             <div className="topbar-right">
                 <AnnouncementDropdown />
@@ -76,11 +78,18 @@ const Topbar = ({ onNotificationClick, onHamburgerClick }) => {
                     </Badge>
                 </IconButton>
                 <Tooltip title="Account">
-                    <IconButton onClick={handleMenu} sx={{ p: 0 }} data-tour="sidebar-profile">
-                        <UserAvatar 
-                            user={user}
-                            size="sm"
-                        />
+                    <IconButton
+                        onClick={handleMenu}
+                        sx={{ p: 0 }}
+                        data-tour="sidebar-profile"
+                        aria-label={user?.fullName ? `Account menu for ${user.fullName}` : 'Account menu'}
+                    >
+                        <span aria-hidden="true">
+                            <UserAvatar 
+                                user={user}
+                                size="sm"
+                            />
+                        </span>
                     </IconButton>
                 </Tooltip>
                 <Menu 

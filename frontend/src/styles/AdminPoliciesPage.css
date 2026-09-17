@@ -1,1 +1,92 @@
-/* AdminPoliciesPage - No custom header styling needed */
+/* AdminPoliciesPage — premium red/white, Inter throughout */
+
+.admin-policies-page {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  font-family: 'Inter', 'Roboto', system-ui, sans-serif;
+  color: #1A1A1A;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.admin-policies-page .MuiTypography-root,
+.admin-policies-page .MuiButton-root,
+.admin-policies-page .MuiChip-label,
+.admin-policies-page .MuiInputBase-root,
+.admin-policies-page .MuiInputLabel-root,
+.admin-policies-page .MuiTableCell-root,
+.admin-policies-page .MuiTab-root,
+.admin-policies-page .MuiMenuItem-root,
+.admin-policies-page .MuiFormControlLabel-label,
+.admin-policies-page .MuiAlert-message,
+.admin-policies-page .MuiDialogTitle-root {
+  font-family: 'Inter', 'Roboto', system-ui, sans-serif !important;
+}
+
+.admin-policies-page .page-hero-header {
+  width: 100%;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 18px rgba(16, 24, 40, 0.05);
+  border: 1px solid #E5E7EB;
+}
+
+.admin-policies-page .page-hero-header__title {
+  font-family: 'Inter', 'Roboto', system-ui, sans-serif !important;
+  letter-spacing: -0.02em;
+}
+
+.admin-policies-page .page-hero-header__title::after {
+  background-color: #E53935;
+  height: 3px;
+  border-radius: 99px;
+}
+
+.admin-policies-page .page-hero-header__icon {
+  background: #FFF5F5;
+  color: #C62828;
+}
+
+.admin-policies-page .page-hero-header__eyebrow,
+.admin-policies-page .page-hero-header__description {
+  font-family: 'Inter', 'Roboto', system-ui, sans-serif !important;
+}
+
+.policies-tabs-wrap {
+  background: #fff;
+  border: 1px solid #E5E7EB;
+  border-radius: 14px;
+  padding: 4px 8px;
+  margin-bottom: 18px;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 18px rgba(16, 24, 40, 0.04);
+}
+
+.policies-tabs-wrap .MuiTabs-scroller {
+  overflow-x: auto !important;
+  scrollbar-width: none;
+}
+
+.policies-tabs-wrap .MuiTabs-scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.admin-policies-page .MuiTableHead-root .MuiTableCell-root {
+  background: #F8F9FB;
+}
+
+.admin-policies-page .MuiTableRow-root:hover > .MuiTableCell-root {
+  background: rgba(229, 57, 53, 0.03);
+}
+
+.admin-policies-page .MuiOutlinedInput-root {
+  border-radius: 10px;
+  font-size: 0.875rem;
+}
+
+.admin-policies-page .MuiChip-root {
+  font-weight: 600;
+}
+
+.admin-policies-page .MuiPaper-outlined {
+  box-shadow: none;
+}

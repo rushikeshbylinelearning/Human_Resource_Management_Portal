@@ -23,10 +23,6 @@ const publicLimiter = rateLimit(rateLimitConfig);
 const validateLimiter = rateLimit(validateRateLimitConfig);
 
 // Relaxed limiter for KYC document uploads (100 req / 15 min).
-// NOTE (new proxy-upload flow): each document upload is now ONE request instead
-// of the previous two (request-upload + confirm-upload).  The current max: 100
-// was already calculated with retry headroom, so it remains correct.  Flagged
-// to the reviewer as required by the change spec — no numeric change made here.
 const kycUploadLimiter = rateLimit(kycUploadLimiterConfig);
 
 // ─── Middleware: validate public-form token → attach req.employeeId ───────────
@@ -38,15 +34,13 @@ const kycUploadLimiter = rateLimit(kycUploadLimiterConfig);
 // piped, req.body fields are not available through express-json.  The token is
 // therefore read from req.query OR from multipart form fields.
 //
-// For the new /kyc/upload route: pass the token as a query-string parameter
+// For the /kyc/upload route: pass the token as a query-string parameter
 //   POST /api/public/kyc/upload?token=<token>
 // (req.query is populated before any middleware touches the body stream.)
-// The legacy /kyc/request-upload routes pass token in the JSON body as before.
 const validatePublicFormToken = async (req, res, next) => {
   try {
-    // For multipart requests the body isn't parsed yet — token must be in query string.
-    // For JSON/urlencoded requests (legacy routes) the token is in req.body.
-    const token = req.query.token || (req.body && req.body.token);
+    // For multipart KYC uploads the token must be in the query string.
+    const token = req.query.token;
     if (!token) {
       return res.status(401).json({ error: 'Token is required.' });
     }
@@ -124,23 +118,7 @@ router.post(
   kycUploadLimiter,
   validatePublicFormToken,
   uploadKycDocumentToR2({ context: 'public' }),
-  kycController.publicUploadDocument
+    kycController.publicUploadDocument
 );
-
-// ── DEPRECATED — kept temporarily as rollback path, remove after new upload ───
-// ── flow is verified in production. ──────────────────────────────────────────
-/**
- * Step 1 — request a presigned PUT URL
- * POST /api/public/kyc/request-upload
- * Body: { token, documentType, originalFileName, mimeType, fileSize }
- */
-router.post('/kyc/request-upload', kycUploadLimiter, validatePublicFormToken, kycController.publicRequestUpload);
-
-/**
- * Step 2 — confirm the upload and create the metadata record
- * POST /api/public/kyc/confirm-upload
- * Body: { token, documentType, storageKey, originalFileName, mimeType, fileSize }
- */
-router.post('/kyc/confirm-upload', kycUploadLimiter, validatePublicFormToken, kycController.publicConfirmUpload);
 
 module.exports = router;

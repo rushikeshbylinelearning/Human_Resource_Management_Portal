@@ -1,8 +1,7 @@
 // frontend/src/components/RecentActivityCard.jsx
 
 import React, { useMemo, useEffect, useState } from 'react';
-import { Typography, Paper, Box } from '@mui/material';
-import { Timeline, TimelineItem, TimelineSeparator, TimelineConnector, TimelineContent, TimelineDot, timelineItemClasses } from '@mui/lab';
+import { Typography, Paper } from '@mui/material';
 import { formatISTTime } from '../utils/istTime';
 import '../styles/RecentActivityCard.css';
 
@@ -37,10 +36,9 @@ const RecentActivityCard = ({ dailyData }) => {
 
     const activities = useMemo(() => {
         if (!dailyData) return [];
-        
+
         const allActivities = [];
 
-        // Process work sessions
         dailyData.sessions?.forEach(session => {
             if (session.startTime) {
                 allActivities.push({ type: 'Clock In', timestamp: session.startTime });
@@ -50,7 +48,6 @@ const RecentActivityCard = ({ dailyData }) => {
             }
         });
 
-        // Process breaks
         dailyData.breaks?.forEach(br => {
             if (br.startTime) {
                 allActivities.push({ type: 'Break Started', timestamp: br.startTime, details: `(${br.breakType})` });
@@ -60,14 +57,12 @@ const RecentActivityCard = ({ dailyData }) => {
             }
         });
 
-        // Sort all activities by timestamp in descending order and take the latest 5
         return allActivities
             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
             .slice(0, 5);
 
     }, [dailyData]);
 
-    // Trigger animation when activities change
     useEffect(() => {
         setIsVisible(false);
         const timer = setTimeout(() => setIsVisible(true), 10);
@@ -76,37 +71,22 @@ const RecentActivityCard = ({ dailyData }) => {
 
     return (
         <Paper elevation={3} sx={{ p: 2.5, borderRadius: '16px', boxShadow: '0 8px 32px rgba(0,0,0,0.08)' }}>
-            <Typography variant="h6" gutterBottom sx={{ fontWeight: 700, letterSpacing: '0.025em', color: '#333333' }}>Recent Activity</Typography>
+            <Typography component="h2" variant="subtitle2" sx={{ fontWeight: 700, letterSpacing: '0.025em', color: '#333333', fontSize: '0.9375rem' }}>Recent Activity</Typography>
             {activities.length > 0 ? (
-                <Timeline
-                    sx={{
-                        [`& .${timelineItemClasses.root}:before`]: {
-                            flex: 0,
-                            padding: 0,
-                        },
-                        p: 0,
-                        mt: 2
-                    }}
-                >
+                <ul className="activity-timeline">
                     {activities.map((activity, index) => {
                         const { icon, color } = getActivityProps(activity.type);
                         return (
-                            <TimelineItem 
-                                key={index}
+                            <li
+                                key={`${activity.type}-${activity.timestamp}-${index}`}
                                 className={`activity-item ${isVisible ? 'visible' : ''}`}
-                                sx={{
-                                    '&.activity-item': {
-                                        transitionDelay: `${index * 30}ms`
-                                    }
-                                }}
+                                style={{ transitionDelay: `${index * 30}ms` }}
                             >
-                                <TimelineSeparator>
-                                    <TimelineDot color={color} variant="outlined">
-                                        {icon}
-                                    </TimelineDot>
-                                    {index < activities.length - 1 && <TimelineConnector />}
-                                </TimelineSeparator>
-                                <TimelineContent sx={{ py: '12px', px: 2 }}>
+                                <div className="activity-rail">
+                                    <div className={`activity-dot activity-dot--${color}`}>{icon}</div>
+                                    {index < activities.length - 1 && <div className="activity-connector" />}
+                                </div>
+                                <div className="activity-content">
                                     <Typography variant="body2" component="span" sx={{ fontWeight: 500, letterSpacing: '0.025em' }}>
                                         {activity.type}
                                     </Typography>
@@ -118,11 +98,11 @@ const RecentActivityCard = ({ dailyData }) => {
                                     <Typography variant="caption" display="block" color="text.secondary" sx={{ fontWeight: 400, letterSpacing: '0.025em' }}>
                                         at {formatTime(activity.timestamp) || ''}
                                     </Typography>
-                                </TimelineContent>
-                            </TimelineItem>
+                                </div>
+                            </li>
                         );
                     })}
-                </Timeline>
+                </ul>
             ) : (
                 <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', p: 2, mt: 1, fontWeight: 400, letterSpacing: '0.025em' }}>
                     No activity recorded for today.

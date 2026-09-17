@@ -1,0 +1,9 @@
+# Robots.txt for Byline People Attendance System
+# This is an authenticated internal application
+
+User-agent: *
+Disallow: /
+
+# Allow crawling of public resources only (if any)
+# Currently all pages require authentication
+# So we disallow everything to prevent indexing of login pages

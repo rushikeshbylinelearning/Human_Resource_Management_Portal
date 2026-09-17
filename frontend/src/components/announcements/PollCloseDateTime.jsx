@@ -1,8 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, Suspense } from "react";
 import { createPortal } from "react-dom";
-import { StaticDateTimePicker } from "@mui/x-date-pickers/StaticDateTimePicker";
 import { format, isValid } from "date-fns";
-import { CalendarClock, X } from "lucide-react";
+import CalendarClock from "lucide-react/dist/esm/icons/calendar-clock";
+import X from "lucide-react/dist/esm/icons/x";
+import { lazyWithRetry } from "../../utils/lazyWithRetry";
+
+const BoundStaticDateTimePicker = lazyWithRetry(() =>
+  import("../lazy/BoundStaticDateTimePicker")
+);
 
 const PANEL_WIDTH = 368;
 const PANEL_GAP = 20;
@@ -165,16 +170,18 @@ const PollCloseDateTime = ({ value, onChange }) => {
               </div>
 
               <div className="poll-datetime-side-body">
-                <StaticDateTimePicker
-                  value={draft}
-                  onChange={setDraft}
-                  disablePast
-                  ampm
-                  displayStaticWrapperAs="desktop"
-                  slotProps={{
-                    actionBar: { actions: [] },
-                  }}
-                />
+                <Suspense fallback={<div className="poll-datetime-side-skeleton" aria-hidden="true" />}>
+                  <BoundStaticDateTimePicker
+                    value={draft}
+                    onChange={setDraft}
+                    disablePast
+                    ampm
+                    displayStaticWrapperAs="desktop"
+                    slotProps={{
+                      actionBar: { actions: [] },
+                    }}
+                  />
+                </Suspense>
               </div>
 
               <div className="poll-datetime-side-actions">

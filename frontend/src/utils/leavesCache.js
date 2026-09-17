@@ -77,24 +77,6 @@ export function setLeavesCache(key, data, ttlMs = LEAVES_CACHE_TTL_MS) {
 }
 
 /**
- * Check if cache entry exists and is still within TTL (fresh).
- */
-export function isLeavesCacheFresh(key) {
-  const entry = cache.get(key);
-  if (!entry) return false;
-  return Date.now() - entry.timestamp < entry.ttlMs;
-}
-
-/**
- * Check if cache entry exists but is stale (past TTL, useful for stale-while-revalidate).
- */
-export function hasStaleLeavesCache(key) {
-  const entry = cache.get(key);
-  if (!entry) return false;
-  return true; // we have something; caller can check age vs TTL
-}
-
-/**
  * Invalidate cache by key or by pattern (e.g. 'leaves:' to clear all leaves caches).
  */
 export function invalidateLeavesCache(keyOrPattern) {
@@ -112,11 +94,3 @@ export function invalidateLeavesCache(keyOrPattern) {
   cache.delete(keyOrPattern);
 }
 
-/**
- * Get cache age in ms for a key. Returns null if not in cache.
- */
-export function getLeavesCacheAge(key) {
-  const entry = cache.get(key);
-  if (!entry) return null;
-  return Date.now() - entry.timestamp;
-}

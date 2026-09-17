@@ -104,6 +104,10 @@ const userSchema = new mongoose.Schema({
     // Application walkthrough
     tourCompleted: { type: Boolean, default: false },
     tourCompletedAt: { type: Date, default: null },
+    // Assigned guided tour for existing employees (without full onboarding reset)
+    tourRequired: { type: Boolean, default: false },
+    tourAssignedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    tourAssignedAt: { type: Date, default: null },
     // Profile completion deadline (7 days from joining date)
     profileCompletionDeadline: { type: Date, default: null },
     profileCompleted: { type: Boolean, default: false },

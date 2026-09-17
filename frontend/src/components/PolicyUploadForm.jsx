@@ -15,7 +15,7 @@ import {
     Switch
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import LazyDatePicker from './lazy/LazyDatePicker';
 
 const PolicyUploadForm = ({ onSubmit, submitting = false }) => {
     const [formData, setFormData] = useState({
@@ -168,7 +168,7 @@ const PolicyUploadForm = ({ onSubmit, submitting = false }) => {
                 </Grid>
 
                 <Grid item xs={12} md={6}>
-                    <DatePicker
+                    <LazyDatePicker
                         label="Effective From"
                         value={formData.effectiveFrom}
                         onChange={handleDateChange}

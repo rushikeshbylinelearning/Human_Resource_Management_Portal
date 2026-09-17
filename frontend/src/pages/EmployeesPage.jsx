@@ -423,7 +423,9 @@ const EmployeesPage = () => {
                 }}
             />
             {isRefreshing && (
-                <SkeletonBox width="22px" height="22px" borderRadius="50%" />
+                <Box className="employees-refresh-indicator" aria-label="Refreshing employees">
+                    <SkeletonBox width="22px" height="22px" borderRadius="50%" />
+                </Box>
             )}
             <Button 
                 variant="contained" 

@@ -60,7 +60,7 @@ const authRoutes = require('./routes/auth');
 const autoLoginRoutes = require('./routes/autoLogin');
 const attendanceRoutes = require('./routes/attendance');
 const breakRoutes = require('./routes/breaks');
-const adminRoutes = require('./routes/admin');
+const adminRoutes = require('./routes/admin/index');
 const employeeRoutes = require('./routes/employees');
 const shiftRoutes = require('./routes/shifts');
 const leaveRoutes = require('./routes/leaves');
@@ -295,15 +295,18 @@ app.use('/api/policies', policiesRoutes);
 const policiesGridFSRoutes = require('./routes/policiesGridFS');
 app.use('/api/policies-gridfs', policiesGridFSRoutes);
 
+const policyTemplatesRoutes = require('./routes/policyTemplates');
+app.use('/api/policy-templates', policyTemplatesRoutes);
+
+const consentRoutes = require('./routes/consent');
+app.use('/api/consent', consentRoutes);
+
 const onboardingRoutes = require('./routes/onboarding');
 const employeeDocumentRoutes = require('./routes/employeeDocuments');
 const kycRoutes = require('./routes/kyc');
 app.use('/api/onboarding', onboardingRoutes);
 app.use('/api/employee-documents', employeeDocumentRoutes);
 app.use('/api/kyc', kycRoutes);
-
-const absentToLeaveRoutes = require('./routes/absent_to_leave_route');
-app.use('/api/admin', absentToLeaveRoutes);
 
 const publicFormAdminRoutes = require('./routes/admin/publicFormAdmin');
 app.use('/api/admin/public-form', publicFormAdminRoutes);
@@ -337,7 +340,7 @@ app.post('/sso/logout', (req, res) => {
     if (err) return res.status(500).json({ success: false, message: 'Logout failed' });
     const redirectUrl = process.env.NODE_ENV === 'production'
       ? 'https://sso.bylinelms.com/login'
-      : 'http://localhost:3000/login';
+      : 'http://localhost:5173/login';
     res.json({ success: true, message: 'Logged out', redirectUrl });
   });
 });
@@ -483,7 +486,9 @@ const startServer = async () => {
 
     console.log(`📁 Frontend static dir: ${FRONTEND_DIR}`);
 
-    const HOST = process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1';
+    // Docker needs 0.0.0.0 so other containers can reach this process.
+    // Local non-Docker dev stays on 127.0.0.1 unless HOST is set.
+    const HOST = process.env.HOST || (process.env.NODE_ENV === 'production' ? '0.0.0.0' : '127.0.0.1');
     httpServer.listen(PORT, HOST, () => {
       console.log(`🚀 Server running on ${HOST}:${PORT} (${process.env.NODE_ENV || 'development'})`);
     });

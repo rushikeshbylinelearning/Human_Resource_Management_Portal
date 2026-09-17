@@ -186,5 +186,4 @@ module.exports = {
     deleteFolderRecursive,
     renameObject,
     objectExists,
-    PRESIGNED_URL_TTL_SECONDS,
 };

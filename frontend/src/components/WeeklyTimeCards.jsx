@@ -2,13 +2,11 @@
 
 import React, { memo } from 'react';
 import { Box, Typography, Paper, Grid } from '@mui/material';
-import {
-  CheckCircleOutline as CheckCircleIcon,
-  HighlightOff as HighlightOffIcon,
-  HelpOutline as HelpOutlineIcon,
-  Weekend as WeekendIcon,
-  BeachAccess as BeachAccessIcon,
-} from '@mui/icons-material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircleOutline';
+import HighlightOffIcon from '@mui/icons-material/HighlightOff';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import WeekendIcon from '@mui/icons-material/Weekend';
+import BeachAccessIcon from '@mui/icons-material/BeachAccess';
 import { getISTNow, getISTDateString, getISTWeekRange, parseISTDate, formatISTDate, getISTDateParts } from '../utils/istTime';
 
 const LEAVE_STATUS = { text: 'Leave', Icon: BeachAccessIcon, color: '#3b82f6' };
@@ -109,7 +107,7 @@ const WeeklyTimeCards = ({ logs, shift, user, leaveRequests = [] }) => {
     return (
         <Box sx={{ mt: 2 }}>
             <Paper elevation={0} sx={{ p: 2, backgroundColor: '#f8f9fa', borderRadius: '12px' }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.9375rem', color: '#111827' }}>
+                <Typography component="h2" variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.9375rem', color: '#111827' }}>
                     Your Week
                 </Typography>
                 <Grid container spacing={1}>
@@ -137,10 +135,10 @@ const WeeklyTimeCards = ({ logs, shift, user, leaveRequests = [] }) => {
                                         backgroundColor: isToday ? '#eff6ff' : isWeekendDay ? '#fef3c7' : isLeaveDayCard ? '#eff6ff' : '#ffffff',
                                     }}
                                 >
-                                    <Typography variant="caption" sx={{ fontWeight: 400, fontSize: '0.6875rem', color: isWeekendDay ? '#92400e' : '#9ca3af' }}>
+                                    <Typography variant="caption" sx={{ fontWeight: 400, fontSize: '0.6875rem', color: isWeekendDay ? '#92400e' : '#6b7280' }}>
                                         {formatISTDate(day, { weekday: 'short' })}
                                     </Typography>
-                                    <Typography variant="h6" sx={{ fontWeight: 600, my: 0.5, fontSize: '1.125rem', color: isWeekendDay ? '#78350f' : '#111827' }}>
+                                    <Typography variant="h6" component="p" sx={{ fontWeight: 600, my: 0.5, fontSize: '1.125rem', color: isWeekendDay ? '#78350f' : '#111827' }}>
                                         {parts.day}
                                     </Typography>
                                     <status.Icon sx={{ color: isWeekendDay ? '#f59e0b' : status.color, fontSize: '1.25rem' }} />
@@ -150,7 +148,7 @@ const WeeklyTimeCards = ({ logs, shift, user, leaveRequests = [] }) => {
                                         sx={{ 
                                             fontWeight: 400, 
                                             fontSize: '0.6875rem',
-                                            color: isToday ? '#3b82f6' : isWeekendDay ? '#92400e' : isLeaveDayCard ? '#3b82f6' : '#9ca3af'
+                                            color: isToday ? '#1d4ed8' : isWeekendDay ? '#92400e' : isLeaveDayCard ? '#1d4ed8' : '#6b7280'
                                         }}
                                     >
                                         {status.text}

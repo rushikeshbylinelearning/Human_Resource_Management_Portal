@@ -8,7 +8,7 @@ const {
   LUNCH_BREAK_DURATION_MS,
   LUNCH_BREAK_SAFETY_CUTOFF_MS,
 } = require('../services/teaBreakService');
-const { hasTeaBreakEnded, clearTeaBreakState } = require('../services/teaBreakState');
+const { hasTeaBreakEnded, clearTeaBreakState, loadEndedEmployeeIdsFromDb, hydrateEndedStateFromDb } = require('../services/teaBreakState');
 
 const RECURRING_INTERVAL_MS = 60 * 1000;
 
@@ -16,10 +16,16 @@ const activeJobs = new Map();
 
 async function runEnforcementPass(announcementId, teaBreakStartedAt, breakType = 'tea') {
   const employeeIds = await getClockedInEmployeeIds();
+  const dbEndedIds = await loadEndedEmployeeIdsFromDb(announcementId);
   let pendingCount = 0;
+  let skippedEnded = 0;
 
   for (const employeeId of employeeIds) {
-    if (hasTeaBreakEnded(announcementId, employeeId)) continue;
+    const id = String(employeeId);
+    if (hasTeaBreakEnded(announcementId, id) || dbEndedIds.has(id)) {
+      skippedEnded += 1;
+      continue;
+    }
     pendingCount += 1;
     try {
       await applyTeaBreakOverrun(employeeId, teaBreakStartedAt, announcementId, breakType);
@@ -28,7 +34,13 @@ async function runEnforcementPass(announcementId, teaBreakStartedAt, breakType =
     }
   }
 
-  return { pendingCount, totalClockedIn: employeeIds.length };
+  if (skippedEnded > 0 || pendingCount > 0) {
+    console.log(
+      `[TeaBreak] Enforcement ${announcementId}: skipped ${skippedEnded} already-ended (TeaBreakReturn), pending ${pendingCount}/${employeeIds.length}`
+    );
+  }
+
+  return { pendingCount, totalClockedIn: employeeIds.length, skippedEnded };
 }
 
 function stopEnforcement(announcementId) {
@@ -108,6 +120,10 @@ async function restoreActiveTeaBreakJobs() {
       const safetyCutoffMs = breakType === 'lunch' ? LUNCH_BREAK_SAFETY_CUTOFF_MS : TEA_BREAK_SAFETY_CUTOFF_MS;
       const endsAt = new Date(new Date(ann.teaBreakStartedAt).getTime() + safetyCutoffMs);
       if (getISTNow() < endsAt) {
+        const endedCount = await hydrateEndedStateFromDb(ann._id);
+        console.log(
+          `[TeaBreak] Restoring ${breakType} enforcement for ${ann._id}; hydrated ${endedCount} ended employee(s) from TeaBreakReturn`
+        );
         scheduleTeaBreakEnforcement(ann._id, ann.teaBreakStartedAt, breakType);
       }
     }

@@ -22,7 +22,6 @@ const KNOWN_AUTH_MIDDLEWARE = new Set([
     'authenticateToken',
     'requireAdmin',
     'requirePayrollAccess',
-    'serviceTokenAuth',
     // The share route is explicitly public — handled via EXEMPT_ROUTES
 ]);
 
@@ -146,4 +145,4 @@ function auditRoutes(app, exitOnFailure = true) {
     return violations;
 }
 
-module.exports = { auditRoutes, collectRoutes };
+module.exports = { auditRoutes };

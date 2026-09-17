@@ -214,17 +214,6 @@ const checkWeeklyLateWarnings = async () => {
 };
 
 /**
- * Daily job to check for probation completions
- */
-// REMOVED: Legacy probation completion check
-// Reason: All probation calculations now use /api/analytics/probation-tracker endpoint
-// This cron job has been disabled. Use the probation tracker endpoint for accurate probation data.
-const checkProbationCompletions = async () => {
-    // REMOVED: Legacy working-days-based probation completion check
-    // Use /api/analytics/probation-tracker endpoint for accurate probation calculations
-};
-
-/**
  * Auto-logout check job - runs every 5 minutes
  * This checks for employees who should be auto-logged out and performs the logout
  */
@@ -320,10 +309,6 @@ const startScheduledJobs = () => {
     checkProbationAndInternshipEndings();
     setInterval(checkProbationAndInternshipEndings, 24 * 60 * 60 * 1000);
     
-    // Daily probation completion check
-    checkProbationCompletions();
-    setInterval(checkProbationCompletions, 24 * 60 * 60 * 1000);
-    
     // Weekly jobs (every Monday at 9 AM)
     checkWeeklyLateWarnings();
     setInterval(checkWeeklyLateWarnings, 7 * 24 * 60 * 60 * 1000);
@@ -347,7 +332,7 @@ const startScheduledJobs = () => {
     // Daily Teams attendance notification (runs at 11:30 AM IST)
     startTeamsMorningReportJob();
     
-    console.log('✅ Scheduled jobs (probation reminders, probation completions, weekly late warnings, auto-logout, half-day conversion, leave accrual, teams morning report) have been started.');
+    console.log('✅ Scheduled jobs (probation reminders, weekly late warnings, auto-logout, half-day conversion, leave accrual, teams morning report) have been started.');
 };
 
 /**
@@ -535,4 +520,4 @@ const startTeamsMorningReportJob = () => {
     setInterval(checkAndRun, 60 * 1000);
 };
 
-module.exports = { startScheduledJobs, checkProbationAndInternshipEndings, startLeaveAccrualJob, startTeamsMorningReportJob };
+module.exports = { startScheduledJobs };

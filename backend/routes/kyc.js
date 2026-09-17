@@ -1,11 +1,8 @@
 // backend/routes/kyc.js
 // KYC document routes.
 //
-// NEW flow: POST /kyc/upload — browser sends multipart/form-data to backend,
+// POST /kyc/upload — browser sends multipart/form-data to backend,
 //   backend proxies bytes to B2 via AWS SDK.  No CORS / presigned-URL involved.
-//
-// LEGACY flow: /request-upload + /confirm-upload — kept as rollback path.
-//   Remove after the new upload flow is verified in production.
 'use strict';
 
 const express = require('express');
@@ -40,13 +37,6 @@ router.post(
     uploadKycDocumentToR2({ context: 'authenticated' }),
     ctrl.uploadDocument
 );
-
-// ── DEPRECATED — kept temporarily as rollback path, remove after new upload ───
-// ── flow is verified in production. ──────────────────────────────────────────
-// Step 1 — request a presigned PUT URL
-router.post('/request-upload', authenticateToken, ctrl.requestUpload);
-// Step 2 — confirm the upload completed and create the metadata record
-router.post('/confirm-upload', authenticateToken, ctrl.confirmUpload);
 
 // ─── View / download ─────────────────────────────────────────────────────────
 // Generates a short-lived presigned GET URL — employees see their own; admins see all

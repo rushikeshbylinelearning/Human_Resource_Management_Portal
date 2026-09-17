@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Grid, Select, MenuItem, InputLabel, FormControl, Box, Stack, Typography, Chip, OutlinedInput, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import OrgAssignmentFields from './OrgAssignmentFields';
+import { resolveOrgFields } from '../utils/orgFieldOptions';
 
 import { SkeletonBox } from '../components/SkeletonLoaders';
 const initialFormState = {
@@ -31,7 +33,6 @@ const initialFormState = {
 };
 
 const roles = ['Admin', 'HR', 'Employee', 'Intern'];
-const domains = ['Development', 'Design', 'Marketing', 'Sales', 'HR', 'Finance', 'Operations', 'Support', 'Management', 'Other'];
 const satPolicies = ['Week 1 & 3 Off', 'Week 2 & 4 Off', 'All Saturdays Working', 'All Saturdays Off'];
 const employmentStatuses = ['Intern', 'Probation', 'Permanent'];
 const allWeekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -77,15 +78,16 @@ const EmployeeForm = ({ open, onClose, onSave, employee, shifts, isSaving }) => 
     useEffect(() => {
         if (open) {
             if (isEditing) {
+                const orgFields = resolveOrgFields(employee);
                 setFormData({
                     employeeCode: employee.employeeCode || '',
                     fullName: employee.fullName || '',
                     email: employee.email || '',
                     password: '',
                     role: employee.role || 'Employee',
-                    domain: employee.domain || '',
-                    designation: employee.designation || '',
-                    department: employee.department || '',
+                    domain: orgFields.domain,
+                    designation: orgFields.designation,
+                    department: orgFields.department,
                     joiningDate: employee.joiningDate ? new Date(employee.joiningDate).toISOString().slice(0, 10) : '',
                     shiftGroup: employee.shiftGroup?._id || '',
                     isActive: employee.isActive,
@@ -114,6 +116,15 @@ const EmployeeForm = ({ open, onClose, onSave, employee, shifts, isSaving }) => 
         setFormData(prev => ({ ...prev, [name]: value }));
     };
     
+    const handleOrgFieldsChange = ({ department, designation, domain }) => {
+        setFormData(prev => ({
+            ...prev,
+            department,
+            designation,
+            domain,
+        }));
+    };
+
     const handleBalanceChange = (e) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -141,7 +152,13 @@ const EmployeeForm = ({ open, onClose, onSave, employee, shifts, isSaving }) => 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (validate()) {
-            const dataToSave = { ...formData };
+            const orgFields = resolveOrgFields(formData);
+            const dataToSave = {
+                ...formData,
+                department: orgFields.department,
+                domain: orgFields.domain,
+                designation: orgFields.designation,
+            };
             
             // Save email exactly as typed by admin (no normalization)
             // Normalization is only applied in SSO authentication flow
@@ -203,26 +220,12 @@ const EmployeeForm = ({ open, onClose, onSave, employee, shifts, isSaving }) => 
                                     sx={textFieldSx} 
                                 />
                             </Grid>
-                            <Grid item xs={12} md={6}>
-                                <TextField 
-                                    name="designation" 
-                                    label="Designation" 
-                                    value={formData.designation} 
-                                    onChange={handleChange} 
-                                    fullWidth 
-                                    sx={textFieldSx} 
-                                />
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <TextField 
-                                    name="department" 
-                                    label="Department" 
-                                    value={formData.department} 
-                                    onChange={handleChange} 
-                                    fullWidth 
-                                    sx={textFieldSx} 
-                                />
-                            </Grid>
+                            <OrgAssignmentFields
+                                department={formData.department}
+                                designation={formData.designation}
+                                onChange={handleOrgFieldsChange}
+                                textFieldSx={textFieldSx}
+                            />
                             <Grid item xs={12} md={6}>
                                 <TextField 
                                     name="joiningDate" 
@@ -276,15 +279,6 @@ const EmployeeForm = ({ open, onClose, onSave, employee, shifts, isSaving }) => 
                                     <InputLabel>Role</InputLabel>
                                     <Select name="role" label="Role" value={formData.role} onChange={handleChange}>
                                         {roles.map(r => <MenuItem key={r} value={r}>{r}</MenuItem>)}
-                                    </Select>
-                                </FormControl>
-                            </Grid>
-                            <Grid item xs={12} md={6}>
-                                <FormControl fullWidth sx={formControlStyles}>
-                                    <InputLabel>Domain</InputLabel>
-                                    <Select name="domain" label="Domain" value={formData.domain} onChange={handleChange}>
-                                        <MenuItem value=""><em>Select Domain</em></MenuItem>
-                                        {domains.map(d => <MenuItem key={d} value={d}>{d}</MenuItem>)}
                                     </Select>
                                 </FormControl>
                             </Grid>

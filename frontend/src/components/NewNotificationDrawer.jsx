@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { openAnnouncementHub } from '../utils/announcementHubEvents';
 import { useAuth } from '../context/AuthContext';
@@ -15,10 +15,11 @@ import useNewNotifications from '../hooks/useNewNotifications';
 import { usePermissions } from '../hooks/usePermissions';
 import api from '../api/axios';
 import '../styles/NotificationDrawer.css';
-import TeamsNotificationModal from './TeamsAttendanceNotificationSettings';
 import { partitionNotifications, countUnread } from '../utils/requestNotifications';
-
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { SkeletonBox } from '../components/SkeletonLoaders';
+
+const TeamsNotificationModal = lazyWithRetry(() => import('./TeamsAttendanceNotificationSettings'));
 const formatDistanceToNow = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -652,11 +653,15 @@ const NewNotificationDrawer = ({ open, onClose, onOpenECRModal }) => {
                 />
             </Box>
         </Drawer>
-        <TeamsNotificationModal
-            open={teamsModalOpen}
-            onClose={() => setTeamsModalOpen(false)}
-            initialTab={2}
-        />
+        {teamsModalOpen && (
+            <Suspense fallback={null}>
+                <TeamsNotificationModal
+                    open={teamsModalOpen}
+                    onClose={() => setTeamsModalOpen(false)}
+                    initialTab={2}
+                />
+            </Suspense>
+        )}
     </>
     );
 };

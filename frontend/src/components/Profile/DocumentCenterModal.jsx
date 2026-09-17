@@ -1,12 +1,8 @@
-import { memo, useState, useEffect, useCallback, useRef } from 'react';
+import { memo, useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { createPortal } from 'react-dom';
-import { Document, Page, pdfjs } from 'react-pdf';
-import 'react-pdf/dist/Page/AnnotationLayer.css';
-import 'react-pdf/dist/Page/TextLayer.css';
+import { PdfDocument, PdfPage } from '../lazy/LazyPdfComponents';
 import api from '../../api/axios';
 import '../../styles/CustomPdfViewer.css';
-
-pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
 
 const MIN_READ_SECONDS = 60;
 
@@ -352,7 +348,13 @@ const DocumentCenterModal = memo(({
                                             <div className="doc-center-preview-error">{pdfError}</div>
                                         )}
                                         {!pdfLoading && !pdfError && pdfBlob && (
-                                            <Document
+                                            <Suspense fallback={
+                                                <div className="doc-center-preview-loading">
+                                                    <div className="pdf-spinner" />
+                                                    <p>Loading document…</p>
+                                                </div>
+                                            }>
+                                            <PdfDocument
                                                 file={pdfBlob}
                                                 onLoadSuccess={({ numPages: pages }) => setNumPages(pages)}
                                                 onLoadError={() => setPdfError('Failed to render PDF.')}
@@ -360,7 +362,7 @@ const DocumentCenterModal = memo(({
                                             >
                                                 {Array.from(new Array(numPages), (_, i) => (
                                                     <div key={`p_${i + 1}`} className="doc-center-pdf-page">
-                                                        <Page
+                                                        <PdfPage
                                                             pageNumber={i + 1}
                                                             scale={scale}
                                                             renderTextLayer
@@ -368,7 +370,8 @@ const DocumentCenterModal = memo(({
                                                         />
                                                     </div>
                                                 ))}
-                                            </Document>
+                                            </PdfDocument>
+                                            </Suspense>
                                         )}
                                     </div>
 

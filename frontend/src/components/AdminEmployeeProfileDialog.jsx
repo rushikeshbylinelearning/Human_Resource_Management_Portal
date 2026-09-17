@@ -18,14 +18,16 @@ import api from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 
 import { SkeletonBox } from '../components/SkeletonLoaders';
-const roles = ['Admin', 'HR', 'Employee', 'Intern'];
-const statusOptions = ['Active', 'Inactive'];
-const employmentStatusOptions = ['Intern', 'Probation', 'Permanent'];
-
+import OrgAssignmentFields from './OrgAssignmentFields';
+import { resolveOrgFields } from '../utils/orgFieldOptions';
 import {
     RED, RED_DARK, RED_BG, RED_LIGHT, TEXT, MUTED, BORDER, SURFACE,
     cardSx, sectionTitleSx, primaryBtnSx, tabSx,
 } from './adminEmployee/adminEmployeeTheme';
+
+const roles = ['Admin', 'HR', 'Employee', 'Intern'];
+const statusOptions = ['Active', 'Inactive'];
+const employmentStatusOptions = ['Intern', 'Probation', 'Permanent'];
 
 const textFieldSx = {
     '& .MuiOutlinedInput-root': {
@@ -41,6 +43,7 @@ const defaultFormState = {
     employeeCode: '',
     designation: '',
     department: '',
+    domain: '',
     email: '',
     role: 'Employee',
     status: 'Active',
@@ -96,11 +99,14 @@ const AdminEmployeeProfileDialog = ({
     const [selectedReportingOption, setSelectedReportingOption] = useState(null);
     const [activeTab, setActiveTab] = useState(0);
 
-    const buildFormState = useMemo(() => (data) => ({
+    const buildFormState = useMemo(() => (data) => {
+        const orgFields = resolveOrgFields(data);
+        return {
         fullName: data?.fullName || '',
         employeeCode: data?.employeeCode || '',
-        designation: data?.designation || '',
-        department: data?.department || '',
+        designation: orgFields.designation,
+        department: orgFields.department,
+        domain: orgFields.domain,
         email: data?.email || '',
         role: data?.role || 'Employee',
         status: data?.isActive === false ? 'Inactive' : 'Active',
@@ -143,7 +149,8 @@ const AdminEmployeeProfileDialog = ({
         pfAccountNumber: data?.identityDetails?.pfAccountNumber || '',
         reportingPersonId: data?.reportingPerson?._id || '',
         employmentStatus: data?.employmentStatus || 'Probation',
-    }), []);
+        };
+    }, []);
 
     useEffect(() => {
         if (employee) {
@@ -242,12 +249,23 @@ const AdminEmployeeProfileDialog = ({
         }
     };
 
+    const handleOrgFieldsChange = ({ department, designation, domain }) => {
+        setFormData(prev => ({
+            ...prev,
+            department,
+            designation,
+            domain,
+        }));
+    };
+
     const buildPayload = () => {
+        const orgFields = resolveOrgFields(formData);
         const payload = {
             fullName: formData.fullName,
             employeeCode: formData.employeeCode,
-            designation: formData.designation,
-            department: formData.department,
+            designation: orgFields.designation,
+            department: orgFields.department,
+            domain: orgFields.domain,
             email: formData.email,
             role: formData.role,
             isActive: formData.status === 'Active',
@@ -490,8 +508,20 @@ const AdminEmployeeProfileDialog = ({
                             <Grid container spacing={2.5}>
                                 <Grid item xs={12} sm={6} md={4}>{renderField({ label: 'Full Name', name: 'fullName' })}</Grid>
                                 <Grid item xs={12} sm={6} md={4}>{renderField({ label: 'Employee ID', name: 'employeeCode' })}</Grid>
-                                <Grid item xs={12} sm={6} md={4}>{renderField({ label: 'Designation', name: 'designation' })}</Grid>
-                                <Grid item xs={12} sm={6} md={4}>{renderField({ label: 'Department', name: 'department' })}</Grid>
+                                {isEditing ? (
+                                    <OrgAssignmentFields
+                                        department={formData.department}
+                                        designation={formData.designation}
+                                        onChange={handleOrgFieldsChange}
+                                        textFieldSx={textFieldSx}
+                                        gridProps={{ xs: 12, sm: 6, md: 4 }}
+                                    />
+                                ) : (
+                                    <>
+                                        <Grid item xs={12} sm={6} md={4}>{renderValue('Department', formData.department)}</Grid>
+                                        <Grid item xs={12} sm={6} md={4}>{renderValue('Designation', formData.designation)}</Grid>
+                                    </>
+                                )}
                                 <Grid item xs={12} sm={6} md={4}>{renderField({ label: 'Email', name: 'email', type: 'email' })}</Grid>
                                 <Grid item xs={12} sm={6} md={4}>{renderField({ label: 'Joining Date', name: 'joiningDate', type: 'date' })}</Grid>
                                 <Grid item xs={12} sm={6} md={4}>

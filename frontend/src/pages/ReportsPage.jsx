@@ -2,13 +2,9 @@
 
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { Typography, Button, Paper, Grid, Alert, Autocomplete, TextField, FormControl, InputLabel, Select, MenuItem, Chip, Stack, ListItemText, Card, CardContent, CardActions, Box, IconButton, Tooltip, Divider, Avatar } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import LazyDatePicker from '../components/lazy/LazyDatePicker';
 import api from '../api/axios';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import { loadJsPDFWithAutoTable, loadXLSX } from '../utils/lazyLibraries';
 import { format, startOfWeek, endOfWeek, subWeeks, startOfMonth, endOfMonth, subMonths, eachDayOfInterval, differenceInDays } from 'date-fns';
 import DownloadIcon from '@mui/icons-material/Download';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
@@ -64,7 +60,8 @@ const mapLeaveReportRow = (row) => {
 };
 
 // --- PDF GENERATION LOGIC (UPDATED) ---
-const generatePdf = (reportType, data, selectedEmployees, dateRange) => {
+const generatePdf = async (reportType, data, selectedEmployees, dateRange) => {
+    const { jsPDF, autoTable } = await loadJsPDFWithAutoTable();
     const doc = new jsPDF({ orientation: reportType === 'notes' ? 'portrait' : 'landscape' });
     let title, head, body;
 
@@ -240,8 +237,10 @@ const generatePdf = (reportType, data, selectedEmployees, dateRange) => {
 };
 
 // --- EXCEL GENERATION LOGIC (UPDATED) ---
-const generateExcel = (reportType, data, selectedEmployees, dateRange) => {
-    const wb = XLSX.utils.book_new();
+const generateExcel = async (reportType, data, selectedEmployees, dateRange) => {
+    const XLSX = await loadXLSX();
+    const xlsx = XLSX.default ?? XLSX;
+    const wb = xlsx.utils.book_new();
     let reportName;
     const boldStyle = { font: { bold: true } };
 
@@ -262,11 +261,11 @@ const generateExcel = (reportType, data, selectedEmployees, dateRange) => {
             'Total Break': formatDuration(row.totalBreakMinutes),
             'Overtime': formatDuration(row.overtimeMinutes || 0)
         }));
-        const ws1 = XLSX.utils.json_to_sheet(detailedLogData);
+        const ws1 = xlsx.utils.json_to_sheet(detailedLogData);
         ws1['!cols'] = [ { wch: 15 }, { wch: 25 }, { wch: 12 }, { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 20 }, { wch: 22 }, { wch: 12 }, { wch: 12 }];
-        const range1 = XLSX.utils.decode_range(ws1['!ref']);
-        for (let C = range1.s.c; C <= range1.e.c; ++C) { const address = XLSX.utils.encode_cell({ r: 0, c: C }); if (ws1[address]) ws1[address].s = boldStyle; }
-        XLSX.utils.book_append_sheet(wb, ws1, 'Detailed Log');
+        const range1 = xlsx.utils.decode_range(ws1['!ref']);
+        for (let C = range1.s.c; C <= range1.e.c; ++C) { const address = xlsx.utils.encode_cell({ r: 0, c: C }); if (ws1[address]) ws1[address].s = boldStyle; }
+        xlsx.utils.book_append_sheet(wb, ws1, 'Detailed Log');
 
         // Add summary counts for single user reports
         if (selectedEmployees.length === 1) {
@@ -326,20 +325,20 @@ const generateExcel = (reportType, data, selectedEmployees, dateRange) => {
                 ['Average Working Hours', formatDuration(avgWorkingMinutes)],
                 ['Total Overtime Hours', formatDuration(totalOvertimeMinutes)]
             ];
-            const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+            const wsSummary = xlsx.utils.aoa_to_sheet(summaryData);
             wsSummary['!cols'] = [{ wch: 30 }, { wch: 20 }];
-            const rangeSummary = XLSX.utils.decode_range(wsSummary['!ref']);
+            const rangeSummary = xlsx.utils.decode_range(wsSummary['!ref']);
             // Make "Summary" header bold (row 0)
             for (let C = rangeSummary.s.c; C <= rangeSummary.e.c; ++C) {
-                const address = XLSX.utils.encode_cell({ r: 0, c: C });
+                const address = xlsx.utils.encode_cell({ r: 0, c: C });
                 if (wsSummary[address]) wsSummary[address].s = boldStyle;
             }
             // Make "Time Summary" header bold (row 8)
             for (let C = rangeSummary.s.c; C <= rangeSummary.e.c; ++C) {
-                const address = XLSX.utils.encode_cell({ r: 8, c: C });
+                const address = xlsx.utils.encode_cell({ r: 8, c: C });
                 if (wsSummary[address]) wsSummary[address].s = boldStyle;
             }
-            XLSX.utils.book_append_sheet(wb, wsSummary, 'Summary');
+            xlsx.utils.book_append_sheet(wb, wsSummary, 'Summary');
         }
 
         const allDatesInRange = eachDayOfInterval(dateRange);
@@ -373,32 +372,33 @@ const generateExcel = (reportType, data, selectedEmployees, dateRange) => {
             });
             return rowData;
         });
-        const ws2 = XLSX.utils.aoa_to_sheet([musterHeaders, ...musterRows]);
+        const ws2 = xlsx.utils.aoa_to_sheet([musterHeaders, ...musterRows]);
         ws2['!cols'] = [ { wch: 15 }, { wch: 25 }, ...dateHeaders.map(() => ({ wch: 15 }))];
-        const range2 = XLSX.utils.decode_range(ws2['!ref']);
-        for (let C = range2.s.c; C <= range2.e.c; ++C) { const address = XLSX.utils.encode_cell({ r: 0, c: C }); if (ws2[address]) ws2[address].s = boldStyle; }
-        XLSX.utils.book_append_sheet(wb, ws2, 'Muster Roll');
+        const range2 = xlsx.utils.decode_range(ws2['!ref']);
+        for (let C = range2.s.c; C <= range2.e.c; ++C) { const address = xlsx.utils.encode_cell({ r: 0, c: C }); if (ws2[address]) ws2[address].s = boldStyle; }
+        xlsx.utils.book_append_sheet(wb, ws2, 'Muster Roll');
         
         reportName = 'Attendance';
 
     } else if (reportType === 'leaves') {
-        const leaveWorksheetData = data.map(row => {
-            const mapped = mapLeaveReportRow(row);
-            return {
-                'Date': mapped.date,
-                'Employee Code': mapped.employeeCode,
-                'Employee Name': mapped.employeeName,
-                'Record': mapped.recordType,
-                'Type': mapped.type,
-                'Status': mapped.status,
-                'Reason': mapped.reason
-            };
-        });
-        const ws = XLSX.utils.json_to_sheet(leaveWorksheetData);
-        ws['!cols'] = [ { wch: 15 }, { wch: 15 }, { wch: 25 }, { wch: 18 }, { wch: 18 }, { wch: 12 }, { wch: 40 }];
-        const range = XLSX.utils.decode_range(ws['!ref']);
-        for (let C = range.s.c; C <= range.e.c; ++C) { const address = XLSX.utils.encode_cell({ r: 0, c: C }); if (ws[address]) ws[address].s = boldStyle; }
-        XLSX.utils.book_append_sheet(wb, ws, 'Leave Report');
+        const leaveWorksheetData = data
+            .filter(row => row.recordType !== 'absent')
+            .map(row => {
+                const mapped = mapLeaveReportRow(row);
+                return {
+                    'Date': mapped.date,
+                    'Employee Code': mapped.employeeCode,
+                    'Employee Name': mapped.employeeName,
+                    'Type': mapped.type,
+                    'Status': mapped.status,
+                    'Reason': mapped.reason
+                };
+            });
+        const ws = xlsx.utils.json_to_sheet(leaveWorksheetData);
+        ws['!cols'] = [ { wch: 15 }, { wch: 15 }, { wch: 25 }, { wch: 18 }, { wch: 12 }, { wch: 40 }];
+        const range = xlsx.utils.decode_range(ws['!ref']);
+        for (let C = range.s.c; C <= range.e.c; ++C) { const address = xlsx.utils.encode_cell({ r: 0, c: C }); if (ws[address]) ws[address].s = boldStyle; }
+        xlsx.utils.book_append_sheet(wb, ws, 'Leave Report');
         reportName = 'Leave';
     } else if (reportType === 'notes') {
         const notesWorksheetData = data.map(row => ({
@@ -413,21 +413,22 @@ const generateExcel = (reportType, data, selectedEmployees, dateRange) => {
             'Created At': format(new Date(row.createdAt), 'yyyy-MM-dd HH:mm'),
             'Updated At': format(new Date(row.updatedAt), 'yyyy-MM-dd HH:mm')
         }));
-        const ws = XLSX.utils.json_to_sheet(notesWorksheetData);
+        const ws = xlsx.utils.json_to_sheet(notesWorksheetData);
         ws['!cols'] = [ { wch: 12 }, { wch: 15 }, { wch: 25 }, { wch: 10 }, { wch: 15 }, { wch: 12 }, { wch: 12 }, { wch: 60 }, { wch: 20 }, { wch: 20 }];
-        const range = XLSX.utils.decode_range(ws['!ref']);
-        for (let C = range.s.c; C <= range.e.c; ++C) { const address = XLSX.utils.encode_cell({ r: 0, c: C }); if (ws[address]) ws[address].s = boldStyle; }
-        XLSX.utils.book_append_sheet(wb, ws, 'Attendance Notes');
+        const range = xlsx.utils.decode_range(ws['!ref']);
+        for (let C = range.s.c; C <= range.e.c; ++C) { const address = xlsx.utils.encode_cell({ r: 0, c: C }); if (ws[address]) ws[address].s = boldStyle; }
+        xlsx.utils.book_append_sheet(wb, ws, 'Attendance Notes');
         reportName = 'Notes';
     }
     
     const period = getReportPeriod(dateRange);
     const employeeName = selectedEmployees.length === 1 ? selectedEmployees[0].fullName.replace(/\s/g, '_') : 'Employees';
-    XLSX.writeFile(wb, `${employeeName}_${reportName}_${period}.xlsx`);
+    xlsx.writeFile(wb, `${employeeName}_${reportName}_${period}.xlsx`);
 };
 
 // Generate PDF for Activity Logs
-const generateActivityLogsPdf = (logs, dateRange) => {
+const generateActivityLogsPdf = async (logs, dateRange) => {
+    const { jsPDF, autoTable } = await loadJsPDFWithAutoTable();
     const doc = new jsPDF({ orientation: 'landscape' });
     const title = 'Activity Logs Report';
     const head = [['Date', 'Time', 'User', 'Employee Code', 'Type', 'Category', 'Priority', 'Message', 'Read Status']];
@@ -465,7 +466,7 @@ const generateActivityLogsPdf = (logs, dateRange) => {
     doc.save(`Activity_Logs_${period}.pdf`);
 };
 
-const ReportCard = memo(({ title, description, icon, onPdfClick, onExcelClick, disabled, children, xs = 12, md = 6, lg = 4 }) => (
+const ReportCard = memo(({ title, description, icon, onPdfClick, onExcelClick, disabled, children, xs = 12, md = 6, lg = 3 }) => (
     <Grid item xs={xs} md={md} lg={lg}>
         <Card className="report-card" elevation={0}>
             <CardContent className="report-card-content">
@@ -492,7 +493,7 @@ const ReportCard = memo(({ title, description, icon, onPdfClick, onExcelClick, d
                 )}
                 <Box className="report-card-spacer" />
             </CardContent>
-            <CardActions className="report-card-actions">
+            <CardActions className="report-card-actions" disableSpacing>
                 <Button 
                     variant="outlined" 
                     size="small"
@@ -500,7 +501,6 @@ const ReportCard = memo(({ title, description, icon, onPdfClick, onExcelClick, d
                     onClick={onPdfClick} 
                     disabled={disabled}
                     startIcon={<PictureAsPdfIcon />}
-                    fullWidth
                 >
                     Export PDF
                 </Button>
@@ -511,7 +511,6 @@ const ReportCard = memo(({ title, description, icon, onPdfClick, onExcelClick, d
                     onClick={onExcelClick} 
                     disabled={disabled}
                     startIcon={<TableChartIcon />}
-                    fullWidth
                 >
                     Export Excel
                 </Button>
@@ -575,7 +574,7 @@ const ReportsPage = () => {
                 } else if (formatType === 'pdf') {
                     // Generate PDF from the JSON data
                     const dateRange = { start: startDate, end: endDate };
-                    generateActivityLogsPdf(data.logs, dateRange);
+                    await generateActivityLogsPdf(data.logs, dateRange);
                 }
             } catch (err) {
                 setError(err.response?.data?.error || 'Failed to download activity logs.');
@@ -602,16 +601,20 @@ const ReportsPage = () => {
 
         try {
             const { data } = await api.post(`/admin/reports/${reportType}`, payload);
-            if (!data || data.length === 0) {
+            // Leave Excel should contain leave requests only — skip attendance "Absent" rows.
+            const reportData = (reportType === 'leaves' && formatType === 'excel')
+                ? (data || []).filter(row => row.recordType !== 'absent')
+                : data;
+            if (!reportData || reportData.length === 0) {
                 setError('No data found for the selected criteria.');
                 setLoading(false);
                 return; 
             }
             const dateRange = { start: startDate, end: endDate };
             if (formatType === 'pdf') {
-                generatePdf(reportType, data, selectedEmployees, dateRange);
+                await generatePdf(reportType, reportData, selectedEmployees, dateRange);
             } else if (formatType === 'excel') {
-                generateExcel(reportType, data, selectedEmployees, dateRange);
+                await generateExcel(reportType, reportData, selectedEmployees, dateRange);
             }
         } catch (err) {
             setError(err.response?.data?.error || `Failed to generate ${reportType} report.`);
@@ -675,10 +678,9 @@ const ReportsPage = () => {
                     </Box>
                 </Box>
                 <Divider className="filter-divider" />
-                <Grid container spacing={2} sx={{ mt: 0 }}>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                            <DatePicker 
+                <Box className="filter-fields">
+                    <Box className="filter-field filter-field--date">
+                        <LazyDatePicker 
                                 label="Start Date" 
                                 value={startDate} 
                                 onChange={setStartDate} 
@@ -689,11 +691,9 @@ const ReportsPage = () => {
                                     }
                                 }}
                             />
-                        </LocalizationProvider>
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={3}>
-                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                            <DatePicker 
+                    </Box>
+                    <Box className="filter-field filter-field--date">
+                        <LazyDatePicker 
                                 label="End Date" 
                                 value={endDate} 
                                 onChange={setEndDate} 
@@ -704,12 +704,11 @@ const ReportsPage = () => {
                                     }
                                 }}
                             />
-                        </LocalizationProvider>
-                    </Grid>
-                    <Grid item xs={12} md={6}>
+                    </Box>
+                    <Box className="filter-field filter-field--presets">
                         <Box className="date-presets-container">
-                            <Typography variant="caption" className="presets-label">Quick Presets:</Typography>
-                            <Stack direction="row" spacing={1} className="date-presets" flexWrap="wrap">
+                            <Typography variant="caption" className="presets-label">Quick Presets</Typography>
+                            <Stack direction="row" className="date-presets" flexWrap="wrap">
                                 <Button 
                                     variant="outlined" 
                                     size="small" 
@@ -744,8 +743,8 @@ const ReportsPage = () => {
                                 </Button>
                             </Stack>
                         </Box>
-                    </Grid>
-                    <Grid item xs={12} md={3} sx={{ ml: { md: 'auto' } }}>
+                    </Box>
+                    <Box className="filter-field filter-field--employees">
                         <Autocomplete
                             multiple
                             options={[selectAllOption, ...employees]}
@@ -879,19 +878,7 @@ const ReportsPage = () => {
                                 className: 'employee-listbox'
                             }}
                             className="employee-autocomplete"
-                            sx={{ 
-                                width: '100%',
-                                minWidth: '320px',
-                                '& .MuiAutocomplete-inputRoot': {
-                                    minHeight: '56px',
-                                    fontSize: '15px',
-                                    padding: '8px 14px !important'
-                                },
-                                '& .MuiAutocomplete-input': {
-                                    fontSize: '15px',
-                                    fontWeight: 400
-                                }
-                            }}
+                            sx={{ width: '100%' }}
                             slotProps={{
                                 popper: {
                                     className: 'employee-autocomplete-popper',
@@ -919,11 +906,11 @@ const ReportsPage = () => {
                                 }
                             }}
                         />
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Box>
             </Paper>
 
-            <Grid container spacing={2} className="reports-grid-container" sx={{ mt: 1.5 }}>
+            <Grid container spacing={2.5} className="reports-grid-container">
                 <ReportCard 
                     title="Attendance & Break Report" 
                     description="Detailed attendance logs with work hours and break times"
@@ -939,7 +926,6 @@ const ReportsPage = () => {
                     onPdfClick={handleLeavesPdfClick} 
                     onExcelClick={handleLeavesExcelClick} 
                     disabled={isDownloadDisabled}
-                    lg={6}
                 >
                     <FormControl fullWidth className="report-card-filter">
                         <InputLabel>Status</InputLabel>
@@ -966,7 +952,6 @@ const ReportsPage = () => {
                     onPdfClick={handleActivityLogsPdfClick} 
                     onExcelClick={handleActivityLogsExcelClick} 
                     disabled={isDownloadDisabled}
-                    lg={6}
                 />
             </Grid>
         </div>

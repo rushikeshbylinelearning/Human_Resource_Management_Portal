@@ -36,6 +36,7 @@ const { checkGeofence } = require('../services/geofencingService');
 const ssoService = require('../services/ssoService');
 const SSOVerification = require('../utils/ssoVerification');
 const jwtUtils = require('../utils/jwtUtils');
+const { syncOrgFields } = require('../utils/syncOrgFields');
 // isNightShiftEmployee was used for the old 7d/10h expiry split; no longer needed
 // with the uniform 15-minute access token model. Import kept as a no-op comment
 // until the module reference is confirmed safe to remove.
@@ -941,14 +942,19 @@ router.post('/sso-consume', async (req, res) => {
                 if (process.env.NODE_ENV !== 'production') console.log(`[SSO-Consume] Auto-provisioning new user with normalized email`);
                 if (process.env.NODE_ENV !== 'production') console.log(`[SSO-Consume] Raw email from SSO: ${rawEmail} -> Normalized: ${userEmail}`);
                 
+                const orgFields = syncOrgFields({
+                    department: userDepartment || 'Unknown',
+                    domain: decoded.domain || userDepartment || 'Unknown',
+                    designation: userDesignation || 'Employee',
+                });
                 user = new User({
                     email: userEmail, // Store normalized email for consistency
                     fullName: userName || userEmail.split('@')[0],
                     employeeCode: employeeCode || `SSO_${Date.now()}`,
                     role: mapSSORoleToAMS(userRole),
-                    department: userDepartment || 'Unknown',
-                    designation: userDesignation || 'Employee',
-                    domain: decoded.domain || 'Unknown',
+                    department: orgFields.department,
+                    designation: orgFields.designation,
+                    domain: orgFields.domain,
                     passwordHash: 'SSO_USER_NO_PASSWORD',
                     joiningDate: new Date(),
                     isActive: true,
@@ -992,7 +998,15 @@ router.post('/sso-consume', async (req, res) => {
                     authMethod: 'SSO'
                 };
 
-                if (userDepartment) updateData.department = userDepartment;
+                if (userDepartment) {
+                    const orgFields = syncOrgFields({
+                        department: userDepartment,
+                        domain: user.domain,
+                        designation: userDesignation || user.designation,
+                    });
+                    updateData.department = orgFields.department;
+                    updateData.domain = orgFields.domain;
+                }
                 if (userDesignation) updateData.designation = userDesignation;
                 if (employeeCode) updateData.employeeCode = employeeCode;
 

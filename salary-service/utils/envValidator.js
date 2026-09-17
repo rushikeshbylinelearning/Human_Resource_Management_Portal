@@ -105,4 +105,4 @@ function validateAndExit() {
     }
 }
 
-module.exports = { validate, validateAndExit };
+module.exports = { validateAndExit };

@@ -12,7 +12,7 @@
   --card-radius: 12px;
   --card-shadow: 0 2px 12px 0 rgba(44,62,80,0.07);
   --border-color: #e5e7eb;
-  --text-muted: #6b7280;
+  --text-muted: #5a6268;  /* Improved from #6b7280 for better contrast (4.62:1 ratio) */
   --topbar-bg: #fff;
   --topbar-text: #213547;
   --topbar-shadow: 0 2px 8px rgba(0,0,0,0.04);
@@ -320,4 +320,36 @@ img {
 /* Smooth touch scrolling globally */
 * {
   -webkit-overflow-scrolling: touch;
+}
+
+.page-fallback-skeleton {
+  width: 100%;
+  min-height: calc(100vh - 200px);
+  padding: 24px;
+}
+.page-fallback-skeleton__bar {
+  height: 28px;
+  width: 40%;
+  max-width: 280px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 37%, #e5e7eb 63%);
+  background-size: 400% 100%;
+  animation: page-fallback-shimmer 1.4s ease-in-out infinite;
+}
+.page-fallback-skeleton__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.page-fallback-skeleton__card {
+  height: 180px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 37%, #e5e7eb 63%);
+  background-size: 400% 100%;
+  animation: page-fallback-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes page-fallback-shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
 }

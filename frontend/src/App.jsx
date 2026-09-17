@@ -8,47 +8,45 @@ import { BreakUIProvider } from './context/BreakUIContext';
 import { TeaBreakProvider } from './context/TeaBreakContext';
 import { ActiveYearProvider } from './context/ActiveYearContext';
 import { NewNotificationProvider } from './hooks/useNewNotifications.jsx'; // Corrected import path
-import { CssBaseline, ThemeProvider, Box } from '@mui/material';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { CssBaseline, ThemeProvider } from '@mui/material';
 import optimizedTheme from './theme/optimizedTheme';
 import { consumeSsoTokenIfPresent } from './utils/ssoConsumer';
+import PageFallbackSkeleton from './components/PageFallbackSkeleton';
 
 // Import Layout and Pages
 import MainLayout from './components/MainLayout';
-import LoginPage from './pages/LoginPage';
-import SSOLoginPage from './pages/SSOLoginPage';
 import ProtectedRoute from './components/ProtectedRoute';
 import PermissionProtectedRoute from './components/PermissionProtectedRoute';
 import IdleDetectionProvider from './components/IdleDetectionProvider';
 import { OnboardingProvider } from './context/OnboardingContext';
-import StandalonePolicyModal from './components/onboarding/StandalonePolicyModal';
+import ConditionalPolicyModal from './components/onboarding/ConditionalPolicyModal';
 import './styles/OnboardingStyles.css';
+
+const LoginPage = lazy(() => import('./pages/LoginPage'));
+const SSOLoginPage = lazy(() => import('./pages/SSOLoginPage'));
+const PublicProfileForm = lazy(() => import('./pages/PublicProfileForm'));
+const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 
 // Lazy load all pages
 const EmployeeDashboardPage = lazy(() => import('./pages/EmployeeDashboardPage'));
 const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
 const EmployeesPage = lazy(() => import('./pages/EmployeesPage'));
 const DeactivatedEmployeesPage = lazy(() => import('./pages/DeactivatedEmployeesPage'));
-const ShiftsPage = lazy(() => import('./pages/ShiftsPage'));
 const LeavesPage = lazy(() => import('./pages/LeavesPage'));
 const AdminLeavesPage = lazy(() => import('./pages/AdminLeavesPage'));
 const ReportsPage = lazy(() => import('./pages/ReportsPage'));
 const AttendanceSummaryPage = lazy(() => import('./pages/AttendanceSummaryPage'));
 const AdminAttendanceSummaryPage = lazy(() => import('./pages/AdminAttendanceSummaryPage'));
 const NewActivityLogPage = lazy(() => import('./pages/NewActivityLogPage'));
-const OfficeLocationsPage = lazy(() => import('./pages/OfficeLocationsPage'));
 const ManageSectionPage = lazy(() => import('./pages/ManageSectionPage'));
 const SSOCallbackPage = lazy(() => import('./pages/SSOCallbackPage'));
 const EmployeeMusterRollPage = lazy(() => import('./pages/EmployeeMusterRollPage'));
 const LeavesTrackerPage = lazy(() => import('./pages/LeavesTrackerPage'));
-const PayrollManagementPage = lazy(() => import('./pages/PayrollManagementPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const LiveAttendancePage = lazy(() => import('./pages/LiveAttendancePage'));
 const EmployeeDetailedAnalyticsPage = lazy(() => import('./pages/EmployeeDetailedAnalyticsPage'));
-// FIX: Static import to prevent skeleton flash during auth resolution
-import ProfilePage from './pages/ProfilePage';
 const AdminPoliciesPage = lazy(() => import('./pages/AdminPoliciesPage'));
+const PolicyTemplateEditorPage = lazy(() => import('./pages/admin/PolicyTemplateEditorPage'));
 const CIFManagementPage = lazy(() => import('./pages/CIFManagement'));
 const EmployeeCIFDetailsPage = lazy(() => import('./pages/EmployeeCIFDetails'));
 const SchedulingManagementPage = lazy(() => import('./pages/SchedulingManagementPage'));
@@ -56,18 +54,8 @@ const ProbationPage = lazy(() => import('./pages/ProbationPage'));
 const RequestsPage = lazy(() => import('./pages/RequestsPage'));
 const AdminRequestsPage = lazy(() => import('./pages/AdminRequestsPage'));
 const HolidayManagementPage = lazy(() => import('./pages/admin/HolidayManagementPage'));
-// Static import - must render before auth resolves, no login required
-import PublicProfileForm from './pages/PublicProfileForm';
 
-// Import skeleton loaders
-import { PageSkeleton } from './components/SkeletonLoaders';
-import ProfilePageSkeleton from './components/Profile/ProfilePageSkeleton';
-
-// Import prefetch utilities
-import { setupPrefetchListeners, routePrefetchMap } from './utils/prefetch';
-
-// Import resource preloading utilities
-import { preloadCriticalResources, preloadAssets } from './utils/resourcePreloader';
+const ProfilePageSkeleton = lazy(() => import('./components/Profile/ProfilePageSkeleton'));
 
 // Delayed fallback component - only shows skeleton after 300ms delay
 const DelayedFallback = ({ children, delay = 300 }) => {
@@ -82,14 +70,8 @@ const DelayedFallback = ({ children, delay = 300 }) => {
 };
 
 // Enhanced loading component for Suspense - uses skeleton loaders
-const PageLoader = ({ type = 'default' }) => (
-    <Box sx={{ 
-        width: '100%', 
-        minHeight: 'calc(100vh - 200px)',
-        p: 3 
-    }}>
-        <PageSkeleton type={type} />
-    </Box>
+const PageLoader = () => (
+    <PageFallbackSkeleton />
 );
 
 // Use optimized theme
@@ -195,15 +177,24 @@ function App() {
         ssoTokenProcessedRef.current = true;
     }, []);
 
-    // Setup route prefetching for performance optimization
+    // Hover prefetch is loaded after first paint so the route import() map
+    // is not part of the entry module graph.
     useEffect(() => {
-        setupPrefetchListeners(routePrefetchMap);
-    }, []);
-
-    // Preload critical resources for performance
-    useEffect(() => {
-        preloadAssets();
-        preloadCriticalResources();
+        let cancelled = false;
+        const start = () => {
+            import('./utils/prefetch').then(({ setupPrefetchListeners, routePrefetchMap }) => {
+                if (!cancelled) setupPrefetchListeners(routePrefetchMap);
+            });
+        };
+        const canIdle = typeof window.requestIdleCallback === 'function';
+        const idleId = canIdle
+            ? window.requestIdleCallback(start, { timeout: 2500 })
+            : window.setTimeout(start, 1200);
+        return () => {
+            cancelled = true;
+            if (canIdle) window.cancelIdleCallback(idleId);
+            else clearTimeout(idleId);
+        };
     }, []);
 
     // Register service worker for caching
@@ -221,8 +212,7 @@ function App() {
     }, []);
 
     return (
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <ThemeProvider theme={optimizedTheme}>
+        <ThemeProvider theme={optimizedTheme}>
                 <CssBaseline />
                 <Router>
                     <AuthProvider>
@@ -232,12 +222,20 @@ function App() {
                                 <NewNotificationProvider> {/* <-- CORRECT NESTING */}
                                     <IdleDetectionProvider>
                                         <OnboardingProvider>
-                                            {/* Standalone Policy Modal for existing employees */}
-                                            <StandalonePolicyModal />
+                                            {/* Conditional rendering: ConsentWizard or StandalonePolicyModal */}
+                                            <ConditionalPolicyModal />
                                         <Routes>
                                     {/* Public routes - accessible without authentication */}
-                                    <Route path="/login" element={<LoginPage />} />
-                                    <Route path="/sso-login" element={<SSOLoginPage />} />
+                                    <Route path="/login" element={
+                                        <Suspense fallback={<DelayedFallback><PageLoader /></DelayedFallback>}>
+                                            <LoginPage />
+                                        </Suspense>
+                                    } />
+                                    <Route path="/sso-login" element={
+                                        <Suspense fallback={<DelayedFallback><PageLoader /></DelayedFallback>}>
+                                            <SSOLoginPage />
+                                        </Suspense>
+                                    } />
                                     <Route path="/auth/sso-callback" element={
                                         <Suspense fallback={<DelayedFallback><PageLoader /></DelayedFallback>}>
                                             <SSOCallbackPage />
@@ -245,7 +243,11 @@ function App() {
                                     } />
                                     
                                     {/* Public Profile Form - No authentication required */}
-                                    <Route path="/public-form" element={<PublicProfileForm />} />
+                                    <Route path="/public-form" element={
+                                        <Suspense fallback={<DelayedFallback><PageLoader /></DelayedFallback>}>
+                                            <PublicProfileForm />
+                                        </Suspense>
+                                    } />
                                     
                                     {/* Root route - smart redirect based on authentication */}
                                     <Route path="/" element={<RootRoute />} />
@@ -270,7 +272,11 @@ function App() {
                                                 <AttendanceSummaryPage />
                                             </Suspense>
                                         } />
-                                        <Route path="/profile" element={<ProfilePage />} />
+                                        <Route path="/profile" element={
+                                            <Suspense fallback={<DelayedFallback><ProfilePageSkeleton /></DelayedFallback>}>
+                                                <ProfilePage />
+                                            </Suspense>
+                                        } />
                                         <Route path="/requests" element={
                                             <Suspense fallback={<DelayedFallback><PageLoader type="list" /></DelayedFallback>}>
                                                 <RequestsPage />
@@ -355,6 +361,16 @@ function App() {
                                                 <AdminPoliciesPage />
                                             </Suspense>
                                         } />
+                                        <Route path="/admin/policy-templates/create" element={
+                                            <Suspense fallback={<DelayedFallback><PageLoader /></DelayedFallback>}>
+                                                <PolicyTemplateEditorPage />
+                                            </Suspense>
+                                        } />
+                                        <Route path="/admin/policy-templates/:id/edit" element={
+                                            <Suspense fallback={<DelayedFallback><PageLoader /></DelayedFallback>}>
+                                                <PolicyTemplateEditorPage />
+                                            </Suspense>
+                                        } />
                                         <Route path="/admin/cif" element={
                                             <Suspense fallback={<DelayedFallback><PageLoader /></DelayedFallback>}>
                                                 <CIFManagementPage />
@@ -406,7 +422,6 @@ function App() {
             </AuthProvider>
         </Router>
         </ThemeProvider>
-    </LocalizationProvider>
 );
 
 }

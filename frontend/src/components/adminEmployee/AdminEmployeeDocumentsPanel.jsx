@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import {
     Box, Typography, Chip, CircularProgress, Stack, Button, IconButton,
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
@@ -10,10 +10,12 @@ import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import HourglassEmptyOutlinedIcon from '@mui/icons-material/HourglassEmptyOutlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
-import SecurePdfViewer from '../SecurePdfViewer';
+import { lazyWithRetry } from '../../utils/lazyWithRetry';
 import AdminEmployeeKycPanel from './AdminEmployeeKycPanel';
 import api from '../../api/axios';
 import { RED, RED_DARK, RED_BG, TEXT, MUTED, cardSx, sectionTitleSx } from './adminEmployeeTheme';
+
+const SecurePdfViewer = lazyWithRetry(() => import('../SecurePdfViewer'));
 
 const docStatusConfig = {
     pending: { label: 'Pending', color: '#92400e', bg: '#fef3c7', icon: <HourglassEmptyOutlinedIcon sx={{ fontSize: 14 }} /> },
@@ -220,12 +222,18 @@ const AdminEmployeeDocumentsPanel = ({ employeeId }) => {
             >
                 <DialogContent sx={{ p: 0, height: '100%', background: '#525659' }}>
                     {viewerDoc && (
-                        <SecurePdfViewer
-                            pdfUrl={`/employee-documents/${viewerDoc._id}/file`}
-                            policyName={viewerDoc.documentTypeLabel}
-                            role="admin"
-                            onClose={() => setViewerDoc(null)}
-                        />
+                        <Suspense fallback={
+                            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                                <CircularProgress />
+                            </Box>
+                        }>
+                            <SecurePdfViewer
+                                pdfUrl={`/employee-documents/${viewerDoc._id}/file`}
+                                policyName={viewerDoc.documentTypeLabel}
+                                role="admin"
+                                onClose={() => setViewerDoc(null)}
+                            />
+                        </Suspense>
                     )}
                 </DialogContent>
             </Dialog>

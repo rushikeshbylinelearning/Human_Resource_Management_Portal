@@ -25,14 +25,35 @@ const policyAcceptanceLogSchema = new mongoose.Schema({
     policyName: { type: String, required: true },
     policyVersion: { type: String, required: true },
 
+    templateId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'PolicyTemplate',
+        default: null,
+        index: true
+    },
+    assignmentSource: {
+        type: String,
+        enum: ['policy', 'template', 'onboarding'],
+        default: 'policy',
+    },
+
     // ── Reading metrics ───────────────────────────────────────────────────────
+    viewedAt: { type: Date, default: null },
     readingStartedAt: { type: Date, default: null },
     readingCompletedAt: { type: Date, default: null },
-    // Actual seconds the document was open (measured client-side)
+    // Actual seconds the document/wizard was open (measured client-side)
     readingDurationSeconds: { type: Number, default: 0 },
+    wizardDurationSeconds: { type: Number, default: 0 },
+    fullNoticeDurationSeconds: { type: Number, default: 0 },
     // Minimum required reading time in seconds (wordCount / 200 WPM * 60)
     minimumReadingSeconds: { type: Number, default: 0 },
     scrolledToBottom: { type: Boolean, default: false },
+    stepTimings: [{
+        stepKey: { type: String, required: true, trim: true },
+        durationSeconds: { type: Number, default: 0 },
+        viewedAt: { type: Date, default: Date.now },
+        _id: false,
+    }],
 
     // ── Acceptance ────────────────────────────────────────────────────────────
     accepted: { type: Boolean, default: false },
@@ -53,6 +74,10 @@ const policyAcceptanceLogSchema = new mongoose.Schema({
                 'account_created',
                 'first_login',
                 'policy_opened',
+                'policy_assigned',
+                'policy_reassigned',
+                'template_assigned',
+                'wizard_opened',
                 'reading_started',
                 'reading_completed',
                 'policy_accepted',
@@ -61,7 +86,11 @@ const policyAcceptanceLogSchema = new mongoose.Schema({
                 'profile_completed',
                 'deadline_passed',
                 'onboarding_completed',
-                'forced_by_admin'
+                'forced_by_admin',
+                'wizard_step_visited',
+                'consent_provided',
+                'continued_without_consent',
+                'alternative_requested'
             ]
         },
         timestamp: { type: Date, default: Date.now },
@@ -80,6 +109,39 @@ const policyAcceptanceLogSchema = new mongoose.Schema({
 
     // Deadline (7 days from account creation / joining date)
     profileDeadline: { type: Date, default: null },
+
+    // ── Template-based consent fields ─────────────────────────────────────────
+    templateVersion: { type: String, default: null },
+
+    guardian: {
+        studentFullName: { type: String, trim: true },
+        studentAdmissionId: { type: String, trim: true },
+        guardianName: { type: String, trim: true },
+        relationship: {
+            type: String,
+            enum: ['parent', 'legal_guardian', 'other_authorized_guardian'],
+        },
+        guardianEmail: { type: String, trim: true, lowercase: true },
+        guardianMobile: {
+            countryCode: { type: String, default: '+966', trim: true },
+            number: { type: String, trim: true },
+        },
+        remark: { type: String, trim: true, maxlength: 1000 },
+    },
+
+    checkboxResponses: [{
+        checkboxId: { type: String, required: true, trim: true },
+        label: { type: String, required: true, trim: true },
+        required: { type: Boolean, required: true },
+        checked: { type: Boolean, required: true },
+        _id: false,
+    }],
+
+    outcome: {
+        type: String,
+        enum: ['consented', 'continued_without_consent', 'alternative_requested'],
+        default: null,
+    },
 
 }, {
     timestamps: true,

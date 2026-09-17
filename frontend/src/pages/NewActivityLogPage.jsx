@@ -3,9 +3,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import { Typography, Button, Alert, Chip, Snackbar, Dialog, DialogTitle, DialogContent, DialogActions, Box, Avatar, Tooltip, IconButton, TextField, TablePagination, FormControl, InputLabel, Select, MenuItem, Grid, Card, CardContent, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Divider, Paper, Stack, LinearProgress, Tabs, Tab } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import LazyDatePicker from '../components/lazy/LazyDatePicker';
 import {
     DeleteOutline as DeleteIcon, VisibilityOutlined as ViewIcon, Search as SearchIcon,
     Refresh as RefreshIcon, Clear as ClearIcon, Login as LoginIcon, Logout as LogoutIcon,
@@ -316,14 +314,10 @@ const NewActivityLogPage = () => {
                 <Grid container spacing={2} alignItems="center">
                     <Grid item xs={12} md={12}><TextField fullWidth size="small" variant="outlined" placeholder="Search user name, code, or message..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} InputProps={{ startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} /> }} /></Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                            <DatePicker label="Start Date" value={filters.startDate} onChange={date => handleFilterChange('startDate', date)} slotProps={{ textField: { size: 'small', fullWidth: true, error: false } }} />
-                        </LocalizationProvider>
+                        <LazyDatePicker label="Start Date" value={filters.startDate} onChange={date => handleFilterChange('startDate', date)} slotProps={{ textField: { size: 'small', fullWidth: true, error: false } }} />
                     </Grid>
                     <Grid item xs={12} sm={6} md={3}>
-                        <LocalizationProvider dateAdapter={AdapterDateFns}>
-                            <DatePicker label="End Date" value={filters.endDate} onChange={date => handleFilterChange('endDate', date)} slotProps={{ textField: { size: 'small', fullWidth: true, error: false } }} />
-                        </LocalizationProvider>
+                        <LazyDatePicker label="End Date" value={filters.endDate} onChange={date => handleFilterChange('endDate', date)} slotProps={{ textField: { size: 'small', fullWidth: true, error: false } }} />
                     </Grid>
                     <Grid item xs={12} sm={4} md={2}><FormControl fullWidth size="small"><InputLabel>Type</InputLabel><Select value={filters.type} label="Type" onChange={e => handleFilterChange('type', e.target.value)}><MenuItem value="">All</MenuItem><MenuItem value="checkin">Check In</MenuItem><MenuItem value="checkout">Check Out</MenuItem><MenuItem value="leave_request">Leave Request</MenuItem></Select></FormControl></Grid>
                     <Grid item xs={12} sm={4} md={2}><FormControl fullWidth size="small"><InputLabel>Category</InputLabel><Select value={filters.category} label="Category" onChange={e => handleFilterChange('category', e.target.value)}><MenuItem value="">All</MenuItem><MenuItem value="attendance">Attendance</MenuItem><MenuItem value="leave">Leave</MenuItem><MenuItem value="break">Break</MenuItem></Select></FormControl></Grid>

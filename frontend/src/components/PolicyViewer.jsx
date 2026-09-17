@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import PropTypes from 'prop-types';
-import { Box, Typography, Stack } from '@mui/material';
-import SecurePdfViewer from './SecurePdfViewer';
+import { Box, Typography, Stack, CircularProgress } from '@mui/material';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 import { useAuth } from '../context/AuthContext';
+
+const SecurePdfViewer = lazyWithRetry(() => import('./SecurePdfViewer'));
 
 const PolicyViewer = ({ policy, onClose }) => {
     const { user } = useAuth();
@@ -33,12 +35,18 @@ const PolicyViewer = ({ policy, onClose }) => {
             </Stack>
             
             <Box sx={{ flex: 1, overflow: 'hidden' }}>
-                <SecurePdfViewer
-                    pdfUrl={pdfUrl}
-                    policyName={policy.name}
-                    role={role}
-                    onClose={onClose}
-                />
+                <Suspense fallback={
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', minHeight: 400 }}>
+                        <CircularProgress />
+                    </Box>
+                }>
+                    <SecurePdfViewer
+                        pdfUrl={pdfUrl}
+                        policyName={policy.name}
+                        role={role}
+                        onClose={onClose}
+                    />
+                </Suspense>
             </Box>
         </Box>
     );

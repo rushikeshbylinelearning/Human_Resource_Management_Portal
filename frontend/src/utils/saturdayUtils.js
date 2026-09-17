@@ -187,19 +187,6 @@ export const getAttendanceStatus = (date, log, saturdayPolicy = 'All Saturdays W
 };
 
 /**
- * Get Saturday policy options
- * @returns {Array} Array of policy options
- */
-export const getSaturdayPolicyOptions = () => {
-  return [
-    { value: 'All Saturdays Working', label: 'All Saturdays Working' },
-    { value: 'All Saturdays Off', label: 'All Saturdays Off' },
-    { value: 'Week 1 & 3 Off', label: 'Week 1 & 3 Off' },
-    { value: 'Week 2 & 4 Off', label: 'Week 2 & 4 Off' }
-  ];
-};
-
-/**
  * Check if a specific Saturday is a working day based on policy
  * @param {Date} date - The date to check (should be a Saturday)
  * @param {string} saturdayPolicy - The Saturday policy

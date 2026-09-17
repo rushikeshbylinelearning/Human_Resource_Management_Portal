@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import api from "../../api/axios";
-import { BarChart2, Check } from "lucide-react";
+import BarChart2 from "lucide-react/dist/esm/icons/bar-chart-2";
+import Check from "lucide-react/dist/esm/icons/check";
 import {
   getPollQuestions,
   hasSubmitted,

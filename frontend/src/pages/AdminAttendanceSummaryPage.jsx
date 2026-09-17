@@ -1,6 +1,6 @@
 // src/pages/AdminAttendanceSummaryPage.jsx - IST-ENFORCED, BACKEND-DRIVEN
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Typography, Alert, FormControl, InputLabel, Select, MenuItem, IconButton, Tooltip, Snackbar, Avatar, Menu, ListItemIcon, ListItemText } from '@mui/material';
+import { Typography, Alert, IconButton, Tooltip, Snackbar, Avatar, Menu, MenuItem, ListItemIcon, ListItemText, Autocomplete, TextField } from '@mui/material';
 import {
     ChevronLeft as ChevronLeftIcon,
     ChevronRight as ChevronRightIcon,
@@ -78,7 +78,8 @@ const AdminAttendanceSummaryPage = () => {
             try {
                 // Do NOT pass includeInactive: deactivated employees must be hidden from attendance summary
                 const { data } = await api.get('/admin/employees?all=true&slim=true');
-                const activeEmployees = filterActiveEmployees(Array.isArray(data) ? data : []);
+                const activeEmployees = filterActiveEmployees(Array.isArray(data) ? data : [])
+                    .sort((a, b) => (a.fullName || '').localeCompare(b.fullName || '', undefined, { sensitivity: 'base' }));
                 setEmployees(activeEmployees);
             } catch (err) {
                 setError('Failed to fetch employee list. Please try again.');
@@ -266,9 +267,15 @@ const AdminAttendanceSummaryPage = () => {
         });
     };
     
-    const handleEmployeeChange = (event) => {
+    const handleEmployeeChange = (_event, emp) => {
         setLogs([]);
-        setSelectedEmployeeId(event.target.value);
+        setSelectedEmployeeId(emp?._id || '');
+    };
+
+    const formatEmployeeLabel = (emp) => {
+        if (!emp) return '';
+        const name = emp.fullName || '';
+        return emp.employeeCode ? `${name} (${emp.employeeCode})` : name;
     };
 
     const handleDayClick = (dayData) => {
@@ -424,14 +431,14 @@ const AdminAttendanceSummaryPage = () => {
                         
                         {formatAdminAttendanceDataForList().map((row, index) => (
                             <div key={index} className="table-row">
-                                <div className="table-cell">{row.date}</div>
-                                <div className="table-cell">{row.firstIn}</div>
-                                <div className="table-cell">{row.lastOut}</div>
-                                <div className="table-cell">{row.totalHours}</div>
-                                <div className="table-cell">{row.paidBreak}</div>
-                                <div className="table-cell">{row.unpaidBreak}</div>
-                                <div className="table-cell">{row.payableHours}</div>
-                                <div className="table-cell">
+                                <div className="table-cell" data-label="Date">{row.date}</div>
+                                <div className="table-cell" data-label="First In">{row.firstIn}</div>
+                                <div className="table-cell" data-label="Last Out">{row.lastOut}</div>
+                                <div className="table-cell" data-label="Total Hours">{row.totalHours}</div>
+                                <div className="table-cell" data-label="Paid Break">{row.paidBreak}</div>
+                                <div className="table-cell" data-label="Unpaid Break">{row.unpaidBreak}</div>
+                                <div className="table-cell" data-label="Payable Hours">{row.payableHours}</div>
+                                <div className="table-cell" data-label="Status">
                                     <div className="status-cell">
                                         <div 
                                             className="status-indicator" 
@@ -451,8 +458,8 @@ const AdminAttendanceSummaryPage = () => {
                                         )}
                                     </div>
                                 </div>
-                                <div className="table-cell">{row.shift}</div>
-                                <div className="table-cell">-</div>
+                                <div className="table-cell" data-label="Shift(s)">{row.shift}</div>
+                                <div className="table-cell" data-label="Regularization">-</div>
                             </div>
                         ))}
                     </div>
@@ -536,30 +543,59 @@ const AdminAttendanceSummaryPage = () => {
                     
                     <div className="header-right">
                         <div className="employee-selector-inline">
-                            <FormControl className="employee-select" size="small">
-                                <InputLabel id="employee-select-label">Select Employee</InputLabel>
-                                <Select
-                                    labelId="employee-select-label"
-                                    value={selectedEmployeeId}
-                                    label="Select Employee"
-                                    onChange={handleEmployeeChange}
-                                    disabled={loadingEmployees}
-                                >
-                                    {employees.map((emp) => (
-                                        <MenuItem key={emp._id} value={emp._id}>
-                                            <div className="employee-option">
-                                                <Avatar sx={{ width: 24, height: 24, mr: 1 }}>
-                                                    {emp.fullName.charAt(0)}
-                                                </Avatar>
-                                                <div className="employee-info">
-                                                    <span className="employee-name">{emp.fullName}</span>
-                                                    <span className="employee-id">({emp.employeeCode})</span>
-                                                </div>
-                                            </div>
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                            <Autocomplete
+                                className="employee-select"
+                                options={employees}
+                                value={selectedEmployeeObject || null}
+                                onChange={handleEmployeeChange}
+                                disabled={loadingEmployees}
+                                loading={loadingEmployees}
+                                autoHighlight
+                                clearOnEscape
+                                getOptionLabel={formatEmployeeLabel}
+                                isOptionEqualToValue={(option, value) => option?._id === value?._id}
+                                filterOptions={(options, { inputValue }) => {
+                                    const q = inputValue.trim().toLowerCase();
+                                    if (!q) return options;
+                                    return options.filter((emp) =>
+                                        (emp.fullName || '').toLowerCase().includes(q) ||
+                                        (emp.employeeCode || '').toLowerCase().includes(q)
+                                    );
+                                }}
+                                slotProps={{
+                                    popper: { className: 'admin-summary-employee-popper' },
+                                    paper: { className: 'admin-summary-employee-paper' },
+                                    listbox: { className: 'admin-summary-employee-listbox' },
+                                }}
+                                renderOption={(props, option) => {
+                                    const { key, ...optionProps } = props;
+                                    return (
+                                        <li key={key} {...optionProps} className={`${optionProps.className || ''} employee-option`}>
+                                            <Avatar
+                                                className="employee-option-avatar"
+                                                src={option.profileImageUrl || undefined}
+                                                alt=""
+                                            >
+                                                {(option.fullName || '?').charAt(0).toUpperCase()}
+                                            </Avatar>
+                                            <span className="employee-option-text">
+                                                {option.fullName}
+                                                {option.employeeCode ? (
+                                                    <span className="employee-option-code"> ({option.employeeCode})</span>
+                                                ) : null}
+                                            </span>
+                                        </li>
+                                    );
+                                }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="Select Employee"
+                                        size="small"
+                                        placeholder="Search by name or ID"
+                                    />
+                                )}
+                            />
                         </div>
                         
                         <div className="action-icons">

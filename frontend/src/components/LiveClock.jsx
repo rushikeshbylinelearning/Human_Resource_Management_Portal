@@ -41,7 +41,7 @@ const LiveClock = () => {
 
     return (
         <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h5" sx={{ fontWeight: 700, color: '#333333', letterSpacing: '0.025em' }}>
+            <Typography variant="h5" component="p" sx={{ fontWeight: 700, color: '#333333', letterSpacing: '0.025em' }}>
                 {formatISTTime(currentTime, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
             </Typography>
             <Typography variant="body2" sx={{ color: '#666666', fontWeight: 400, letterSpacing: '0.025em' }}>

@@ -52,6 +52,8 @@ const OnboardingWelcome = ({ onStart }) => {
                         alt="Company Logo"
                         className="ams-welcome-logo"
                         aria-hidden="true"
+                        width="60"
+                        height="60"
                     />
 
                     <div>

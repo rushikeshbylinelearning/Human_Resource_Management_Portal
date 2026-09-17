@@ -1,43 +1,24 @@
 // backend/controllers/kycController.js
 // KYC document management.
 //
-// NEW (proxy-upload) flow — POST /kyc/upload  and  POST /public/kyc/upload:
+// POST /kyc/upload and POST /public/kyc/upload:
 //   Browser → backend (multipart/form-data) → backend uploads to B2 via AWS SDK.
 //   No CORS or presigned-URL involvement.  Handled by uploadDocument /
 //   publicUploadDocument below.
-//
-// LEGACY (presigned-URL) flow — request-upload + confirm-upload pairs:
-//   Kept intact as a rollback path.  NOT called by the frontend once it switches
-//   to the new endpoints.  Remove after the new flow is verified in production.
 'use strict';
 
 const { randomUUID } = require('crypto');
-const { PutObjectCommand, GetObjectCommand, HeadObjectCommand } = require('@aws-sdk/client-s3');
+const { PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { getR2Client, BUCKET_NAME } = require('../config/r2');
-const { EmployeeKycDocument, KYC_DOCUMENT_TYPES, VALID_TYPES } = require('../models/EmployeeKycDocument');
+const { EmployeeKycDocument, KYC_DOCUMENT_TYPES } = require('../models/EmployeeKycDocument');
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
-const ALLOWED_MIME_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
-const ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png'];
-const UPLOAD_URL_EXPIRY_SECONDS = 5 * 60;   // 5 minutes
 const DOWNLOAD_URL_EXPIRY_SECONDS = 5 * 60; // 5 minutes
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function isAdminOrHr(role) {
     return ['Admin', 'HR'].includes(role);
-}
-
-function getExtension(filename = '') {
-    const idx = filename.lastIndexOf('.');
-    if (idx === -1) return '';
-    return filename.slice(idx).toLowerCase();
-}
-
-function inferMimeFromExtension(ext) {
-    const map = { '.pdf': 'application/pdf', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png' };
-    return map[ext] || null;
 }
 
 function buildStorageKey(employeeId, documentType, ext) {
@@ -87,184 +68,6 @@ exports.getMyDocuments = async (req, res) => {
     } catch (err) {
         console.error('[KYC] getMyDocuments error:', err);
         res.status(500).json({ error: 'Failed to fetch KYC documents.' });
-    }
-};
-
-// ─── POST /kyc/request-upload ─────────────────────────────────────────────────
-// Step 1 of upload flow: validate params → generate presigned PUT URL.
-// Body: { documentType, originalFileName, mimeType, fileSize }
-exports.requestUpload = async (req, res) => {
-    try {
-        const { documentType, originalFileName, mimeType, fileSize } = req.body;
-        const employeeId = req.user.userId;
-
-        // ── Validate document type ──
-        if (!VALID_TYPES.includes(documentType)) {
-            return res.status(400).json({ error: `Invalid documentType. Must be one of: ${VALID_TYPES.join(', ')}` });
-        }
-
-        // ── Validate file name / extension ──
-        if (!originalFileName || typeof originalFileName !== 'string') {
-            return res.status(400).json({ error: 'originalFileName is required.' });
-        }
-        const ext = getExtension(originalFileName);
-        if (!ALLOWED_EXTENSIONS.includes(ext)) {
-            return res.status(400).json({
-                error: `File type not allowed. Allowed extensions: ${ALLOWED_EXTENSIONS.join(', ')}`,
-            });
-        }
-
-        // ── Validate MIME type (client-reported; verified again on confirm) ──
-        const normalizedMime = (mimeType || '').toLowerCase();
-        if (!ALLOWED_MIME_TYPES.includes(normalizedMime)) {
-            return res.status(400).json({
-                error: `MIME type not allowed. Allowed: ${ALLOWED_MIME_TYPES.join(', ')}`,
-            });
-        }
-
-        // Cross-check extension vs MIME
-        const expectedMime = inferMimeFromExtension(ext);
-        if (expectedMime && expectedMime !== normalizedMime) {
-            return res.status(400).json({ error: 'File extension and MIME type do not match.' });
-        }
-
-        // ── Validate file size (client-reported; R2 enforces via Content-Length on PUT) ──
-        const parsedSize = parseInt(fileSize, 10);
-        if (!parsedSize || parsedSize <= 0) {
-            return res.status(400).json({ error: 'fileSize must be a positive number.' });
-        }
-        if (parsedSize > MAX_FILE_SIZE) {
-            return res.status(400).json({ error: `File size exceeds the 5 MB limit.` });
-        }
-
-        // ── Generate storage key ──
-        const storageKey = buildStorageKey(employeeId, documentType, ext);
-
-        // ── Generate presigned PUT URL (5-minute expiry) ──
-        const client = getR2Client();
-        const bucket = BUCKET_NAME();
-
-        // IMPORTANT — why ContentType and ContentLength are NOT in the command:
-        //
-        // 1. ContentLength: browsers treat it as a forbidden header (XHR spec).
-        //    Signing it means the browser can't satisfy the signature → SignatureDoesNotMatch.
-        //
-        // 2. ContentType: non-plain-text MIME types (application/pdf, image/jpeg, etc.)
-        //    trigger a CORS OPTIONS preflight when set via XHR.setRequestHeader.
-        //    B2's simple CORS UI does not set AllowedHeaders, so that preflight is rejected
-        //    with a CORS error that surfaces as "Network error" in all browsers.
-        //    By NOT signing ContentType, the browser never needs to set it as a header,
-        //    so no preflight is fired. The correct MIME type is embedded in the URL itself
-        //    via the unsigned query parameter below, and B2 stores it as the object's
-        //    Content-Type metadata.
-        //
-        // The file is still stored with the correct MIME type because we pass it as an
-        // unhoisted query param via the `unhoistableHeaders` option below.
-        const command = new PutObjectCommand({
-            Bucket: bucket,
-            Key: storageKey,
-            // ContentType and ContentLength intentionally omitted from signed headers — see above
-        });
-
-        const presignedPutUrl = await getSignedUrl(client, command, {
-            expiresIn: UPLOAD_URL_EXPIRY_SECONDS,
-        });
-
-        res.json({
-            presignedPutUrl,
-            storageKey,
-            expiresInSeconds: UPLOAD_URL_EXPIRY_SECONDS,
-        });
-    } catch (err) {
-        console.error('[KYC] requestUpload error:', err);
-        res.status(500).json({ error: 'Failed to generate upload URL.' });
-    }
-};
-
-// ─── POST /kyc/confirm-upload ─────────────────────────────────────────────────
-// Step 2: after the client PUT the file to R2, call this to create the metadata record.
-// Body: { documentType, storageKey, originalFileName, mimeType, fileSize }
-exports.confirmUpload = async (req, res) => {
-    try {
-        const { documentType, storageKey, originalFileName, mimeType, fileSize } = req.body;
-        const employeeId = req.user.userId;
-
-        // ── Re-validate everything (never trust the client) ──
-        if (!VALID_TYPES.includes(documentType)) {
-            return res.status(400).json({ error: 'Invalid documentType.' });
-        }
-        if (!storageKey || typeof storageKey !== 'string') {
-            return res.status(400).json({ error: 'storageKey is required.' });
-        }
-
-        // The storage key must match the pattern for this employee + type
-        const expectedPrefix = `kyc/${employeeId}/${documentType}/`;
-        if (!storageKey.startsWith(expectedPrefix)) {
-            return res.status(400).json({ error: 'storageKey does not match the expected pattern for this employee/type.' });
-        }
-
-        const ext = getExtension(storageKey);
-        if (!ALLOWED_EXTENSIONS.includes(ext)) {
-            return res.status(400).json({ error: 'Disallowed file extension in storageKey.' });
-        }
-
-        const normalizedMime = (mimeType || '').toLowerCase();
-        if (!ALLOWED_MIME_TYPES.includes(normalizedMime)) {
-            return res.status(400).json({ error: 'Disallowed MIME type.' });
-        }
-
-        const parsedSize = parseInt(fileSize, 10);
-        if (!parsedSize || parsedSize <= 0 || parsedSize > MAX_FILE_SIZE) {
-            return res.status(400).json({ error: 'Invalid fileSize.' });
-        }
-
-        // ── Verify the object actually landed in R2 ──
-        try {
-            const client = getR2Client();
-            const headResult = await client.send(new HeadObjectCommand({ Bucket: BUCKET_NAME(), Key: storageKey }));
-            
-            // Verify the uploaded file size matches what was reported
-            if (headResult.ContentLength !== parsedSize) {
-                console.error(`[KYC] Size mismatch for ${storageKey}: expected ${parsedSize}, got ${headResult.ContentLength}`);
-                return res.status(400).json({ 
-                    error: 'File size mismatch. The uploaded file size does not match the expected size. Please try uploading again.' 
-                });
-            }
-        } catch (headErr) {
-            console.error('[KYC] HeadObject failed — file not found in R2:', headErr.message);
-            return res.status(400).json({ error: 'File not found in storage. Please upload the file first.' });
-        }
-
-        // ── Mark any existing active record for this type as superseded ──
-        const previous = await EmployeeKycDocument.findOneAndUpdate(
-            { employeeId, documentType, superseded: false },
-            { $set: { superseded: true } },
-            { new: false, sort: { uploadedAt: -1 } }
-        );
-
-        // ── Create the new metadata record ──
-        const typeMeta = getDocTypeMeta(documentType);
-        const newDoc = await EmployeeKycDocument.create({
-            employeeId,
-            documentType,
-            storageKey,
-            originalFileName,
-            mimeType: normalizedMime,
-            fileSize: parsedSize,
-            uploadedBy: req.user.userId,
-            status: 'pending_review',
-            isOptional: typeMeta ? typeMeta.isOptional : false,
-            supersedesId: previous ? previous._id : null,
-            superseded: false,
-        });
-
-        res.status(201).json({
-            message: 'Document uploaded successfully and is pending review.',
-            document: sanitizeDoc(newDoc.toObject()),
-        });
-    } catch (err) {
-        console.error('[KYC] confirmUpload error:', err);
-        res.status(500).json({ error: 'Failed to confirm upload.' });
     }
 };
 
@@ -429,150 +232,6 @@ exports.getAllDocuments = async (req, res) => {
     } catch (err) {
         console.error('[KYC] getAllDocuments error:', err);
         res.status(500).json({ error: 'Failed to fetch KYC records.' });
-    }
-};
-
-// ─── POST /api/public/kyc/request-upload ─────────────────────────────────────
-// Public-token variant of requestUpload.
-// Body: { token, documentType, originalFileName, mimeType, fileSize }
-exports.publicRequestUpload = async (req, res) => {
-    try {
-        const { token, documentType, originalFileName, mimeType, fileSize } = req.body;
-
-        // ── Validate the public form token ──
-        const { employeeId } = req; // set by validatePublicFormToken middleware
-        if (!employeeId) {
-            return res.status(401).json({ error: 'Unauthorized.' });
-        }
-
-        if (!VALID_TYPES.includes(documentType)) {
-            return res.status(400).json({ error: `Invalid documentType.` });
-        }
-        if (!originalFileName || typeof originalFileName !== 'string') {
-            return res.status(400).json({ error: 'originalFileName is required.' });
-        }
-        const ext = getExtension(originalFileName);
-        if (!ALLOWED_EXTENSIONS.includes(ext)) {
-            return res.status(400).json({ error: `File type not allowed. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}` });
-        }
-        const normalizedMime = (mimeType || '').toLowerCase();
-        if (!ALLOWED_MIME_TYPES.includes(normalizedMime)) {
-            return res.status(400).json({ error: `MIME type not allowed.` });
-        }
-        const expectedMime = inferMimeFromExtension(ext);
-        if (expectedMime && expectedMime !== normalizedMime) {
-            return res.status(400).json({ error: 'File extension and MIME type do not match.' });
-        }
-        const parsedSize = parseInt(fileSize, 10);
-        if (!parsedSize || parsedSize <= 0 || parsedSize > MAX_FILE_SIZE) {
-            return res.status(400).json({ error: `File exceeds the 5 MB limit.` });
-        }
-
-        const storageKey = buildStorageKey(employeeId, documentType, ext);
-        const client = getR2Client();
-        const bucket = BUCKET_NAME();
-
-        // IMPORTANT — ContentType and ContentLength are intentionally NOT in the command.
-        // See the detailed comment in requestUpload above for full reasoning.
-        // Short version: signing these headers forces the browser to set them as XHR headers,
-        // which triggers a CORS preflight that B2's CORS config cannot satisfy via the
-        // simple UI (AllowedHeaders is not configurable there).
-        const command = new PutObjectCommand({
-            Bucket: bucket,
-            Key: storageKey,
-            // ContentType and ContentLength intentionally omitted from signed headers
-        });
-        const presignedPutUrl = await getSignedUrl(client, command, {
-            expiresIn: UPLOAD_URL_EXPIRY_SECONDS,
-        });
-
-        res.json({ presignedPutUrl, storageKey, expiresInSeconds: UPLOAD_URL_EXPIRY_SECONDS });
-    } catch (err) {
-        console.error('[KYC] publicRequestUpload error:', err);
-        res.status(500).json({ error: 'Failed to generate upload URL.' });
-    }
-};
-
-// ─── POST /api/public/kyc/confirm-upload ─────────────────────────────────────
-// Public-token variant of confirmUpload.
-// Body: { token, documentType, storageKey, originalFileName, mimeType, fileSize }
-exports.publicConfirmUpload = async (req, res) => {
-    try {
-        const { documentType, storageKey, originalFileName, mimeType, fileSize } = req.body;
-        const employeeId = req.employeeId; // set by validatePublicFormToken middleware
-
-        if (!employeeId) {
-            return res.status(401).json({ error: 'Unauthorized.' });
-        }
-        if (!VALID_TYPES.includes(documentType)) {
-            return res.status(400).json({ error: 'Invalid documentType.' });
-        }
-        if (!storageKey || typeof storageKey !== 'string') {
-            return res.status(400).json({ error: 'storageKey is required.' });
-        }
-        const expectedPrefix = `kyc/${employeeId}/${documentType}/`;
-        if (!storageKey.startsWith(expectedPrefix)) {
-            return res.status(400).json({ error: 'storageKey does not match the expected pattern.' });
-        }
-        const ext = getExtension(storageKey);
-        if (!ALLOWED_EXTENSIONS.includes(ext)) {
-            return res.status(400).json({ error: 'Disallowed file extension in storageKey.' });
-        }
-        const normalizedMime = (mimeType || '').toLowerCase();
-        if (!ALLOWED_MIME_TYPES.includes(normalizedMime)) {
-            return res.status(400).json({ error: 'Disallowed MIME type.' });
-        }
-        const parsedSize = parseInt(fileSize, 10);
-        if (!parsedSize || parsedSize <= 0 || parsedSize > MAX_FILE_SIZE) {
-            return res.status(400).json({ error: 'Invalid fileSize.' });
-        }
-
-        // Verify the object actually landed in R2
-        try {
-            const client = getR2Client();
-            const headResult = await client.send(new HeadObjectCommand({ Bucket: BUCKET_NAME(), Key: storageKey }));
-            
-            // Verify the uploaded file size matches what was reported
-            if (headResult.ContentLength !== parsedSize) {
-                console.error(`[KYC] publicConfirmUpload size mismatch for ${storageKey}: expected ${parsedSize}, got ${headResult.ContentLength}`);
-                return res.status(400).json({ 
-                    error: 'File size mismatch. The uploaded file size does not match the expected size. Please try uploading again.' 
-                });
-            }
-        } catch (headErr) {
-            console.error('[KYC] publicConfirmUpload HeadObject failed:', headErr.message);
-            return res.status(400).json({ error: 'File not found in storage. Please upload the file first.' });
-        }
-
-        // Mark any existing active record for this type as superseded
-        const previous = await EmployeeKycDocument.findOneAndUpdate(
-            { employeeId, documentType, superseded: false },
-            { $set: { superseded: true } },
-            { new: false, sort: { uploadedAt: -1 } }
-        );
-
-        const typeMeta = getDocTypeMeta(documentType);
-        const newDoc = await EmployeeKycDocument.create({
-            employeeId,
-            documentType,
-            storageKey,
-            originalFileName,
-            mimeType: normalizedMime,
-            fileSize: parsedSize,
-            uploadedBy: employeeId, // same as employee in public-form context
-            status: 'pending_review',
-            isOptional: typeMeta ? typeMeta.isOptional : false,
-            supersedesId: previous ? previous._id : null,
-            superseded: false,
-        });
-
-        res.status(201).json({
-            message: 'Document uploaded successfully and is pending review.',
-            document: sanitizeDoc(newDoc.toObject()),
-        });
-    } catch (err) {
-        console.error('[KYC] publicConfirmUpload error:', err);
-        res.status(500).json({ error: 'Failed to confirm upload.' });
     }
 };
 

@@ -139,15 +139,3 @@ export function formatMinutesToHM(minutes) {
     return `${h}h ${m}m`;
 }
 
-/**
- * Format minutes as HH:MM:SS (with seconds) for timer display.
- */
-export function formatMinutesToHMS(totalMinutes) {
-    if (totalMinutes == null || isNaN(totalMinutes) || totalMinutes < 0) return { hours: 0, minutes: 0, seconds: 0 };
-    const totalSeconds = Math.floor(totalMinutes * 60);
-    return {
-        hours: Math.floor(totalSeconds / 3600),
-        minutes: Math.floor((totalSeconds % 3600) / 60),
-        seconds: totalSeconds % 60,
-    };
-}

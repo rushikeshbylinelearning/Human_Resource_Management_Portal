@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Box,
@@ -11,8 +11,10 @@ import {
   Close as CloseIcon,
   Download as DownloadIcon
 } from '@mui/icons-material';
-import CustomPdfViewer from '../CustomPdfViewer';
+import { lazyWithRetry } from '../../utils/lazyWithRetry';
 import api from '../../api/axios';
+
+const CustomPdfViewer = lazyWithRetry(() => import('../CustomPdfViewer'));
 
 const CIFFilePreview = ({ file, onClose, onDownload }) => {
   const modalRef = useRef(null);
@@ -224,13 +226,19 @@ const CIFFilePreview = ({ file, onClose, onDownload }) => {
 
     if (pdfBlobUrl) {
       return (
-        <CustomPdfViewer
-          pdfUrl={pdfBlobUrl}
-          title={file.originalName}
-          version="1.0"
-          effectiveDate={file.createdAt}
-          onClose={onClose}
-        />
+        <Suspense fallback={
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+            <CircularProgress />
+          </Box>
+        }>
+          <CustomPdfViewer
+            pdfUrl={pdfBlobUrl}
+            title={file.originalName}
+            version="1.0"
+            effectiveDate={file.createdAt}
+            onClose={onClose}
+          />
+        </Suspense>
       );
     }
 

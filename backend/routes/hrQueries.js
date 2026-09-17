@@ -165,6 +165,7 @@ router.post('/:queryId/message', authenticateToken, async (req, res) => {
 router.get('/:queryId', authenticateToken, async (req, res) => {
     try {
         const query = await HRQuery.findById(req.params.queryId)
+            .populate('employeeId', 'fullName employeeId employeeCode email department')
             .select('-ipAddress -userAgent')
             .lean();
         
@@ -172,11 +173,17 @@ router.get('/:queryId', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'Query not found' });
         }
         
-        // Check access rights
-        const isEmployee = query.employeeId.toString() === req.user.userId;
+        // Check access rights — owner, Admin/HR, or delegated HR-query managers
+        const ownerId = (query.employeeId?._id || query.employeeId)?.toString();
+        const isEmployee = ownerId === req.user.userId;
         const isHROrAdmin = req.user.role === 'Admin' || req.user.role === 'HR';
-        
-        if (!isEmployee && !isHROrAdmin) {
+        let canManage = isHROrAdmin;
+        if (!isEmployee && !canManage) {
+            const dbUser = await User.findById(req.user.userId).select('featurePermissions').lean();
+            canManage = dbUser?.featurePermissions?.canManageHRQueries === true;
+        }
+
+        if (!isEmployee && !canManage) {
             return res.status(403).json({ error: 'Unauthorized' });
         }
         
@@ -184,16 +191,17 @@ router.get('/:queryId', authenticateToken, async (req, res) => {
         const dbQuery = await HRQuery.findById(req.params.queryId);
         if (isEmployee) {
             await dbQuery.markMessagesAsRead('employee');
-        } else if (isHROrAdmin) {
+        } else if (canManage) {
             await dbQuery.markMessagesAsRead('hr');
         }
         
         // Reload with updated read status
         const updatedQuery = await HRQuery.findById(req.params.queryId)
+            .populate('employeeId', 'fullName employeeId employeeCode email department')
             .select('-ipAddress -userAgent')
             .lean();
-        
-        res.json(updatedQuery);
+
+        res.json({ ...updatedQuery, itemType: 'hr_query' });
     } catch (error) {
         logger.error('Failed to fetch query:', error);
         res.status(500).json({ error: 'Failed to fetch query' });

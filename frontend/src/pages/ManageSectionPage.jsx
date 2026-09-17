@@ -649,9 +649,9 @@ const privilegeOptions = useMemo(() => {
         </Paper>
 
         {/* ROW 2: Core Features (4 cols) + Break Timing Configuration (8 cols) */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 3, mb: 3 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'repeat(12, minmax(0, 1fr))' }, gap: { xs: 2, lg: 3 }, mb: 3 }}>
           {/* Core Features - 4 columns */}
-          <Box sx={{ gridColumn: 'span 4' }}>
+          <Box sx={{ gridColumn: { xs: '1 / -1', lg: 'span 4' }, minWidth: 0 }}>
             <Paper 
               elevation={0} 
               sx={{
@@ -779,7 +779,7 @@ const privilegeOptions = useMemo(() => {
           </Box>
 
           {/* Break Timing Configuration - 8 columns */}
-          <Box sx={{ gridColumn: 'span 8' }}>
+          <Box sx={{ gridColumn: { xs: '1 / -1', lg: 'span 8' }, minWidth: 0 }}>
             <Paper 
               elevation={0} 
               sx={{
@@ -866,7 +866,7 @@ const privilegeOptions = useMemo(() => {
                     </Box>
                     
                     {/* 4-column grid for inputs */}
-                    <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 2 }}>
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', sm: 'repeat(2, minmax(0, 1fr))', xl: 'repeat(4, minmax(0, 1fr))' }, gap: 2 }}>
                       <FormControl fullWidth size="small">
                         <InputLabel sx={{ fontSize: '13px' }}>Break Type</InputLabel>
                         <Select
@@ -1029,9 +1029,9 @@ const privilegeOptions = useMemo(() => {
         </Box>
 
         {/* ROW 3: UI Controls (4 cols) + Auto Break (4 cols) + Privilege Level (4 cols) */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 3, mb: 3 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'repeat(12, minmax(0, 1fr))' }, gap: { xs: 2, lg: 3 }, mb: 3 }}>
           {/* UI Controls - 4 columns */}
-          <Box sx={{ gridColumn: 'span 4' }}>
+          <Box sx={{ gridColumn: { xs: '1 / -1', lg: 'span 4' }, minWidth: 0 }}>
             <Paper 
               elevation={0} 
               sx={{
@@ -1303,7 +1303,7 @@ const privilegeOptions = useMemo(() => {
           </Box>
 
           {/* Auto-Break on Inactivity - 4 columns */}
-          <Box sx={{ gridColumn: 'span 4' }}>
+          <Box sx={{ gridColumn: { xs: '1 / -1', lg: 'span 4' }, minWidth: 0 }}>
             <Paper 
               elevation={0} 
               sx={{
@@ -1433,7 +1433,7 @@ const privilegeOptions = useMemo(() => {
           </Box>
 
           {/* Privilege Level - 4 columns */}
-          <Box sx={{ gridColumn: 'span 4' }}>
+          <Box sx={{ gridColumn: { xs: '1 / -1', lg: 'span 4' }, minWidth: 0 }}>
             <Paper 
               elevation={0} 
               sx={{

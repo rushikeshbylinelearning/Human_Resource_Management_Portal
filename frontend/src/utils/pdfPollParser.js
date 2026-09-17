@@ -1,9 +1,4 @@
-import * as pdfjs from "pdfjs-dist";
-
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url
-).toString();
+import { loadPdfjs } from "./lazyLibraries";
 
 const Y_TOLERANCE = 4;
 const INDENT_THRESHOLD = 18;
@@ -88,6 +83,7 @@ function itemsToLines(items) {
 }
 
 async function extractLinesFromPdf(file) {
+  const pdfjs = await loadPdfjs();
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
   const allLines = [];
@@ -227,7 +223,7 @@ function flushQuestion(current, questions) {
 /**
  * Parse structured PDF lines into poll questions.
  */
-export function parseQuestionsFromLines(lines) {
+function parseQuestionsFromLines(lines) {
   if (!lines?.length) return [];
 
   const bodyFontSize = median(lines.map((l) => l.fontSize));
@@ -382,7 +378,7 @@ function enrichQuestionsFromLines(questions, lines) {
 /**
  * Fallback: parse flat text when line reconstruction yields poor results.
  */
-export function parseQuestionsFromText(rawText) {
+function parseQuestionsFromText(rawText) {
   const pseudoLines = rawText
     .split(/\n+/)
     .map((t) => t.trim())
@@ -436,10 +432,3 @@ export async function parseQuestionsFromPdf(file) {
   return questions;
 }
 
-/**
- * @deprecated Use parseQuestionsFromPdf — kept for tests
- */
-export async function extractTextFromPdf(file) {
-  const lines = await extractLinesFromPdf(file);
-  return lines.map((l) => l.text).join("\n");
-}

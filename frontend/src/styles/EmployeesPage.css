@@ -194,7 +194,7 @@
 /* ─── Tablet: header controls wrap ──────────── */
 @media (max-width: 900px) {
   .employees-page {
-    padding: 16px !important;
+    padding: 0 !important;
   }
 
   /* Header pill: stack on tablet */
@@ -210,14 +210,49 @@
     flex-wrap: wrap;
     gap: 8px;
   }
-
-  .employees-page .add-button {
-    flex: 1 !important;
-  }
 }
 
 /* ─── Mobile: table → card layout ───────────── */
 @media (max-width: 768px) {
+  .employees-page .page-hero-header__actions {
+    min-width: 0;
+  }
+
+  .employees-page .header-actions {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 44px;
+    gap: 10px !important;
+    min-width: 0;
+    position: relative;
+  }
+
+  .employees-page .header-actions > .MuiOutlinedInput-root {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0 !important;
+  }
+
+  .employees-page .employees-refresh-indicator {
+    grid-column: 2;
+    grid-row: 1;
+    z-index: 1;
+    align-self: center;
+    justify-self: center;
+    pointer-events: none;
+  }
+
+  .employees-page .add-button {
+    width: 100%;
+    min-height: 42px;
+    margin: 0 !important;
+  }
+
+  .employees-page .header-actions > .MuiIconButton-root {
+    width: 44px;
+    height: 42px;
+    margin: 0 !important;
+  }
+
   /* Hide the header row of the custom div-grid table */
   .employee-grid-header {
     display: none !important;
@@ -225,7 +260,7 @@
 
   /* Reset the grid on the body rows — each row becomes a card */
   .employee-grid-body {
-    padding: 12px !important;
+    padding: 10px !important;
     display: flex !important;
     flex-direction: column !important;
     gap: 12px !important;
@@ -238,7 +273,7 @@
     grid-template-columns: unset !important;
     border: 1px solid #e9ecef !important;
     border-radius: 12px !important;
-    padding: 14px !important;
+    padding: 14px 16px !important;
     margin: 0 !important;
     border-bottom: 1px solid #e9ecef !important;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06) !important;
@@ -258,6 +293,8 @@
     border-bottom: 1px solid #f1f3f5 !important;
     font-size: 0.875rem !important;
     overflow: visible !important;
+    min-width: 0;
+    gap: 12px;
   }
 
   .grid-cell:last-child {
@@ -272,27 +309,32 @@
     color: #6c757d;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    min-width: 110px;
+    min-width: 104px;
     flex-shrink: 0;
   }
 
-  /* Employee name cell: override the flex-row layout from data-label */
+  /* Employee identity is the visual anchor of each card. */
   .grid-cell.fullName {
-    flex-direction: column !important;
-    align-items: flex-start !important;
-    gap: 6px !important;
+    justify-content: flex-start !important;
+    gap: 12px !important;
+    padding: 10px 0 12px !important;
   }
 
   .grid-cell.fullName::before {
-    display: none; /* avatar+name shown differently */
+    display: none;
+  }
+
+  .grid-cell.fullName .employee-name,
+  .grid-cell.fullName .employee-email {
+    max-width: 100%;
   }
 
   /* Actions cell: buttons row, full width */
   .grid-cell.actions {
-    justify-content: flex-end !important;
+    justify-content: center !important;
     flex-wrap: wrap !important;
-    gap: 6px !important;
-    padding-top: 10px !important;
+    gap: 8px !important;
+    padding-top: 12px !important;
     border-bottom: none !important;
   }
 
@@ -308,11 +350,40 @@
   .grid-cell.isActive {
     justify-content: space-between !important;
   }
+
+  .employees-card .MuiTablePagination-toolbar {
+    min-height: 54px;
+    padding: 4px 8px;
+  }
+
+  .employees-card .MuiTablePagination-spacer {
+    display: none;
+  }
+
+  .employees-card .MuiTablePagination-displayedRows {
+    margin-left: auto;
+  }
 }
 
 /* ─── Small phones ─────────────────────────── */
 @media (max-width: 480px) {
   .employees-page {
-    padding: 10px !important;
+    padding: 0 !important;
+  }
+
+  .employee-grid-body {
+    padding: 8px !important;
+  }
+
+  .employee-grid-row {
+    padding: 12px 14px !important;
+  }
+
+  .grid-cell::before {
+    min-width: 92px;
+  }
+
+  .employees-card .MuiTablePagination-selectLabel {
+    display: none;
   }
 }

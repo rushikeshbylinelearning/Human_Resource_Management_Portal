@@ -169,6 +169,10 @@
 ═══════════════════════════════════════════ */
 
 @media (max-width: 768px) {
+  .sidebar.mobile-open {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
   /*
     When the sidebar is open on mobile (class 'mobile-open' applied by JS),
     show labels alongside icons — makes it easier to navigate by touch.
@@ -177,6 +181,8 @@
     align-items: flex-start;
     padding: 0 10px;
     gap: 4px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .sidebar.mobile-open .sidebar-link {
@@ -187,6 +193,7 @@
     border-radius: 10px;
     gap: 14px;
     justify-content: flex-start;
+    box-sizing: border-box;
   }
 
   .sidebar.mobile-open .sidebar-label {
@@ -215,6 +222,8 @@
 
   .sidebar.mobile-open .sidebar-footer {
     padding: 0 10px 20px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .sidebar.mobile-open .sidebar-footer .sidebar-link {
@@ -230,5 +239,10 @@
   /* Increase touch area for all sidebar links on mobile */
   .sidebar-link {
     min-height: 48px;
+  }
+
+  .sidebar-link:hover::after {
+    opacity: 0;
+    visibility: hidden;
   }
 }

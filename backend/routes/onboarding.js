@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/authenticateToken');
+const requireAdminOrHr = require('../middleware/requireAdminOrHr');
 const ctrl = require('../controllers/onboardingController');
 
 // ── Employee endpoints (all require valid JWT) ────────────────────────────────
@@ -19,15 +20,20 @@ router.post('/policy/standalone-start-reading', authenticateToken, ctrl.standalo
 router.post('/policy/standalone-accept',       authenticateToken, ctrl.standaloneAcceptPolicy);
 
 // ── Admin endpoints ───────────────────────────────────────────────────────────
-router.get('/admin/compliance',                    authenticateToken, ctrl.getComplianceDashboard);
-router.get('/admin/compliance/export',             authenticateToken, ctrl.exportComplianceReport);
-router.get('/admin/compliance/:userId/timeline',   authenticateToken, ctrl.getEmployeeTimeline);
-router.post('/admin/policy/:policyId/set-mandatory',   authenticateToken, ctrl.setMandatoryPolicy);
-router.post('/admin/policy/:policyId/unset-mandatory', authenticateToken, ctrl.unsetMandatoryPolicy);
-router.post('/admin/force/:userId',                authenticateToken, ctrl.forceOnboarding);
+router.get('/admin/compliance',                    authenticateToken, requireAdminOrHr, ctrl.getComplianceDashboard);
+router.get('/admin/compliance/export',             authenticateToken, requireAdminOrHr, ctrl.exportComplianceReport);
+router.get('/admin/compliance/:userId/timeline',   authenticateToken, requireAdminOrHr, ctrl.getEmployeeTimeline);
+router.get('/admin/control',                       authenticateToken, requireAdminOrHr, ctrl.getOnboardingControl);
+router.put('/admin/control',                       authenticateToken, requireAdminOrHr, ctrl.updateOnboardingControl);
+router.post('/admin/policy/:policyId/set-mandatory',   authenticateToken, requireAdminOrHr, ctrl.setMandatoryPolicy);
+router.post('/admin/policy/:policyId/unset-mandatory', authenticateToken, requireAdminOrHr, ctrl.unsetMandatoryPolicy);
+router.post('/admin/force/:userId',                authenticateToken, requireAdminOrHr, ctrl.forceOnboarding);
+router.post('/admin/restart-onboarding',           authenticateToken, requireAdminOrHr, ctrl.restartOnboardingForUsers);
+router.post('/admin/assign-tour',                  authenticateToken, requireAdminOrHr, ctrl.assignTourToUsers);
 
 // ── Dynamic Policy Assignment (Admin/HR) ──────────────────────────────────────
-router.post('/admin/assign-policy-to-users',  authenticateToken, ctrl.assignPolicyToUsers);
-router.post('/admin/assign-policy-to-all',    authenticateToken, ctrl.assignPolicyToAll);
+router.post('/admin/assign-policy-to-users',  authenticateToken, requireAdminOrHr, ctrl.assignPolicyToUsers);
+router.post('/admin/assign-policy-to-all',    authenticateToken, requireAdminOrHr, ctrl.assignPolicyToAll);
+router.post('/admin/assign-template-to-users', authenticateToken, requireAdminOrHr, ctrl.assignTemplateToUsers);
 
 module.exports = router;

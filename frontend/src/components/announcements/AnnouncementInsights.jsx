@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { BarChart3, Coffee, Megaphone, PieChart, Users } from "lucide-react";
+import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
+import Coffee from "lucide-react/dist/esm/icons/coffee";
+import Megaphone from "lucide-react/dist/esm/icons/megaphone";
+import PieChart from "lucide-react/dist/esm/icons/pie-chart";
+import Users from "lucide-react/dist/esm/icons/users";
 import api from "../../api/axios";
 import socket from "../../socket";
 import AnnouncementReadReceipts from "./AnnouncementReadReceipts";

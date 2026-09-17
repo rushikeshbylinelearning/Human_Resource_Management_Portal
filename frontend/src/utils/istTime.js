@@ -121,19 +121,6 @@ export const startOfISTDay = (date = null) => {
 };
 
 /**
- * Get end of day (23:59:59.999) in IST for a given date
- * @param {Date|string} date - Date object or YYYY-MM-DD string
- * @returns {Date} Date object representing IST end of day
- */
-export const endOfISTDay = (date = null) => {
-    const dateString = getISTDateString(date);
-    const [year, month, day] = dateString.split('-');
-    // Create IST end of day: YYYY-MM-DDTHH:mm:ss.sss+05:30
-    const istISOString = `${year}-${month}-${day}T23:59:59.999+05:30`;
-    return new Date(istISOString);
-};
-
-/**
  * Convert a Date object to IST time string for display
  * @param {Date} date - Date object (assumed to be in correct timezone context)
  * @param {object} options - Intl.DateTimeFormat options
@@ -267,21 +254,6 @@ export const formatDateRange = (date, isCalendarView = false) => {
 };
 
 /**
- * Compare two dates in IST
- * Returns 0 if equal, -1 if date1 < date2, 1 if date1 > date2
- * @param {Date|string} date1 - First date
- * @param {Date|string} date2 - Second date
- * @returns {number} Comparison result
- */
-export const compareISTDates = (date1, date2) => {
-    const d1Str = getISTDateString(date1);
-    const d2Str = getISTDateString(date2);
-    if (d1Str < d2Str) return -1;
-    if (d1Str > d2Str) return 1;
-    return 0;
-};
-
-/**
  * Format timestamp as IST date + time for display.
  * Accepts backend-provided ISO strings or Date only. No browser-local fallback.
  * @param {Date|string} timestamp - ISO string or Date
@@ -303,19 +275,6 @@ export const formatISTDateTime = (timestamp, options = {}) => {
         hour12: true
     };
     return new Date(d).toLocaleString('en-GB', { ...defaultOpts, ...options });
-};
-
-/**
- * Get YYYY-MM-DD (IST) from an ISO datetime string.
- * Use for API payloads and attendanceDate. No browser-local derivation.
- * @param {string} isoString - ISO 8601 datetime string from backend
- * @returns {string} YYYY-MM-DD in IST
- */
-export const getISTDateFromISO = (isoString) => {
-    if (!isoString || typeof isoString !== 'string') return '';
-    const d = new Date(isoString);
-    if (isNaN(d.getTime())) return '';
-    return getISTDateString(d);
 };
 
 /**
