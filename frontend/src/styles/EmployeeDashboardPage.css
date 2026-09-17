@@ -26,13 +26,19 @@
 /* --- Page Container --- */
 .employee-dashboard-container {
     width: 100%;
-    min-height: 100vh;
-    padding: 28px;
+    min-height: calc(100vh - var(--topbar-height));
+    padding: clamp(16px, 1.5vw, 28px);
     background: radial-gradient(1200px 800px at 10% -10%, rgba(220,53,69,0.06), rgba(0,0,0,0) 40%), var(--theme-bg);
     display: flex;
     justify-content: center;
     align-items: flex-start;
     overflow-y: auto;
+}
+
+.employee-dashboard-content {
+    width: 100%;
+    max-width: 1680px;
+    margin: 0 auto;
 }
 
 /* Cards base and depth */
@@ -89,17 +95,19 @@
 .action-card {
     padding: 28px !important;
     min-height: 450px;
-    width: 700px;
+    width: 100%;
 }
 .weekly-view-card {
     padding: 16px !important;
     min-height: 350px;
+    width: 100%;
 }
 .profile-card {
     text-align: center;
     position: relative;
     padding: 50px 24px 24px 24px !important;
     height: 320px;
+    width: 100%;
 }
 .profile-avatar {
     width: 80px !important;
@@ -114,9 +122,9 @@
 }
 .profile-avatar-letter { font-size: 3rem; font-weight: bold; }
 
-.shift-info-card { padding: 24px !important; height: 480px;  width: 400px; }
-.recent-activity-card { padding: 20px !important; height: 500px; width: 500px; }
-.saturday-schedule-card { padding: 24px !important; height: 300px; }
+.shift-info-card { padding: 24px !important; height: 480px; width: 100%; }
+.recent-activity-card { padding: 20px !important; height: 500px; width: 100%; }
+.saturday-schedule-card { padding: 24px !important; height: 300px; width: 100%; }
 
 /* Progress Bar */
 .progress-bar-container { position: relative; height: 12px; border-radius: 8px; background-color: #eef0f2; overflow: hidden; }
@@ -333,6 +341,45 @@
 
 .early-checkout-actions .theme-button-red.selected {
     box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.28) !important;
+}
+
+/* Mobile dashboard spacing and card sizing */
+@media (max-width: 600px) {
+    .employee-dashboard-container {
+        padding: 12px;
+    }
+
+    .dashboard-card-base {
+        border-radius: 14px !important;
+    }
+
+    .action-card {
+        padding: 20px !important;
+        min-height: 440px;
+    }
+
+    .weekly-view-card {
+        padding: 12px !important;
+        min-height: 0;
+    }
+
+    .profile-card {
+        padding: 40px 20px 20px !important;
+        height: auto;
+        min-height: 290px;
+    }
+
+    .shift-info-card,
+    .recent-activity-card,
+    .saturday-schedule-card {
+        padding: 20px !important;
+        height: auto;
+    }
+
+    .theme-button-red,
+    .theme-button-checkout {
+        white-space: nowrap;
+    }
 }
 
 /* Late warning dialog */

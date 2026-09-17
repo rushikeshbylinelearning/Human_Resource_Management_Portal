@@ -16,6 +16,11 @@
   zoom: 1;
 }
 
+.employee-view .admin-attendance-summary-page {
+  min-height: calc(100vh - var(--topbar-height));
+  padding: clamp(16px, 1.5vw, 24px);
+}
+
 /* === MAIN HEADER === */
 .admin-attendance-summary-page .summary-header {
   display: flex;
@@ -278,6 +283,11 @@
 }
 
 @media (max-width: 768px) {
+  .employee-view .admin-attendance-summary-page {
+    min-height: 0;
+    padding: 0;
+  }
+
   .admin-attendance-summary-page {
     padding: 0.75rem;
   }

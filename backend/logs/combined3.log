@@ -201905,3 +201905,47 @@
   message: 'Request',
   timestamp: '2026-09-17 12:39:54'
 }
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-17 15:55:32'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/health',
+  statusCode: 404,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-17 16:00:56'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/?all=true&slim=true&_t=1789642704531',
+  statusCode: 403,
+  duration: '2ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-17 16:28:24'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/?all=true&slim=true&_t=1789642704531',
+  statusCode: 403,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-17 16:28:24'
+}

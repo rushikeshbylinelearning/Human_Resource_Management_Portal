@@ -1,5 +1,5 @@
 .requests-page {
-  padding: 0 0 2rem;
+  padding: clamp(16px, 1.5vw, 24px);
   width: 100%;
   box-sizing: border-box;
 }
@@ -199,6 +199,10 @@
 }
 
 @media (max-width: 600px) {
+  .requests-page {
+    padding: 0;
+  }
+
   .rr-kpi-grid {
     grid-template-columns: 1fr 1fr;
     gap: 8px;

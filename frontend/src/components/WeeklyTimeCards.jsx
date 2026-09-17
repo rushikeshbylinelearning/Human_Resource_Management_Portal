@@ -105,12 +105,22 @@ const WeeklyTimeCards = ({ logs, shift, user, leaveRequests = [] }) => {
     };
 
     return (
-        <Box sx={{ mt: 2 }}>
-            <Paper elevation={0} sx={{ p: 2, backgroundColor: '#f8f9fa', borderRadius: '12px' }}>
+        <Box sx={{ mt: { xs: 0, sm: 2 } }}>
+            <Paper elevation={0} sx={{ p: { xs: 1.5, sm: 2 }, backgroundColor: '#f8f9fa', borderRadius: '12px' }}>
                 <Typography component="h2" variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, fontSize: '0.9375rem', color: '#111827' }}>
                     Your Week
                 </Typography>
-                <Grid container spacing={1}>
+                <Grid
+                    container
+                    spacing={0.5}
+                    wrap="nowrap"
+                    sx={{
+                        overflowX: { xs: 'auto', sm: 'visible' },
+                        pb: { xs: 0.75, sm: 0 },
+                        scrollbarWidth: 'thin',
+                        WebkitOverflowScrolling: 'touch',
+                    }}
+                >
                     {weekDays.map((day, index) => {
                         const dayString = getISTDateString(day);
                         const isToday = dayString === todayDateString;
@@ -123,11 +133,20 @@ const WeeklyTimeCards = ({ logs, shift, user, leaveRequests = [] }) => {
                         const parts = getISTDateParts(day);
 
                         return (
-                            <Grid item xs key={index} sx={{ minWidth: '80px' }}>
+                            <Grid
+                                item
+                                xs
+                                key={index}
+                                sx={{
+                                    minWidth: { xs: '64px', sm: 0 },
+                                    flex: { xs: '0 0 64px', sm: '1 1 0' },
+                                }}
+                            >
                                 <Paper 
                                     elevation={isToday ? 3 : 0}
                                     sx={{
-                                        p: 1.5,
+                                        px: 0.5,
+                                        py: 1.5,
                                         textAlign: 'center',
                                         borderRadius: '10px',
                                         border: isToday ? '2px solid #3b82f6' : isWeekendDay ? '2px solid #fbbf24' : isLeaveDayCard ? '2px solid #93c5fd' : '2px solid transparent',
