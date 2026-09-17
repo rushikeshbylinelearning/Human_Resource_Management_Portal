@@ -8,6 +8,10 @@ on:
 env:
   DEPLOY_ROOT: /home/bylinelm/attendance-test.bylinelms.com
   SALARY_DEPLOY_ROOT: /home/bylinelm/payroll-test.bylinelms.com/salary-service
+  # Production AMS (attendance.bylinelms.com) stays on :3011.
+  # Test AMS (attendance-test.bylinelms.com) uses this port only.
+  AMS_TEST_PORT: 5005
+  AMS_PROD_PORT: 3011
 
 jobs:
   deploy:
@@ -60,15 +64,57 @@ jobs:
             frontend/dist/ \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.DEPLOY_ROOT }}/
 
-      - name: Install AMS dependencies and restart PM2
+      - name: Deploy test Apache proxy (.htaccess → :5005)
+        run: |
+          rsync -avz \
+            -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.SSH_PORT }}" \
+            deploy/attendance-test.htaccess \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.DEPLOY_ROOT }}/.htaccess
+
+      - name: Start test AMS on :5005 via PM2 (do not touch production :3011)
         run: |
           ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.SSH_PORT }} \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
+            set -e
             source ~/.bashrc
             cd /home/bylinelm/attendance-test.bylinelms.com/backend
             npm ci --omit=dev
-            pm2 restart attendancetest-backend --update-env
+
+            # Only create/replace the TEST process. Never restart/delete production
+            # (attendance-system on :3011 / attendance.bylinelms.com).
+            pm2 delete attendancetest-backend || true
+            PORT=5005 HOST=127.0.0.1 NODE_ENV=production \
+              pm2 start ecosystem.config.cjs --only attendancetest-backend --env production --update-env
             pm2 save
+
+            echo "Waiting for attendancetest-backend on :5005..."
+            healthy=0
+            for i in $(seq 1 15); do
+              if curl -fsS "http://127.0.0.1:5005/health" >/dev/null; then
+                echo "attendancetest-backend is healthy on :5005"
+                curl -fsS "http://127.0.0.1:5005/health"
+                echo
+                healthy=1
+                break
+              fi
+              sleep 2
+            done
+
+            if [ "$healthy" != "1" ]; then
+              echo "attendancetest-backend did not become healthy on :5005"
+              pm2 describe attendancetest-backend || true
+              pm2 logs attendancetest-backend --lines 80 --nostream || true
+              exit 1
+            fi
+
+            echo "Confirming production AMS on :3011 is still up..."
+            if ! curl -fsS "http://127.0.0.1:3011/health" >/dev/null; then
+              echo "ERROR: production AMS on :3011 is not healthy after test deploy"
+              pm2 list || true
+              exit 1
+            fi
+            echo "Production AMS on :3011 is still healthy"
+            pm2 list
           EOF
 
       # ── salary-service frontend ──────────────────────────────────────────────
