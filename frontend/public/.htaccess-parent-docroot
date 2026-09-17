@@ -16,14 +16,14 @@ RewriteBase /
 # Backend → PM2
 RewriteCond %{HTTP:Upgrade} =websocket [NC]
 RewriteCond %{REQUEST_URI} ^/api/socket.io [NC]
-RewriteRule .* ws://127.0.0.1:5005%{REQUEST_URI} [P,L]
+RewriteRule .* ws://127.0.0.1:3015%{REQUEST_URI} [P,L]
 
 RewriteCond %{REQUEST_URI} ^/api [NC,OR]
 RewriteCond %{REQUEST_URI} ^/health$ [NC,OR]
 RewriteCond %{REQUEST_URI} ^/avatars [NC,OR]
 RewriteCond %{REQUEST_URI} ^/medical-certificates [NC,OR]
 RewriteCond %{REQUEST_URI} ^/public/ [NC]
-RewriteRule .* http://127.0.0.1:5005%{REQUEST_URI} [P,L,QSA]
+RewriteRule .* http://127.0.0.1:3015%{REQUEST_URI} [P,L,QSA]
 
 # Static assets from frontend/
 RewriteRule ^assets/(.*)$ frontend/assets/$1 [L]
