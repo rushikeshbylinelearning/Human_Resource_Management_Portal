@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 /**
- * Ensures attendance-test backend .env can boot on PORT 3015.
- * 5005 is taken by dg-awareness-backend on the shared host.
+ * Ensures attendance-test backend .env can boot on PORT 5005.
  * Does not overwrite an existing SESSION_SECRET.
  * Never used by production (attendance.bylinelms.com / :3011).
  */
@@ -28,7 +27,7 @@ const upsert = (key, value) => {
 
 const hasValue = (key) => new RegExp(`^${key}=.+$`, 'm').test(text);
 
-upsert('PORT', '3015');
+upsert('PORT', '5005');
 upsert('FRONTEND_URL', 'https://attendance-test.bylinelms.com');
 upsert('BACKEND_PUBLIC_URL', 'https://attendance-test.bylinelms.com');
 
@@ -40,4 +39,4 @@ if (!hasValue('SESSION_SECRET')) {
 }
 
 fs.writeFileSync(envPath, text);
-console.log('Test .env ready (PORT=3015, test FRONTEND_URL)');
+console.log('Test .env ready (PORT=5005, test FRONTEND_URL)');

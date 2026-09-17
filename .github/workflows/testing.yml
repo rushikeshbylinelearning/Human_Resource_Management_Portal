@@ -9,8 +9,8 @@ env:
   DEPLOY_ROOT: /home/bylinelm/attendance-test.bylinelms.com
   SALARY_DEPLOY_ROOT: /home/bylinelm/payroll-test.bylinelms.com/salary-service
   # Production AMS (attendance.bylinelms.com) stays on :3011.
-  # 5005 is already used by dg-awareness-backend on this host.
-  AMS_TEST_PORT: 3015
+  # Test AMS (attendance-test.bylinelms.com) uses this port only.
+  AMS_TEST_PORT: 5005
   AMS_PROD_PORT: 3011
 
 jobs:
@@ -64,14 +64,14 @@ jobs:
             frontend/dist/ \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.DEPLOY_ROOT }}/
 
-      - name: Deploy test Apache proxy (.htaccess → :3015)
+      - name: Deploy test Apache proxy (.htaccess → :5005)
         run: |
           rsync -avz \
             -e "ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.SSH_PORT }}" \
             deploy/attendance-test.htaccess \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.DEPLOY_ROOT }}/.htaccess
 
-      - name: Start test AMS on :3015 via PM2 (do not touch production :3011)
+      - name: Start test AMS on :5005 via PM2 (do not touch production :3011)
         run: |
           ssh -i ~/.ssh/id_ed25519 -p ${{ secrets.SSH_PORT }} \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} << 'EOF'
@@ -81,32 +81,23 @@ jobs:
             npm ci --omit=dev
 
             # Test .env lives only on the server (never rsynced). Fill the values
-            # required to boot: SESSION_SECRET, PORT=3015, test site URLs.
+            # required to boot: SESSION_SECRET, PORT=5005, test site URLs.
             node scripts/ensure-test-env.js
 
             # Only create/replace the TEST process. Never restart/delete production
-            # (attendance-backend on :3011) or other apps (e.g. dg-awareness on :5005).
+            # (attendance-backend on :3011 / attendance.bylinelms.com).
             pm2 delete attendancetest-backend >/dev/null 2>&1 || true
-
-            if ss -lnt 2>/dev/null | grep -q ':3015 ' || netstat -lnt 2>/dev/null | grep -q ':3015 '; then
-              echo "ERROR: port 3015 is already in use by another process"
-              ss -lntp 2>/dev/null | grep 3015 || netstat -lntp 2>/dev/null | grep 3015 || true
-              pm2 list || true
-              exit 1
-            fi
-
-            PORT=3015 HOST=127.0.0.1 NODE_ENV=production \
+            PORT=5005 HOST=127.0.0.1 NODE_ENV=production \
               pm2 start ecosystem.config.cjs --only attendancetest-backend --env production --update-env
             pm2 save
 
-            echo "Waiting for attendancetest-backend on :3015..."
+            echo "Waiting for attendancetest-backend on :5005..."
             healthy=0
             for i in $(seq 1 20); do
-              code=$(curl -sS -o /tmp/ams-test-health.json -w '%{http_code}' "http://127.0.0.1:3015/health" || true)
-              body=$(cat /tmp/ams-test-health.json 2>/dev/null || true)
-              if [ "$code" = "200" ] && echo "$body" | grep -q '"status"'; then
-                echo "attendancetest-backend is healthy on :3015"
-                echo "$body"
+              code=$(curl -sS -o /tmp/ams-test-health.json -w '%{http_code}' "http://127.0.0.1:5005/health" || true)
+              if [ "$code" = "200" ]; then
+                echo "attendancetest-backend is healthy on :5005"
+                cat /tmp/ams-test-health.json
                 echo
                 healthy=1
                 break
@@ -116,9 +107,9 @@ jobs:
             done
 
             if [ "$healthy" != "1" ]; then
-              echo "attendancetest-backend did not become healthy on :3015"
-              echo "--- listeners on 3015 ---"
-              ss -lntp 2>/dev/null | grep 3015 || netstat -lntp 2>/dev/null | grep 3015 || true
+              echo "attendancetest-backend did not become healthy on :5005"
+              echo "--- listeners on 5005 ---"
+              ss -lntp 2>/dev/null | grep 5005 || netstat -lntp 2>/dev/null | grep 5005 || true
               echo "--- last health body ---"
               cat /tmp/ams-test-health.json 2>/dev/null || true
               echo

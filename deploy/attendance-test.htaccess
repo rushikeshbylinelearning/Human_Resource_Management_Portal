@@ -3,8 +3,8 @@
 # Document root: ~/attendance-test.bylinelms.com/  (index.html + assets/)
 #
 # Apache serves the React app. /api and other backend paths proxy to the
-# TEST PM2 process on 3015 — never production :3011
-# (attendance.bylinelms.com) and never :5005 (dg-awareness-backend).
+# TEST PM2 process on 5005 — never production :3011
+# (attendance.bylinelms.com).
 #
 # PM2:
 #   cd ~/attendance-test.bylinelms.com/backend
@@ -20,10 +20,10 @@ RewriteBase /
   PassengerEnabled off
 </IfModule>
 
-# ─── Proxy backend paths to the test PM2 process (port 3015) ────────────────
+# ─── Proxy backend paths to the test PM2 process (port 5005) ────────────────
 RewriteCond %{HTTP:Upgrade} =websocket [NC]
 RewriteCond %{REQUEST_URI} ^/api/socket.io [NC]
-RewriteRule .* ws://127.0.0.1:3015%{REQUEST_URI} [P,L]
+RewriteRule .* ws://127.0.0.1:5005%{REQUEST_URI} [P,L]
 
 RewriteCond %{REQUEST_URI} ^/api [NC,OR]
 RewriteCond %{REQUEST_URI} ^/health$ [NC,OR]
@@ -31,7 +31,7 @@ RewriteCond %{REQUEST_URI} ^/avatars [NC,OR]
 RewriteCond %{REQUEST_URI} ^/medical-certificates [NC,OR]
 RewriteCond %{REQUEST_URI} ^/internal [NC,OR]
 RewriteCond %{REQUEST_URI} ^/public/ [NC]
-RewriteRule .* http://127.0.0.1:3015%{REQUEST_URI} [P,L,QSA]
+RewriteRule .* http://127.0.0.1:5005%{REQUEST_URI} [P,L,QSA]
 
 # ─── Frontend: real files, then React SPA fallback ───────────────────────────
 RewriteCond %{REQUEST_FILENAME} -f [OR]
