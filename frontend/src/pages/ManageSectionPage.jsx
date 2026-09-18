@@ -24,7 +24,8 @@ import {
   MoreVert as MoreVertIcon,
   Schedule as ScheduleIcon,
   NotificationsActive as NotificationsActiveIcon,
-  SupportAgent as SupportAgentIcon
+  SupportAgent as SupportAgentIcon,
+  EventNote as EventNoteIcon
 } from '@mui/icons-material';
 import api from '../api/axios';
 import '../styles/ManageSectionPage.css';
@@ -126,6 +127,8 @@ const ManageSectionPage = () => {
   const [earlyCheckoutApprovalDialog, setEarlyCheckoutApprovalDialog] = useState({ open: false, enabled: false });
   const [teamsNotifModal, setTeamsNotifModal] = useState(false);
   const [updatingEarlyCheckoutApproval, setUpdatingEarlyCheckoutApproval] = useState(false);
+  const [leavesSectionDialog, setLeavesSectionDialog] = useState({ open: false, enabled: true });
+  const [updatingLeavesSection, setUpdatingLeavesSection] = useState(false);
 
   // Fetch all users with their permissions
   const fetchUsers = useCallback(async () => {
@@ -228,6 +231,41 @@ const ManageSectionPage = () => {
       console.error('Error updating require admin approval for early checkout:', err);
     } finally {
       setUpdatingEarlyCheckoutApproval(false);
+    }
+  }, []);
+
+  const fetchLeavesSectionSetting = useCallback(async () => {
+    try {
+      const response = await api.get('/admin/settings/leaves-section');
+      return response.data?.enabled !== false;
+    } catch (err) {
+      console.error('Error fetching leave section setting:', err);
+      return true;
+    }
+  }, []);
+
+  const openLeavesSectionDialog = useCallback(async () => {
+    setMenuAnchor(null);
+    setLeavesSectionDialog({ open: true, enabled: true });
+    const enabled = await fetchLeavesSectionSetting();
+    setLeavesSectionDialog({ open: true, enabled });
+  }, [fetchLeavesSectionSetting]);
+
+  const handleLeavesSectionToggle = useCallback(async (event) => {
+    const enabled = event.target.checked;
+    setUpdatingLeavesSection(true);
+    try {
+      await api.post('/admin/settings/leaves-section', { enabled });
+      setLeavesSectionDialog((prev) => ({ ...prev, enabled }));
+      setSuccess(enabled
+        ? 'Leave section is now visible to employees and interns.'
+        : 'Leave section is now hidden from employees and interns.');
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to update leave section setting.');
+      console.error('Error updating leave section setting:', err);
+    } finally {
+      setUpdatingLeavesSection(false);
     }
   }, []);
 
@@ -1984,6 +2022,47 @@ const privilegeOptions = useMemo(() => {
                   }}
                 >
                   Require Admin Approval for Early Checkout
+                </Typography>
+              </MenuItem>
+              <MenuItem
+                onClick={openLeavesSectionDialog}
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 1.5,
+                  px: 2.5,
+                  py: 1.5,
+                  mx: 1,
+                  borderRadius: '10px',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    bgcolor: '#F7F7F9',
+                    transform: 'translateX(2px)',
+                  },
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    bgcolor: 'rgba(229,57,53,0.08)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <EventNoteIcon sx={{ fontSize: 18, color: '#e53935' }} />
+                </Box>
+                <Typography
+                  sx={{
+                    fontSize: '0.9375rem',
+                    fontWeight: 500,
+                    color: '#1F1F1F',
+                  }}
+                >
+                  Leave Section for Users
                 </Typography>
               </MenuItem>
               <Divider sx={{ my: 1.5, mx: 2, borderColor: '#EFEFEF' }} />
@@ -3850,6 +3929,37 @@ const privilegeOptions = useMemo(() => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setEarlyCheckoutApprovalDialog((prev) => ({ ...prev, open: false }))}>
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={leavesSectionDialog.open}
+        onClose={() => setLeavesSectionDialog((prev) => ({ ...prev, open: false }))}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>Leave Section for Users</DialogTitle>
+        <DialogContent dividers>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            When disabled, employees and interns will not see Leaves in the sidebar and cannot open the leave page.
+            Admin and HR can still manage leave requests.
+          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={leavesSectionDialog.enabled}
+                onChange={handleLeavesSectionToggle}
+                disabled={updatingLeavesSection}
+                color="primary"
+              />
+            }
+            label={leavesSectionDialog.enabled ? 'On (users can see Leaves)' : 'Off (Leaves hidden from users)'}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setLeavesSectionDialog((prev) => ({ ...prev, open: false }))}>
             Close
           </Button>
         </DialogActions>

@@ -24,6 +24,10 @@ const YEAR_END_FEATURE_KEY = 'yearEndFeature';
 const ENFORCE_REQUIRED_LOGOUT_KEY = 'enforceRequiredLogoutBeforeCheckout';
 // Feature toggle: require admin approval before early checkout is executed
 const REQUIRE_ADMIN_APPROVAL_EARLY_CHECKOUT_KEY = 'requireAdminApprovalForEarlyCheckout';
+const {
+    isLeavesSectionEnabled,
+    setLeavesSectionEnabled,
+} = require('../utils/leavesSectionSetting');
 
 // GET /api/admin/settings/hr-emails - Get the list of HR emails
 router.get('/hr-emails', [authenticateToken, isAdminOrHr], async (req, res) => {
@@ -214,8 +218,41 @@ router.post('/require-admin-approval-early-checkout', [authenticateToken, isAdmi
     }
 });
 
+// GET /api/admin/settings/leaves-section - whether employees/interns can see Leaves
+router.get('/leaves-section', [authenticateToken, isAdmin], async (req, res) => {
+    try {
+        const enabled = await isLeavesSectionEnabled();
+        res.json({ enabled });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error fetching leave section setting.' });
+    }
+});
 
-
+// POST /api/admin/settings/leaves-section - hide/show Leaves for employees and interns
+router.post('/leaves-section', [authenticateToken, isAdmin], async (req, res) => {
+    const { enabled } = req.body;
+    if (typeof enabled !== 'boolean') {
+        return res.status(400).json({ error: 'Enabled must be a boolean value.' });
+    }
+    try {
+        const nextValue = await setLeavesSectionEnabled(enabled);
+        try {
+            const { getIO } = require('../socketManager');
+            const io = getIO();
+            if (io) {
+                io.emit('leaves_section_updated', {
+                    enabled: nextValue,
+                    timestamp: new Date().toISOString(),
+                });
+            }
+        } catch (socketErr) {
+            console.warn('[Settings] Could not broadcast leaves_section_updated:', socketErr.message);
+        }
+        res.json({ enabled: nextValue });
+    } catch (error) {
+        res.status(500).json({ error: 'Server error updating leave section setting.' });
+    }
+});
 
 
 // --- Teams Attendance Notification (Power Automate Webhook) ---

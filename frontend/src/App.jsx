@@ -262,7 +262,7 @@ function App() {
 
                                         <Route path="/leaves" element={
                                             <Suspense fallback={<DelayedFallback><PageLoader type="list" /></DelayedFallback>}>
-                                                <PermissionProtectedRoute requiredPermission="leaves">
+                                                <PermissionProtectedRoute requiredPermission="leaves" showAccessDenied={false} fallbackPath="/dashboard">
                                                     <LeavesPage />
                                                 </PermissionProtectedRoute>
                                             </Suspense>

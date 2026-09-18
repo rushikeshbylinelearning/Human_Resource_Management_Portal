@@ -59,7 +59,12 @@ export const usePermissions = () => {
   // Permission check functions
   const canAccess = useMemo(() => ({
     // Core features
-    leaves: () => permissions.leaves === true,
+    leaves: () => {
+      if (!['Admin', 'HR'].includes(user?.role) && user?.leavesSectionEnabled === false) {
+        return false;
+      }
+      return permissions.leaves === true;
+    },
     breaks: () => permissions.breaks === true,
     extraFeatures: () => permissions.extraFeatures === true,
     
@@ -151,7 +156,7 @@ export const usePermissions = () => {
       }
       return permissions.canManageHRQueries === true;
     },
-  }), [permissions, user?.role]);
+  }), [permissions, user?.role, user?.leavesSectionEnabled]);
 
   // Break management helpers - Time-based restrictions
   const breakLimits = useMemo(() => {

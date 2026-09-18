@@ -6,6 +6,7 @@ import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { useOnboarding } from '../../context/OnboardingContext';
 import { useAuth } from '../../context/AuthContext';
+import { usePermissions } from '../../hooks/usePermissions';
 import { useNavigate } from 'react-router-dom';
 import OnboardingWelcome from './OnboardingWelcome';
 
@@ -335,6 +336,7 @@ const resolveStepElement = (step) => {
 const AppTour = () => {
     const { completeTour, tourPending } = useOnboarding();
     const { user } = useAuth();
+    const { canAccess } = usePermissions();
     const navigate = useNavigate();
 
     const [showWelcome, setShowWelcome] = useState(true);
@@ -348,8 +350,11 @@ const AppTour = () => {
 
     const buildSteps = useCallback(() => {
         const base = isAdminOrHR ? ADMIN_STEPS : EMPLOYEE_STEPS;
-        return base.map(resolveStepElement);
-    }, [isAdminOrHR]);
+        const showLeaves = canAccess.leaves();
+        return base
+            .filter((step) => showLeaves || step.element !== '[data-tour="sidebar-leaves"]')
+            .map(resolveStepElement);
+    }, [isAdminOrHR, canAccess]);
 
     const clearArrowListeners = useCallback(() => {
         if (arrowRepositionRef.current) {

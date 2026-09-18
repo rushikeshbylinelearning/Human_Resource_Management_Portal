@@ -483,7 +483,11 @@ const NewNotificationDrawer = ({ open, onClose, onOpenECRModal }) => {
             } else {
                 navigate('/profile');
             }
-        } else if (path === 'leaves') navigate(isAdmin ? '/admin/leaves' : '/leaves');
+        } else if (path === 'leaves') {
+            if (isAdmin) navigate('/admin/leaves');
+            else if (canAccess.leaves()) navigate('/leaves');
+            else navigate('/dashboard');
+        }
         else if (path === 'attendance') navigate(isAdmin ? '/admin/attendance-summary' : '/dashboard', { state: { refresh: true } });
         else if (path === 'admin/dashboard') navigate('/admin/dashboard', { state: { refresh: true } });
         else if (path === '/employees' || path === '/admin/employees' || path?.includes('employees')) {

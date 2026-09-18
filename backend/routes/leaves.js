@@ -16,6 +16,16 @@ const uploadMedicalCertificate = require('../middleware/uploadMedicalCertificate
 const mongoose = require('mongoose');
 const { GridFSBucket } = require('mongodb');
 const { parseISTDate, formatISTDate, getTodayISTKey, normalizeLeaveDatesForApi } = require('../utils/istTime');
+const requireLeavesAccess = require('../middleware/requireLeavesAccess');
+
+router.use(authenticateToken);
+router.use((req, res, next) => {
+    if (req.path === '/holidays') {
+        return next();
+    }
+    return requireLeavesAccess(req, res, next);
+});
+
 
 const formatLeaveDateRangeForEmail = (leaveDates) => {
     if (!leaveDates || leaveDates.length === 0) return 'N/A';

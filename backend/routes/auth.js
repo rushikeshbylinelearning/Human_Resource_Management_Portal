@@ -37,6 +37,7 @@ const ssoService = require('../services/ssoService');
 const SSOVerification = require('../utils/ssoVerification');
 const jwtUtils = require('../utils/jwtUtils');
 const { syncOrgFields } = require('../utils/syncOrgFields');
+const { attachLeavesSectionFlag } = require('../utils/leavesSectionSetting');
 // isNightShiftEmployee was used for the old 7d/10h expiry split; no longer needed
 // with the uniform 15-minute access token model. Import kept as a no-op comment
 // until the module reference is confirmed safe to remove.
@@ -264,13 +265,7 @@ router.post('/login', validateLogin, loginGeofencingMiddleware, async (req, res)
         // in memory only (no localStorage / sessionStorage write for access token).
         res.cookie('refreshToken', rawRefreshToken, getRefreshCookieOptions());
 
-        res.status(200).json({
-            message: 'Login successful!',
-            accessToken,
-            // 'token' alias kept for backward-compatibility during rollout.
-            // Remove once frontend is fully migrated to 'accessToken'.
-            token: accessToken,
-            user: {
+        const loginUser = await attachLeavesSectionFlag({
                 id: user._id,
                 name: user.fullName,
                 fullName: user.fullName,
@@ -319,7 +314,15 @@ router.post('/login', validateLogin, loginGeofencingMiddleware, async (req, res)
                 // Include onboarding status so the frontend can decide the flow
                 // without an extra API call on first login.
                 onboarding: user.onboarding || {}
-            }
+            });
+
+        res.status(200).json({
+            message: 'Login successful!',
+            accessToken,
+            // 'token' alias kept for backward-compatibility during rollout.
+            // Remove once frontend is fully migrated to 'accessToken'.
+            token: accessToken,
+            user: loginUser
         });
 
     } catch (error) {
@@ -485,7 +488,7 @@ router.get('/me', async (req, res) => {
         
         if (cachedUser) {
             if (process.env.NODE_ENV !== 'production') console.log('[/me] Returning cached user data');
-            return res.json(cachedUser);
+            return res.json(await attachLeavesSectionFlag(cachedUser));
         }
 
         if (process.env.NODE_ENV !== 'production') console.log('[/me] Fetching user from database');
@@ -571,7 +574,7 @@ router.get('/me', async (req, res) => {
         cacheService.setUser(userId, userResponse);
         
         if (process.env.NODE_ENV !== 'production') console.log('[/me] User data cached and returned successfully');
-        res.json(userResponse);
+        res.json(await attachLeavesSectionFlag(userResponse));
     } catch (error) {
         console.error('[/me] Error fetching user data:', error);
         console.error('[/me] Error details:', error.message, error.stack);
@@ -604,7 +607,7 @@ router.get('/callback', async (req, res) => {
         const amsToken = ssoService.createAMSToken(user);
 
         // Prepare user data for response
-        const userData = {
+        const userData = await attachLeavesSectionFlag({
             id: user._id,
             name: user.fullName,
             fullName: user.fullName,
@@ -626,7 +629,7 @@ router.get('/callback', async (req, res) => {
                 duration: user.shiftGroup.durationHours,
                 paidBreak: user.shiftGroup.paidBreakMinutes,
             } : null
-        };
+        });
 
         if (process.env.NODE_ENV !== 'production') console.log(`[SSO] Successfully authenticated user: ${user.email} via SSO`);
 
@@ -1071,7 +1074,7 @@ router.post('/sso-consume', async (req, res) => {
         if (process.env.NODE_ENV !== 'production') console.log(`[SSO-Consume] ✅ SSO login success: ${userEmail}`);
 
         // Prepare user data for response
-        const userData = {
+        const userData = await attachLeavesSectionFlag({
             id: user._id,
             name: user.fullName,
             fullName: user.fullName,
@@ -1093,7 +1096,7 @@ router.post('/sso-consume', async (req, res) => {
                 duration: user.shiftGroup.durationHours,
                 paidBreak: user.shiftGroup.paidBreakMinutes,
             } : null
-        };
+        });
 
         // Prepare success response with proper format
         const redirectUrlToUse = returnUrl || '/dashboard';

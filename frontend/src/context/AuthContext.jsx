@@ -482,14 +482,26 @@ export const AuthProvider = ({ children }) => {
             }
         };
 
+        const handleLeavesSectionUpdate = (data) => {
+            setUser((prev) => {
+                if (!prev) return prev;
+                return { ...prev, leavesSectionEnabled: data?.enabled !== false };
+            });
+            if (data?.enabled) {
+                refreshUserData().catch(console.error);
+            }
+        };
+
         socket.on('permissions_updated', handlePermissionUpdate);
         socket.on('employment_status_updated', handleEmploymentStatusUpdate);
         socket.on('user_profile_updated', handleUserProfileUpdate);
+        socket.on('leaves_section_updated', handleLeavesSectionUpdate);
 
         return () => {
             socket.off('permissions_updated', handlePermissionUpdate);
             socket.off('employment_status_updated', handleEmploymentStatusUpdate);
             socket.off('user_profile_updated', handleUserProfileUpdate);
+            socket.off('leaves_section_updated', handleLeavesSectionUpdate);
             document.removeEventListener('visibilitychange', handleVisibilityChange);
             // Don't disconnect socket here - let it handle reconnection automatically
         };
