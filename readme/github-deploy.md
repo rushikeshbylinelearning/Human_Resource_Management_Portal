@@ -38,15 +38,3 @@ Do **not** add `SESSION_SECRET`, `MONGODB_URI`, or other app secrets to GitHub. 
 
 - `/home/bylinelm/attendance.bylinelms.com/backend/.env` (production)
 - `/home/bylinelm/attendance-test.bylinelms.com/backend/.env` (test)
-
-## First-time server folders
-
-Production expects:
-
-```text
-/home/bylinelm/attendance.bylinelms.com/          ← frontend dist + .htaccess
-/home/bylinelm/attendance.bylinelms.com/backend/  ← Node app, .env, keys/
-/home/bylinelm/payroll.bylinelms.com/salary-service/
-```
-
-If `.env` or JWT `keys/` are missing on production, PM2 will fail after the `main` push. Copy them from the working production tree (or from test, then set `PORT=3011` and `FRONTEND_URL=https://attendance.bylinelms.com`).

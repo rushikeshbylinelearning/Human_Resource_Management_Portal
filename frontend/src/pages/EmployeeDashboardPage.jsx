@@ -932,7 +932,7 @@ const EmployeeDashboardPage = () => {
 
     return (
         <Box className="employee-dashboard-container">
-            <Box>
+            <Box className="employee-dashboard-content">
                 {/* Pending Policy Acknowledgement Banner */}
                 <PendingPolicyBanner />
 
@@ -960,7 +960,7 @@ const EmployeeDashboardPage = () => {
                 )}
                 
                 <Grid container spacing={3} alignItems="flex-start">
-                    <Grid item xs={12} lg={4}>
+                    <Grid size={{ xs: 12, lg: 5 }}>
                         <Stack spacing={3}>
                             <Paper className="dashboard-card-base action-card" data-tour="attendance-card">
                                 <Box>
@@ -1121,7 +1121,7 @@ const EmployeeDashboardPage = () => {
                             </Paper>
                         </Stack>
                     </Grid>
-                    <Grid item xs={12} lg={4}>
+                    <Grid size={{ xs: 12, lg: 3 }}>
                         <Stack spacing={3}>
                             <Paper className="dashboard-card-base profile-card">
                                 <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
@@ -1163,7 +1163,7 @@ const EmployeeDashboardPage = () => {
                             </Paper>
                         </Stack>
                     </Grid>
-                    <Grid item xs={12} lg={4}>
+                    <Grid size={{ xs: 12, lg: 4 }}>
                         <Stack spacing={3} sx={{ height: '100%' }}>
                             <Paper className="dashboard-card-base recent-activity-card" sx={{ display: 'flex', flexDirection: 'column' }}>
                                 <Box sx={{ flexGrow: 1, overflowY: 'auto', minHeight: 320 }}>

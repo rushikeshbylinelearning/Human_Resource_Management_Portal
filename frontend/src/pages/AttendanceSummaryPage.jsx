@@ -383,7 +383,7 @@ const AttendanceSummaryPage = () => {
                 <header className="summary-header">
                     <div className="header-left">
                         <Typography variant="h4" component="h1" className="summary-title">
-                            My AMS Portal
+                            Attendance Summary
                         </Typography>
                     </div>
                     

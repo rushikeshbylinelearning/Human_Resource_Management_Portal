@@ -115,7 +115,7 @@ body, html {
     --topbar-height: 56px;
 
     /* EMPLOYEE View */
-    --sidebar-width-employee: 260px;
+    --sidebar-width-employee: var(--sidebar-width);
 }
 
 body, html {
@@ -149,9 +149,10 @@ body, html {
 /* So we remove them from the main layout. */
 .employee-view .main-content {
     margin-left: var(--sidebar-width-employee);
-    padding: 0; /* Remove padding to allow dashboard to fill the space */
+    padding: var(--topbar-height) 0 0;
     width: calc(100% - var(--sidebar-width-employee));
-    min-height: 100vh;
+    height: 100vh;
+    min-height: 0;
     min-width: 0;
     overflow-x: hidden;
     box-sizing: border-box;
