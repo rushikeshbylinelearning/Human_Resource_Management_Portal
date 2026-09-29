@@ -10,31 +10,51 @@ import DownloadIcon from '@mui/icons-material/Download';
 import CloseIcon from '@mui/icons-material/Close';
 import '../styles/SecurePdfViewer.css';
 import api from '../api/axios';
+import { formatPdfFetchError, getReactPdfDocumentOptions, createPdfBlobUrl, revokePdfBlobUrl } from '../utils/pdfjsConfig';
 
 const SecurePdfViewer = ({ pdfUrl, policyName, role = 'employee', onClose }) => {
+    console.log('[SecurePdfViewer] Component mounted/updated - Version 2.0');
     const [numPages, setNumPages] = useState(null);
     const [pageNumber, setPageNumber] = useState(1);
     const [scale, setScale] = useState(1.0);
-    const [pdfBlob, setPdfBlob] = useState(null);
+    const [pdfSrc, setPdfSrc] = useState(null);
+    const [downloadBuffer, setDownloadBuffer] = useState(null);
+    const pdfBlobUrlRef = useRef(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const containerRef = useRef(null);
     const pageRefs = useRef({});
+
+    const handleCloseViewer = useCallback(() => {
+        revokePdfBlobUrl(pdfBlobUrlRef.current);
+        pdfBlobUrlRef.current = null;
+        onClose?.();
+    }, [onClose]);
 
     // Fetch PDF as blob to prevent direct URL access
     useEffect(() => {
         const fetchPdf = async () => {
             setLoading(true);
             setError(null);
+            setPdfSrc(null);
             try {
-                // Use the configured api axios instance — it always carries the
-                // in-memory Authorization header set by AuthContext (Phase 1 model).
-                // No sessionStorage reads needed.
-                const response = await api.get(pdfUrl, { responseType: 'blob' });
-                setPdfBlob(response.data);
+                console.log('[SecurePdfViewer] Fetching PDF from:', pdfUrl);
+                const response = await api.get(pdfUrl, { responseType: 'arraybuffer' });
+                
+                console.log('[SecurePdfViewer] Response received:', {
+                    status: response.status,
+                    contentType: response.headers['content-type'],
+                    dataSize: response.data.byteLength
+                });
+                
+                setDownloadBuffer(response.data.slice(0));
+                revokePdfBlobUrl(pdfBlobUrlRef.current);
+                const blobUrl = createPdfBlobUrl(response.data);
+                pdfBlobUrlRef.current = blobUrl;
+                setPdfSrc(blobUrl);
             } catch (err) {
-                console.error('Error loading PDF:', err);
-                setError('Failed to load PDF. Please try again.');
+                console.error('[SecurePdfViewer] Error loading PDF:', err);
+                setError(formatPdfFetchError(err));
             } finally {
                 setLoading(false);
             }
@@ -43,12 +63,9 @@ const SecurePdfViewer = ({ pdfUrl, policyName, role = 'employee', onClose }) => 
         if (pdfUrl) {
             fetchPdf();
         }
-
-        // Cleanup blob URL on unmount
+        
         return () => {
-            if (pdfBlob) {
-                URL.revokeObjectURL(URL.createObjectURL(pdfBlob));
-            }
+            // Do not revoke blob URLs here — Strict Mode re-runs cleanup before the worker finishes.
         };
     }, [pdfUrl]);
 
@@ -149,9 +166,10 @@ const SecurePdfViewer = ({ pdfUrl, policyName, role = 'employee', onClose }) => 
     };
 
     const handleDownload = useCallback(() => {
-        if (role !== 'admin' || !pdfBlob) return;
+        if (role !== 'admin' || !downloadBuffer) return;
 
-        const url = URL.createObjectURL(pdfBlob);
+        const blob = new Blob([downloadBuffer], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
         link.download = `${policyName || 'policy'}.pdf`;
@@ -159,7 +177,7 @@ const SecurePdfViewer = ({ pdfUrl, policyName, role = 'employee', onClose }) => 
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-    }, [pdfBlob, policyName, role]);
+    }, [downloadBuffer, policyName, role]);
 
     if (loading) {
         return (
@@ -249,7 +267,7 @@ const SecurePdfViewer = ({ pdfUrl, policyName, role = 'employee', onClose }) => 
 
                     {/* Close Button */}
                     {onClose && (
-                        <IconButton onClick={onClose} size="small" title="Close">
+                        <IconButton onClick={handleCloseViewer} size="small" title="Close">
                             <CloseIcon />
                         </IconButton>
                     )}
@@ -268,15 +286,17 @@ const SecurePdfViewer = ({ pdfUrl, policyName, role = 'employee', onClose }) => 
                     p: 2
                 }}
             >
-                {pdfBlob && (
+                {pdfSrc && (
                     <Suspense fallback={
                         <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                             <CircularProgress />
                         </Box>
                     }>
                     <PdfDocument
-                        file={pdfBlob}
+                        key={pdfSrc}
+                        file={pdfSrc}
                         onLoadSuccess={onDocumentLoadSuccess}
+                        options={getReactPdfDocumentOptions()}
                         loading={
                             <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                                 <CircularProgress />

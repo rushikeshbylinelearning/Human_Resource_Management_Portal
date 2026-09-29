@@ -9,7 +9,6 @@ import PageTransition from './PageTransition';
 import useNewNotifications from '../hooks/useNewNotifications';
 import OnboardingOrchestrator from './onboarding/OnboardingOrchestrator';
 import { useAuth } from '../context/AuthContext';
-import { usePermissions } from '../hooks/usePermissions';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 import HRQueryChatLauncher from './HRQueryChatLauncher';
 import '../styles/MainLayout.css';
@@ -31,7 +30,6 @@ const MainLayout = () => {
 
     const { fetchNotifications } = useNewNotifications();
     const { user } = useAuth();
-    const { canAccess } = usePermissions();
     const isAdminView = ['Admin', 'HR', 'Manager'].includes(user?.role);
 
     useEffect(() => {
@@ -159,9 +157,7 @@ const MainLayout = () => {
                         onSuccess={handleECRSuccess}
                     />
                 )}
-                {(user?.role === 'Admin' || user?.role === 'HR' || canAccess?.manageHRQueries?.()) && (
-                    <HRQueryChatLauncher />
-                )}
+                {user && <HRQueryChatLauncher />}
                 <NotificationPermissionPrompt 
                     onPermissionChange={handleNotificationPermissionChange}
                 />

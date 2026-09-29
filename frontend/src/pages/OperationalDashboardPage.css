@@ -1,0 +1,471 @@
+/* frontend/src/pages/OperationalDashboardPage.css */
+
+.operational-dashboard-page {
+  width: 100%;
+  min-height: calc(100vh - 96px);
+  background: #f5f6fb;
+  padding: 0 clamp(12px, 1.25vw, 20px) clamp(16px, 1.5vw, 24px);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.operational-dashboard-inner {
+  width: 100%;
+  max-width: none !important;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.operational-dashboard-page .page-hero-header {
+  margin-bottom: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* ── Main panel (tabs + content) ─────────────────────────────── */
+.operational-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.06);
+  border: 1px solid #e9ecef;
+  overflow: hidden;
+}
+
+.operational-tabs {
+  padding: 0 8px;
+  flex-shrink: 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.operational-tab {
+  min-height: 56px;
+  text-transform: none;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.operational-tab.Mui-selected {
+  color: #3498db;
+  font-weight: 600;
+}
+
+.operational-tab:hover {
+  background: rgba(52, 152, 219, 0.04);
+}
+
+.operational-tabs .MuiTabs-indicator {
+  height: 3px;
+  background: linear-gradient(90deg, #3498db 0%, #2980b9 100%);
+  border-radius: 3px 3px 0 0;
+}
+
+/* ── Content Area ─────────────────────────────────────────── */
+.operational-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+}
+
+.operational-loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+}
+
+.operational-content .MuiCircularProgress-root,
+.operational-loading .MuiCircularProgress-root {
+  color: #3498db;
+}
+
+/* ── Tables ─────────────────────────────────────────────────── */
+.operational-table-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+}
+
+.operational-table-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  max-height: calc(100vh - 280px);
+}
+
+.operational-table-scroll .MuiTableHead-root .MuiTableCell-head {
+  background: #f8fafc;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: #475569;
+  padding: 10px 14px;
+  white-space: nowrap;
+}
+
+.operational-table-scroll .MuiTableBody-root .MuiTableCell-root {
+  padding: 8px 14px;
+  font-size: 0.875rem;
+}
+
+.operational-cell-subject {
+  max-width: 1px;
+  width: 28%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.operational-table-empty {
+  padding: 3rem 1rem !important;
+  color: #64748b !important;
+}
+
+.operational-table-pagination {
+  flex-shrink: 0;
+  border-top: 1px solid #e9ecef;
+}
+
+/* ── Activity logs list ─────────────────────────────────────── */
+.operational-activity-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.operational-activity-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  max-height: calc(100vh - 280px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 16px 16px;
+  box-sizing: border-box;
+}
+
+.operational-activity-scroll .operational-log-card {
+  flex-shrink: 0;
+}
+
+.operational-activity-message-cell {
+  max-width: 1px;
+  width: 40%;
+}
+
+.operational-activity-message {
+  color: #2c3e50 !important;
+  font-size: 0.875rem !important;
+  line-height: 1.45 !important;
+  word-break: break-word;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* ── Dashboard Cards (HR/IT) ─────────────────────────────────────────── */
+.operational-dashboard-page .MuiCard-root {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.06);
+  border: 1px solid #e9ecef;
+  transition: box-shadow 0.2s ease;
+}
+
+.operational-dashboard-page .MuiCard-root:hover {
+  box-shadow: 0 4px 16px rgba(44, 62, 80, 0.1);
+}
+
+.operational-dashboard-page .MuiCardContent-root {
+  padding: 20px !important;
+}
+
+.operational-dashboard-page .MuiDivider-root {
+  border-color: #e9ecef;
+}
+
+/* ── Logs Toolbar ─────────────────────────────────────────── */
+.operational-logs-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fafbfc;
+  border-bottom: 1px solid #e9ecef;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.operational-logs-toolbar--inline .operational-search-field {
+  flex: 1 1 220px;
+  min-width: 180px;
+  max-width: none;
+}
+
+.operational-filter-field {
+  min-width: 130px;
+  flex: 0 1 150px;
+}
+
+.operational-filter-field--wide {
+  flex: 0 1 180px;
+  min-width: 160px;
+}
+
+.operational-toolbar-meta {
+  margin-left: auto;
+  color: #64748b !important;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.operational-search-field .MuiOutlinedInput-root {
+  border-radius: 10px;
+  background: #fafbfc;
+  transition: all 0.2s ease;
+}
+
+.operational-search-field .MuiOutlinedInput-root:hover {
+  background: #fff;
+}
+
+.operational-search-field .MuiOutlinedInput-root.Mui-focused {
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.operational-refresh-btn {
+  color: #64748b;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  padding: 8px;
+  transition: all 0.2s ease;
+}
+
+.operational-refresh-btn:hover {
+  background: #f8fafc;
+  border-color: #3498db;
+  color: #3498db;
+}
+
+.operational-refresh-btn-header {
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.operational-refresh-btn-header:hover {
+  color: #3498db;
+  background: rgba(52, 152, 219, 0.08);
+}
+
+/* ── Log Cards ─────────────────────────────────────────── */
+.operational-log-card {
+  border-radius: 10px !important;
+  box-shadow: 0 1px 4px rgba(44, 62, 80, 0.05) !important;
+  margin-bottom: 0;
+  border: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.operational-log-card:hover {
+  box-shadow: 0 4px 16px rgba(44, 62, 80, 0.1) !important;
+  border-color: #3498db;
+}
+
+.operational-log-card__content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 12px 16px;
+  gap: 16px;
+}
+
+.operational-log-card__main {
+  flex: 1;
+  min-width: 0; /* Allow text truncation */
+}
+
+.operational-log-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.operational-log-category {
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  font-size: 0.7rem !important;
+  letter-spacing: 0.04em;
+}
+
+.operational-log-type {
+  color: #94a3b8 !important;
+  text-transform: capitalize;
+  font-weight: 500;
+}
+
+.operational-log-message {
+  color: #2c3e50;
+  font-size: 0.9375rem !important;
+  line-height: 1.5 !important;
+  margin-bottom: 6px !important;
+  word-break: break-word;
+}
+
+.operational-log-user {
+  color: #64748b !important;
+  font-size: 0.8125rem !important;
+}
+
+.operational-log-user strong {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.operational-log-card__time {
+  text-align: right;
+  min-width: 100px;
+  white-space: nowrap;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+/* ── Empty State ─────────────────────────────────────────── */
+.operational-empty-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2rem 1rem;
+  margin: 16px;
+  min-height: 240px;
+  background: #fafbfc;
+  border-radius: 10px;
+  border: 1px dashed #e2e8f0;
+}
+
+.operational-empty-state .MuiTypography-h6 {
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.operational-empty-state .MuiTypography-body2 {
+  color: #94a3b8;
+}
+
+/* ── Pagination ─────────────────────────────────────────── */
+.operational-pagination {
+  margin: 0 16px 16px;
+  border-radius: 10px !important;
+  border: 1px solid #e9ecef;
+  box-shadow: none !important;
+  flex-shrink: 0;
+}
+
+.operational-pagination .MuiTablePagination-root {
+  color: #64748b;
+}
+
+.operational-pagination .MuiTablePagination-selectLabel,
+.operational-pagination .MuiTablePagination-displayedRows {
+  font-size: 0.875rem;
+  color: #64748b;
+}
+
+.operational-pagination .MuiIconButton-root {
+  color: #64748b;
+}
+
+.operational-pagination .MuiIconButton-root:hover {
+  background: rgba(52, 152, 219, 0.08);
+  color: #3498db;
+}
+
+/* ── Responsive Design ─────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .operational-log-card__content {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .operational-log-card__time {
+    text-align: left;
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 600px) {
+  .operational-dashboard-page {
+    padding: 0 12px 12px;
+  }
+
+  .operational-logs-toolbar {
+    padding: 12px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .operational-toolbar-meta {
+    margin-left: 0;
+    text-align: right;
+  }
+
+  .operational-table-scroll,
+  .operational-activity-scroll {
+    max-height: calc(100vh - 320px);
+  }
+
+  .operational-refresh-btn {
+    width: 100%;
+  }
+
+  .operational-log-card__content {
+    padding: 14px 16px;
+  }
+}
+
+/* ── Dashboard Summary Cards Styling ─────────────────────────────────────────── */
+.operational-dashboard-page .MuiGrid-item {
+  display: flex;
+}
+
+.operational-dashboard-page .MuiGrid-item > div {
+  width: 100%;
+}
+
+/* Make sure DashboardSummaryCard inherits consistent styling */
+.operational-dashboard-page .dashboard-summary-card {
+  height: 100%;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.06);
+  transition: all 0.2s ease;
+}
+
+.operational-dashboard-page .dashboard-summary-card:hover {
+  box-shadow: 0 4px 16px rgba(44, 62, 80, 0.1);
+  transform: translateY(-2px);
+}

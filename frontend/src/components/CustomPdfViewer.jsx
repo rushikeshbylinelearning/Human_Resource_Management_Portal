@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { PdfDocument, PdfPage } from './lazy/LazyPdfComponents';
 import '../styles/CustomPdfViewer.css';
 import api from '../api/axios';
+import { formatPdfFetchError, getReactPdfDocumentOptions, createPdfBlobUrl, revokePdfBlobUrl } from '../utils/pdfjsConfig';
 
 const MIN_READ_SECONDS = 60;
 
@@ -21,13 +22,14 @@ const CustomPdfViewer = ({
 }) => {
     const isAcknowledgmentMode = mode === 'onboarding-policy' || mode === 'employee-document';
     const isOnboardingPolicy = mode === 'onboarding-policy';
+    const useNativePdfIframe = !isAcknowledgmentMode;
 
     const [numPages, setNumPages] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
     const [scale, setScale] = useState(isAcknowledgmentMode ? 1.2 : 1.0);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [pdfBlob, setPdfBlob] = useState(null);
+    const [pdfSrc, setPdfSrc] = useState(null);
     const [acknowledged, setAcknowledged] = useState(false);
     const [hasReachedEnd, setHasReachedEnd] = useState(false);
     const [readingSeconds, setReadingSeconds] = useState(0);
@@ -37,7 +39,7 @@ const CustomPdfViewer = ({
     const pageRefs = useRef({});
     const readingStartRef = useRef(null);
     const readingStartNotifiedRef = useRef(false);
-
+    const pdfBlobUrlRef = useRef(null);
     const timerComplete = readingSeconds >= MIN_READ_SECONDS;
     const canAcknowledge = timerComplete && hasReachedEnd;
 
@@ -67,31 +69,84 @@ const CustomPdfViewer = ({
     }, []);
 
     const onDocumentLoadError = useCallback((err) => {
-        console.error('Error loading PDF:', err);
-        setError('Failed to load PDF document');
+        console.error('[CustomPdfViewer] PDF.js Document Load Error:', err);
+        console.error('[CustomPdfViewer] Error name:', err?.name);
+        console.error('[CustomPdfViewer] Error message:', err?.message);
+        console.error('[CustomPdfViewer] Error stack:', err?.stack);
+        
+        let errorMessage = 'Failed to load PDF document';
+        if (err?.message) {
+            errorMessage += `: ${err.message}`;
+        }
+        
+        setError(errorMessage);
         setLoading(false);
     }, []);
 
     useEffect(() => {
+        if (!pdfUrl) {
+            setError('No document URL provided.');
+            setLoading(false);
+            return undefined;
+        }
+
+        let cancelled = false;
+
         const fetchPdf = async () => {
             try {
                 setLoading(true);
                 setError(null);
+                setPdfSrc(null);
+                revokePdfBlobUrl(pdfBlobUrlRef.current);
+                pdfBlobUrlRef.current = null;
                 setAcknowledged(false);
                 setHasReachedEnd(false);
                 setReadingSeconds(0);
                 readingStartNotifiedRef.current = false;
-                const response = await api.get(pdfUrl, { responseType: 'blob' });
-                setPdfBlob(response.data);
+                
+                console.log('[CustomPdfViewer] Fetching PDF from:', pdfUrl);
+                const response = await api.get(pdfUrl, { responseType: 'arraybuffer' });
+                
+                if (cancelled) return;
+
+                console.log('[CustomPdfViewer] Response received:', {
+                    status: response.status,
+                    contentType: response.headers['content-type'],
+                    contentLength: response.headers['content-length'],
+                    dataSize: response.data.byteLength
+                });
+                
+                if (!response.data || response.data.byteLength === 0) {
+                    throw new Error('Received empty PDF data');
+                }
+
+                const blobUrl = createPdfBlobUrl(response.data);
+                pdfBlobUrlRef.current = blobUrl;
+                setPdfSrc(blobUrl);
+                if (useNativePdfIframe) {
+                    setLoading(false);
+                    setNumPages(1);
+                }
             } catch (err) {
-                console.error('Error fetching PDF:', err);
-                setError(err.message || 'Failed to load PDF');
+                if (cancelled) return;
+                console.error('[CustomPdfViewer] Error fetching PDF:', err);
+                setError(formatPdfFetchError(err));
                 setLoading(false);
             }
         };
 
         fetchPdf();
-    }, [pdfUrl]);
+
+        return () => {
+            cancelled = true;
+        };
+    }, [pdfUrl, isAcknowledgmentMode]);
+
+    const handleCloseViewer = useCallback(() => {
+        revokePdfBlobUrl(pdfBlobUrlRef.current);
+        pdfBlobUrlRef.current = null;
+        onClose?.();
+    }, [onClose]);
 
     // Minimum reading timer — starts when the policy document first renders
     useEffect(() => {
@@ -130,12 +185,12 @@ const CustomPdfViewer = ({
         if (!dismissable) return undefined;
 
         const handleEscKey = (event) => {
-            if (event.key === 'Escape') onClose();
+            if (event.key === 'Escape') handleCloseViewer();
         };
 
         document.addEventListener('keydown', handleEscKey);
         return () => document.removeEventListener('keydown', handleEscKey);
-    }, [onClose, dismissable]);
+    }, [handleCloseViewer, dismissable]);
 
     useEffect(() => {
         if (modalRef.current) {
@@ -212,7 +267,7 @@ const CustomPdfViewer = ({
 
     const handleBackdropClick = (e) => {
         if (dismissable && e.target === e.currentTarget) {
-            onClose();
+            handleCloseViewer();
         }
     };
 
@@ -264,7 +319,7 @@ const CustomPdfViewer = ({
                         {dismissable && (
                             <button
                                 className="pdf-viewer-close"
-                                onClick={onClose}
+                                onClick={handleCloseViewer}
                                 aria-label="Close PDF viewer"
                                 title="Close (ESC)"
                             >
@@ -273,6 +328,7 @@ const CustomPdfViewer = ({
                         )}
                     </div>
 
+                    {!useNativePdfIframe && (
                     <div className="pdf-viewer-toolbar">
                         <div className="pdf-toolbar-section">
                             <button
@@ -333,6 +389,7 @@ const CustomPdfViewer = ({
                             </button>
                         </div>
                     </div>
+                    )}
 
                     <div className={`pdf-viewer-body${isAcknowledgmentMode ? ' pdf-viewer-body-onboarding' : ''}`}>
                     <div
@@ -357,7 +414,15 @@ const CustomPdfViewer = ({
                             </div>
                         )}
 
-                        {!error && pdfBlob && (
+                        {!error && pdfSrc && useNativePdfIframe && (
+                            <iframe
+                                className="pdf-native-iframe"
+                                src={pdfSrc}
+                                title={title || 'PDF document'}
+                            />
+                        )}
+
+                        {!error && pdfSrc && !useNativePdfIframe && (
                             <Suspense fallback={
                                 <div className="pdf-loading">
                                     <div className="pdf-spinner" />
@@ -365,11 +430,13 @@ const CustomPdfViewer = ({
                                 </div>
                             }>
                             <PdfDocument
-                                file={pdfBlob}
+                                key={pdfSrc}
+                                file={pdfSrc}
                                 onLoadSuccess={onDocumentLoadSuccess}
                                 onLoadError={onDocumentLoadError}
                                 loading=""
                                 error=""
+                                options={getReactPdfDocumentOptions()}
                             >
                                 {Array.from(new Array(numPages), (_, index) => (
                                     <div

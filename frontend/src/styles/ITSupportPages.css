@@ -1,0 +1,180 @@
+/* frontend/src/styles/ITSupportPages.css */
+/* Shared styles for ITSupportPage and AdminITSupportPage */
+
+.it-support-page {
+  width: 100%;
+  min-height: 100vh;
+  background: #f5f6fb;
+  padding: clamp(16px, 1.5vw, 24px);
+  box-sizing: border-box;
+}
+
+/* ── Tabs Container ─────────────────────────────────────────── */
+.it-tabs-container {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.06);
+  margin-bottom: 1.5rem;
+  border: 1px solid #e9ecef;
+}
+
+.it-tabs {
+  padding: 0 8px;
+}
+
+.it-tab {
+  min-height: 56px;
+  text-transform: none;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.it-tab.Mui-selected {
+  color: #3498db;
+  font-weight: 600;
+}
+
+.it-tab:hover {
+  background: rgba(52, 152, 219, 0.04);
+}
+
+.it-tabs .MuiTabs-indicator {
+  height: 3px;
+  background: linear-gradient(90deg, #3498db 0%, #2980b9 100%);
+  border-radius: 3px 3px 0 0;
+}
+
+/* ── Filters Toolbar ─────────────────────────────────────────── */
+.it-filters-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.06);
+  margin-bottom: 1.5rem;
+  border: 1px solid #e9ecef;
+}
+
+.it-search-field,
+.it-filter-select {
+  flex: 1;
+  min-width: 200px;
+}
+
+.it-search-field .MuiOutlinedInput-root,
+.it-filter-select .MuiOutlinedInput-root {
+  border-radius: 10px;
+  background: #fafbfc;
+  transition: all 0.2s ease;
+}
+
+.it-search-field .MuiOutlinedInput-root:hover,
+.it-filter-select .MuiOutlinedInput-root:hover {
+  background: #fff;
+}
+
+.it-search-field .MuiOutlinedInput-root.Mui-focused,
+.it-filter-select .MuiOutlinedInput-root.Mui-focused {
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.it-refresh-btn {
+  color: #64748b;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.it-refresh-btn:hover {
+  background: #f8fafc;
+  border-color: #3498db;
+  color: #3498db;
+}
+
+/* ── Statistics Cards ─────────────────────────────────────────── */
+.it-stats-grid {
+  margin-bottom: 1.5rem;
+}
+
+/* ── Tickets Grid ─────────────────────────────────────────── */
+.it-tickets-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin-bottom: 2rem;
+}
+
+/* ── Empty State ─────────────────────────────────────────── */
+.it-empty-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.06);
+}
+
+.it-empty-state-icon {
+  font-size: 64px !important;
+  color: #94a3b8;
+  margin-bottom: 16px;
+}
+
+.it-empty-state-title {
+  color: #64748b;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.it-empty-state-subtitle {
+  color: #94a3b8;
+}
+
+/* ── Loading State ─────────────────────────────────────────── */
+.it-loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem 1rem;
+}
+
+.it-loading-container .MuiCircularProgress-root {
+  color: #3498db;
+}
+
+/* ── Responsive Design ─────────────────────────────────────────── */
+@media (max-width: 960px) {
+  .it-filters-toolbar {
+    padding: 12px;
+  }
+
+  .it-tickets-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .it-support-page {
+    padding: 12px;
+  }
+
+  .it-filters-toolbar {
+    flex-direction: column;
+  }
+
+  .it-search-field,
+  .it-filter-select {
+    width: 100%;
+    min-width: 100%;
+  }
+
+  .it-tickets-grid {
+    grid-template-columns: 1fr;
+  }
+}

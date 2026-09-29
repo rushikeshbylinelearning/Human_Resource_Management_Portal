@@ -506,3 +506,25 @@
   level: 'error',
   timestamp: '2026-09-10 17:46:30'
 }
+{
+  service: 'attendance-system',
+  message: 'Application Error getIO is not a function',
+  stack: 'TypeError: getIO is not a function\n' +
+    '    at D:\\Zip 4\\attendance-system\\backend\\routes\\manage.js:646:20\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)',
+  operation: 'update_dashboard_access',
+  userId: '687f797fcac0a473f5b46e07',
+  level: 'error',
+  timestamp: '2026-09-29 14:56:03'
+}
+{
+  service: 'attendance-system',
+  message: 'Application Error getIO is not a function',
+  stack: 'TypeError: getIO is not a function\n' +
+    '    at D:\\Zip 4\\attendance-system\\backend\\routes\\manage.js:646:20\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)',
+  operation: 'update_dashboard_access',
+  userId: '687f797fcac0a473f5b46e07',
+  level: 'error',
+  timestamp: '2026-09-29 14:56:29'
+}

@@ -6,9 +6,9 @@ import socket from '../socket';
 import ProfileMain from '../components/Profile/ProfileMain';
 import ProfilePolicies from '../components/Profile/ProfilePolicies';
 import ProfileSidebar from '../components/Profile/ProfileSidebar';
-import { lazyWithRetry } from '../utils/lazyWithRetry';
 import ProfileCompletionBanner from '../components/onboarding/ProfileCompletionBanner';
 import { useOnboarding } from '../context/OnboardingContext';
+import { lazyWithRetry } from '../utils/lazyWithRetry';
 import '../styles/ProfilePage.css';
 
 const CustomPdfViewer = lazyWithRetry(() => import('../components/CustomPdfViewer'));
@@ -151,7 +151,7 @@ const ProfilePage = () => {
         };
         
         loadInitialData();
-    }, []); // Only run once on mount
+    }, [user?.id, user?._id]); // Load when auth user becomes available
 
     // Listen for profile updates via Socket.IO
     useEffect(() => {
@@ -298,6 +298,23 @@ const ProfilePage = () => {
     }, []);
 
     const handlePolicyClick = useCallback((policy) => {
+        if (policy?.fileMissing) {
+            setSnackbar({
+                open: true,
+                severity: 'info',
+                message: 'This policy PDF is missing from storage. Ask HR to re-upload it from Admin → Policies.',
+            });
+            return;
+        }
+        const hasPdf = policy?.fileId && policy?.sourceKind !== 'consent_template';
+        if (!hasPdf) {
+            setSnackbar({
+                open: true,
+                severity: 'info',
+                message: 'This policy has no PDF attached yet. Contact HR if you need a copy.',
+            });
+            return;
+        }
         setSelectedPolicy(policy);
         setPolicyModalOpen(true);
     }, []);

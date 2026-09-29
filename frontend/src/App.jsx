@@ -54,6 +54,7 @@ const ProbationPage = lazy(() => import('./pages/ProbationPage'));
 const RequestsPage = lazy(() => import('./pages/RequestsPage'));
 const AdminRequestsPage = lazy(() => import('./pages/AdminRequestsPage'));
 const HolidayManagementPage = lazy(() => import('./pages/admin/HolidayManagementPage'));
+const OperationalDashboardPage = lazy(() => import('./pages/OperationalDashboardPage'));
 
 const ProfilePageSkeleton = lazy(() => import('./components/Profile/ProfilePageSkeleton'));
 
@@ -283,6 +284,26 @@ function App() {
                                             </Suspense>
                                         } />
                                         
+                                        <Route path="/it-support/manage" element={<Navigate to="/operational-dashboard?tab=it" replace />} />
+                                        <Route path="/it-support" element={<Navigate to="/requests" replace />} />
+
+                                        <Route path="/operational-dashboard" element={
+                                            <Suspense fallback={<DelayedFallback><PageLoader /></DelayedFallback>}>
+                                                <PermissionProtectedRoute requiredPermission="operationalDashboard">
+                                                    <OperationalDashboardPage />
+                                                </PermissionProtectedRoute>
+                                            </Suspense>
+                                        } />
+
+                                        <Route path="/resources/hr" element={<Navigate to="/operational-dashboard?tab=hr" replace />} />
+                                        <Route path="/resources/it" element={<Navigate to="/operational-dashboard?tab=it" replace />} />
+
+                                        {/* Legacy redirects */}
+                                        <Route path="/dashboard/hr" element={<Navigate to="/operational-dashboard" replace />} />
+                                        <Route path="/dashboard/it" element={<Navigate to="/operational-dashboard" replace />} />
+                                        <Route path="/logs" element={<Navigate to="/operational-dashboard" replace />} />
+                                        <Route path="/activity-log" element={<Navigate to="/operational-dashboard" replace />} />
+                                        
                                         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
                                         <Route path="/admin/dashboard" element={
                                             <Suspense fallback={<DelayedFallback><PageLoader /></DelayedFallback>}>
@@ -319,11 +340,7 @@ function App() {
                                                 </PermissionProtectedRoute>
                                             </Suspense>
                                         } />
-                                        <Route path="/activity-log" element={
-                                            <Suspense fallback={<DelayedFallback><PageLoader /></DelayedFallback>}>
-                                                <NewActivityLogPage />
-                                            </Suspense>
-                                        } />
+                                        <Route path="/activity-log" element={<Navigate to="/operational-dashboard" replace />} />
                                         <Route path="/admin/attendance-summary" element={
                                             <Suspense fallback={<DelayedFallback><PageLoader /></DelayedFallback>}>
                                                 <AdminAttendanceSummaryPage />

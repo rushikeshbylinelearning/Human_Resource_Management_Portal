@@ -25,7 +25,8 @@ import {
   Schedule as ScheduleIcon,
   NotificationsActive as NotificationsActiveIcon,
   SupportAgent as SupportAgentIcon,
-  EventNote as EventNoteIcon
+  EventNote as EventNoteIcon,
+  Dashboard as DashboardIcon
 } from '@mui/icons-material';
 import api from '../api/axios';
 import '../styles/ManageSectionPage.css';
@@ -102,6 +103,7 @@ const ManageSectionPage = () => {
       canViewLiveAttendance: false,
       canManageResourceRequests: false,
       canManageHRQueries: false,
+      canManageITSupport: false,
       canManageBulkAttendanceActions: false,
       privilegeLevel: 'normal',
       restrictedFeatures: {
@@ -325,8 +327,8 @@ const privilegeOptions = useMemo(() => {
     [users]
   );
 
-  const resourceRequestsEnabledCount = useMemo(
-    () => users.filter((user) => user.featurePermissions?.canManageResourceRequests).length,
+  const itTicketEnabledCount = useMemo(
+    () => users.filter((user) => user.featurePermissions?.canManageITSupport).length,
     [users]
   );
 
@@ -529,6 +531,7 @@ const privilegeOptions = useMemo(() => {
       canViewLiveAttendance: false,
       canManageResourceRequests: false,
       canManageHRQueries: false,
+      canManageITSupport: false,
       canManageBulkAttendanceActions: false,
       privilegeLevel: 'normal',
       // Merge existing values from featurePermissions while adding defaults
@@ -1259,15 +1262,15 @@ const privilegeOptions = useMemo(() => {
                 }}>
                   <Box>
                     <Typography variant="body2" sx={{ fontWeight: 500, color: '#111827', fontSize: '13px' }}>
-                      Can Manage Resource Requests
+                      HR Query Access
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '11px' }}>
-                      Review and update employee stationery, IT, and workplace resource requests
+                      Operational Dashboard (HR) and HR Query FAB for receiving and managing HR Queries
                     </Typography>
                   </Box>
                   <Switch
-                    checked={safeFeaturePermissions.canManageResourceRequests}
-                    onChange={(e) => handlePermissionChange(currentUser._id, 'canManageResourceRequests', e.target.checked)}
+                    checked={safeFeaturePermissions.canManageHRQueries}
+                    onChange={(e) => handlePermissionChange(currentUser._id, 'canManageHRQueries', e.target.checked)}
                     sx={{
                       '& .MuiSwitch-switchBase.Mui-checked': {
                         color: '#4F46E5',
@@ -1288,15 +1291,15 @@ const privilegeOptions = useMemo(() => {
                 }}>
                   <Box>
                     <Typography variant="body2" sx={{ fontWeight: 500, color: '#111827', fontSize: '13px' }}>
-                      Can Manage HR Queries
+                      IT Ticket Access
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '11px' }}>
-                      View, respond to, and manage employee HR queries and resource requests
+                      Operational Dashboard (IT) and IT Ticket FAB for receiving and managing IT Tickets
                     </Typography>
                   </Box>
                   <Switch
-                    checked={safeFeaturePermissions.canManageHRQueries}
-                    onChange={(e) => handlePermissionChange(currentUser._id, 'canManageHRQueries', e.target.checked)}
+                    checked={safeFeaturePermissions.canManageITSupport}
+                    onChange={(e) => handlePermissionChange(currentUser._id, 'canManageITSupport', e.target.checked)}
                     sx={{
                       '& .MuiSwitch-switchBase.Mui-checked': {
                         color: '#4F46E5',
@@ -2151,10 +2154,10 @@ const privilegeOptions = useMemo(() => {
             icon: <SupportAgentIcon />,
           },
           {
-            label: 'Resource Requests',
-            value: resourceRequestsEnabledCount,
-            helper: 'Delegated request managers',
-            icon: <Inventory2Icon />,
+            label: 'IT Tickets',
+            value: itTicketEnabledCount,
+            helper: 'Delegated IT ticket managers',
+            icon: <SupportAgentIcon />,
           },
           {
             label: 'Bulk Attendance',
@@ -3350,17 +3353,17 @@ const privilegeOptions = useMemo(() => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
                   <Box>
                     <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a1a2e', fontSize: '0.875rem' }}>
-                      Can Manage Resource Requests
+                      HR Query Access
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '0.75rem', mt: 0.3, display: 'block' }}>
-                      Review and update employee resource requests (no delete access)
+                      Operational Dashboard (HR) and HR Query FAB
                     </Typography>
                   </Box>
                   <Switch
-                    checked={bulkSettings.featurePermissions.canManageResourceRequests}
+                    checked={bulkSettings.featurePermissions.canManageHRQueries}
                     onChange={(e) => setBulkSettings(prev => ({
                       ...prev,
-                      featurePermissions: { ...prev.featurePermissions, canManageResourceRequests: e.target.checked }
+                      featurePermissions: { ...prev.featurePermissions, canManageHRQueries: e.target.checked }
                     }))}
                     sx={{
                       width: 52,
@@ -3399,17 +3402,17 @@ const privilegeOptions = useMemo(() => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
                   <Box>
                     <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a1a2e', fontSize: '0.875rem' }}>
-                      Can Manage HR Queries
+                      IT Ticket Access
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '0.75rem', mt: 0.3, display: 'block' }}>
-                      View, respond to, and manage employee HR queries
+                      Operational Dashboard (IT) and IT Ticket FAB
                     </Typography>
                   </Box>
                   <Switch
-                    checked={bulkSettings.featurePermissions.canManageHRQueries}
+                    checked={bulkSettings.featurePermissions.canManageITSupport}
                     onChange={(e) => setBulkSettings(prev => ({
                       ...prev,
-                      featurePermissions: { ...prev.featurePermissions, canManageHRQueries: e.target.checked }
+                      featurePermissions: { ...prev.featurePermissions, canManageITSupport: e.target.checked }
                     }))}
                     sx={{
                       width: 52,

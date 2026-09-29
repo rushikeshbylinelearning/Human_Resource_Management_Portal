@@ -2,7 +2,18 @@ import { memo, useState, useEffect, useCallback, useRef, Suspense } from 'react'
 import { createPortal } from 'react-dom';
 import { PdfDocument, PdfPage } from '../lazy/LazyPdfComponents';
 import api from '../../api/axios';
+import { createPdfBlobUrl, getReactPdfDocumentOptions, revokePdfBlobUrl } from '../../utils/pdfjsConfig';
 import '../../styles/CustomPdfViewer.css';
+
+const parseBlobError = async (blob) => {
+    try {
+        const text = await blob.text();
+        const parsed = JSON.parse(text);
+        return parsed.error || parsed.message || null;
+    } catch {
+        return null;
+    }
+};
 
 const MIN_READ_SECONDS = 60;
 
@@ -22,7 +33,7 @@ const DocumentCenterModal = memo(({
     hasPersonalEmail = false,
 }) => {
     const [selectedId, setSelectedId] = useState(null);
-    const [pdfBlob, setPdfBlob] = useState(null);
+    const [pdfSrc, setPdfSrc] = useState(null);
     const [pdfLoading, setPdfLoading] = useState(false);
     const [pdfError, setPdfError] = useState(null);
     const [numPages, setNumPages] = useState(null);
@@ -41,6 +52,7 @@ const DocumentCenterModal = memo(({
     const contentRef = useRef(null);
     const readingStartRef = useRef(null);
     const readingStartNotifiedRef = useRef(false);
+    const pdfBlobUrlRef = useRef(null);
 
     const visibleDocs = documents.filter((d) => d.fileRef);
     const selectedDoc = visibleDocs.find((d) => d._id === selectedId) || null;
@@ -63,16 +75,22 @@ const DocumentCenterModal = memo(({
         return atBottom;
     }, [numPages]);
 
+    const handleClose = useCallback(() => {
+        revokePdfBlobUrl(pdfBlobUrlRef.current);
+        pdfBlobUrlRef.current = null;
+        onClose();
+    }, [onClose]);
+
     useEffect(() => {
         if (!open) return undefined;
-        const onKey = (e) => { if (e.key === 'Escape') onClose(); };
+        const onKey = (e) => { if (e.key === 'Escape') handleClose(); };
         document.addEventListener('keydown', onKey);
         document.body.style.overflow = 'hidden';
         return () => {
             document.removeEventListener('keydown', onKey);
             document.body.style.overflow = '';
         };
-    }, [open, onClose]);
+    }, [open, handleClose]);
 
     useEffect(() => {
         if (!open) return;
@@ -90,9 +108,11 @@ const DocumentCenterModal = memo(({
     }, [open, initialDocumentId, documents]);
 
     useEffect(() => {
-        if (!open || !selectedId) return;
+        if (!open || !selectedId) return undefined;
 
-        setPdfBlob(null);
+        setPdfSrc(null);
+        revokePdfBlobUrl(pdfBlobUrlRef.current);
+        pdfBlobUrlRef.current = null;
         setPdfError(null);
         setNumPages(null);
         setAcknowledged(false);
@@ -102,21 +122,53 @@ const DocumentCenterModal = memo(({
         readingStartNotifiedRef.current = false;
         readingStartRef.current = null;
 
+        let cancelled = false;
+
         const load = async () => {
             setPdfLoading(true);
             try {
                 await api.post(`/employee-documents/${selectedId}/view`);
                 const response = await api.get(`/employee-documents/${selectedId}/file`, { responseType: 'blob' });
-                setPdfBlob(response.data);
+                if (cancelled) return;
+                const contentType = response.headers['content-type'] || '';
+                if (!contentType.includes('pdf') && response.data?.type && !response.data.type.includes('pdf')) {
+                    const apiMsg = await parseBlobError(response.data);
+                    throw new Error(apiMsg || 'Document file is not available.');
+                }
+                const buffer = await response.data.arrayBuffer();
+                revokePdfBlobUrl(pdfBlobUrlRef.current);
+                const blobUrl = createPdfBlobUrl(buffer);
+                pdfBlobUrlRef.current = blobUrl;
+                setPdfSrc(blobUrl);
             } catch (err) {
-                setPdfError(err.response?.data?.error || 'Failed to load document.');
+                if (cancelled) return;
+                let message = 'Failed to load document.';
+                if (err.response?.data instanceof Blob) {
+                    message = (await parseBlobError(err.response.data)) || message;
+                } else if (err.response?.data?.error) {
+                    message = err.response.data.error;
+                } else if (err.message) {
+                    message = err.message;
+                }
+                setPdfError(message);
             } finally {
-                setPdfLoading(false);
+                if (!cancelled) setPdfLoading(false);
             }
         };
 
         load();
+
+        return () => {
+            cancelled = true;
+        };
     }, [open, selectedId]);
+
+    useEffect(() => {
+        if (open) return undefined;
+        revokePdfBlobUrl(pdfBlobUrlRef.current);
+        pdfBlobUrlRef.current = null;
+        setPdfSrc(null);
+    }, [open]);
 
     useEffect(() => {
         if (!needsAck || !numPages) return undefined;
@@ -145,7 +197,7 @@ const DocumentCenterModal = memo(({
         el.addEventListener('scroll', onScroll);
         onScroll();
         return () => el.removeEventListener('scroll', onScroll);
-    }, [needsAck, numPages, pdfBlob, checkReachedEnd]);
+    }, [needsAck, numPages, pdfSrc, checkReachedEnd]);
 
     const handleDownload = async (doc, e) => {
         e?.stopPropagation();
@@ -208,7 +260,7 @@ const DocumentCenterModal = memo(({
     const timerRemaining = Math.max(0, MIN_READ_SECONDS - readingSeconds);
 
     const modal = createPortal(
-        <div className="doc-center-overlay" onClick={onClose} role="presentation">
+        <div className="doc-center-overlay" onClick={handleClose} role="presentation">
             <div
                 className="doc-center-modal doc-center-modal-split"
                 onClick={(e) => e.stopPropagation()}
@@ -223,7 +275,7 @@ const DocumentCenterModal = memo(({
                             {visibleDocs.length} document{visibleDocs.length !== 1 ? 's' : ''} assigned to you
                         </p>
                     </div>
-                    <button type="button" className="doc-center-close" onClick={onClose} aria-label="Close">
+                    <button type="button" className="doc-center-close" onClick={handleClose} aria-label="Close">
                         ×
                     </button>
                 </header>
@@ -308,7 +360,7 @@ const DocumentCenterModal = memo(({
                                                             No personal email —{' '}
                                                             <a
                                                                 href="#contact"
-                                                                onClick={(e) => { e.stopPropagation(); onClose(); }}
+                                                                onClick={(e) => { e.stopPropagation(); handleClose(); }}
                                                                 className="doc-center-btn-forward-hint-link"
                                                             >
                                                                 add one in your profile
@@ -347,7 +399,7 @@ const DocumentCenterModal = memo(({
                                         {pdfError && (
                                             <div className="doc-center-preview-error">{pdfError}</div>
                                         )}
-                                        {!pdfLoading && !pdfError && pdfBlob && (
+                                        {!pdfLoading && !pdfError && pdfSrc && (
                                             <Suspense fallback={
                                                 <div className="doc-center-preview-loading">
                                                     <div className="pdf-spinner" />
@@ -355,10 +407,12 @@ const DocumentCenterModal = memo(({
                                                 </div>
                                             }>
                                             <PdfDocument
-                                                file={pdfBlob}
+                                                key={pdfSrc}
+                                                file={pdfSrc}
                                                 onLoadSuccess={({ numPages: pages }) => setNumPages(pages)}
                                                 onLoadError={() => setPdfError('Failed to render PDF.')}
                                                 loading=""
+                                                options={getReactPdfDocumentOptions()}
                                             >
                                                 {Array.from(new Array(numPages), (_, i) => (
                                                     <div key={`p_${i + 1}`} className="doc-center-pdf-page">

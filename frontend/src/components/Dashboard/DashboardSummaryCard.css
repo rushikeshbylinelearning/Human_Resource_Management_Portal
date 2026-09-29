@@ -1,0 +1,102 @@
+/* frontend/src/components/Dashboard/DashboardSummaryCard.css */
+
+.dashboard-summary-card {
+  height: 100%;
+  border-radius: 12px !important;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 8px rgba(44, 62, 80, 0.06) !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.dashboard-summary-card:hover {
+  box-shadow: 0 4px 16px rgba(44, 62, 80, 0.1) !important;
+  transform: translateY(-2px);
+  border-color: #d1d5db;
+}
+
+.dashboard-summary-card--clickable {
+  cursor: pointer;
+}
+
+.dashboard-summary-card--clickable:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(44, 62, 80, 0.12) !important;
+}
+
+.dashboard-summary-card--clickable:active {
+  transform: translateY(-1px);
+}
+
+.dashboard-summary-card__content {
+  padding: 18px 20px !important;
+  height: 100%;
+}
+
+.dashboard-summary-card__main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  height: 100%;
+}
+
+.dashboard-summary-card__text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.dashboard-summary-card__title {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #94a3b8 !important;
+  margin-bottom: 8px !important;
+}
+
+.dashboard-summary-card__value {
+  font-size: 1.75rem !important;
+  font-weight: 700 !important;
+  color: #2c3e50 !important;
+  line-height: 1.2 !important;
+  margin-bottom: 4px !important;
+}
+
+.dashboard-summary-card__subtitle {
+  font-size: 0.75rem !important;
+  color: #64748b !important;
+  font-weight: 500 !important;
+}
+
+.dashboard-summary-card__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 12px;
+  transition: all 0.2s ease;
+}
+
+.dashboard-summary-card:hover .dashboard-summary-card__icon {
+  transform: scale(1.05);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .dashboard-summary-card__value {
+    font-size: 1.5rem !important;
+  }
+
+  .dashboard-summary-card__icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .dashboard-summary-card__icon svg {
+    font-size: 24px !important;
+  }
+}

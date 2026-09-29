@@ -1,8 +1,6 @@
-import { memo, useState, useEffect, Suspense } from 'react';
+import { memo, useState, useEffect } from 'react';
 import HRQueryChat from '../HRQueryChat';
-import { lazyWithRetry } from '../../utils/lazyWithRetry';
-
-const DocumentCenterModal = lazyWithRetry(() => import('./DocumentCenterModal'));
+import DocumentCenterModal from './DocumentCenterModal';
 
 const ProfilePolicies = memo(({
     policies,
@@ -49,13 +47,11 @@ const ProfilePolicies = memo(({
                         <p className="policies-empty">No policies available</p>
                     ) : (
                         policies.map((policy) => (
-                            <div
+                            <button
+                                type="button"
                                 key={policy._id}
                                 className="policy-item"
                                 onClick={() => onPolicyClick(policy)}
-                                role="button"
-                                tabIndex={0}
-                                onKeyDown={(e) => e.key === 'Enter' && onPolicyClick(policy)}
                             >
                                 <div className="policy-icon">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -66,8 +62,14 @@ const ProfilePolicies = memo(({
                                 <div className="policy-content">
                                     <div className="policy-header">
                                         <span className="policy-name">{policy.name}</span>
-                                        <span className={`policy-status ${policy.status === 'Active' ? 'status-active' : 'status-archived'}`}>
-                                            {policy.status}
+                                        <span className={`policy-status ${
+                                            policy.fileMissing
+                                                ? 'status-file-missing'
+                                                : policy.status === 'Active'
+                                                    ? 'status-active'
+                                                    : 'status-archived'
+                                        }`}>
+                                            {policy.fileMissing ? 'File missing' : policy.status}
                                         </span>
                                     </div>
                                     <div className="policy-meta">
@@ -76,7 +78,7 @@ const ProfilePolicies = memo(({
                                         <span className="policy-date">Effective {formatDate(policy.effectiveFrom)}</span>
                                     </div>
                                 </div>
-                            </div>
+                            </button>
                         ))
                     )}
                 </div>
@@ -112,16 +114,14 @@ const ProfilePolicies = memo(({
                 </button>
             </div>
 
-            <Suspense fallback={null}>
-                <DocumentCenterModal
-                    open={centerOpen}
-                    onClose={handleCloseCenter}
-                    documents={documents}
-                    initialDocumentId={initialDocumentId}
-                    onDocumentsUpdated={onDocumentsUpdated}
-                    hasPersonalEmail={hasPersonalEmail}
-                />
-            </Suspense>
+            <DocumentCenterModal
+                open={centerOpen}
+                onClose={handleCloseCenter}
+                documents={documents}
+                initialDocumentId={initialDocumentId}
+                onDocumentsUpdated={onDocumentsUpdated}
+                hasPersonalEmail={hasPersonalEmail}
+            />
 
             {/* HR Query Chat */}
             <div className="policies-section">

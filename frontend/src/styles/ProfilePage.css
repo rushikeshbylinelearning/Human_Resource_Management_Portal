@@ -925,6 +925,7 @@
     max-width: 296px;
     box-sizing: border-box;
     overflow: hidden;
+    z-index: 2;
 }
 
 .profile-policies::before {
@@ -999,6 +1000,12 @@
     cursor: pointer;
     transition: all 0.18s ease;
     background: var(--bg-white);
+    width: 100%;
+    box-sizing: border-box;
+    font-family: inherit;
+    text-align: left;
+    appearance: none;
+    -webkit-appearance: none;
 }
 
 .policy-item:hover {
@@ -1050,6 +1057,7 @@
 
 .status-active   { background: #DCFCE7; color: #15803D; }
 .status-archived { background: var(--border-light); color: var(--text-muted); }
+.status-file-missing { background: #FEE2E2; color: #B91C1C; }
 
 .policy-meta {
     display: flex;

@@ -187,6 +187,9 @@ const userSchema = new mongoose.Schema({
 
     // Bulk attendance actions on admin summary (live refresh, end breaks)
     canManageBulkAttendanceActions: { type: Boolean, default: false },
+
+    // IT Support ticket management (delegated IT staff access)
+    canManageITSupport: { type: Boolean, default: false },
     
     // Privilege levels: 'restricted', 'normal', 'advanced'
     privilegeLevel: { 
@@ -221,6 +224,14 @@ const userSchema = new mongoose.Schema({
 
     // When true, late arrival (beyond grace period) marks the day as half-day. When false, only "late" is recorded, not half-day.
     lateArrivalMarksHalfDay: { type: Boolean, default: false }
+  },
+  
+  // --- DASHBOARD ACCESS CONTROL ---
+  // Controls which dashboards users can access (HR Dashboard, IT Dashboard)
+  // Admin always has access to both (hardcoded in middleware)
+  dashboardAccess: {
+    hr: { type: Boolean, default: false },
+    it: { type: Boolean, default: false }
   }
 }, { timestamps: true });
 

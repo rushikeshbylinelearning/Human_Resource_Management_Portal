@@ -25,6 +25,7 @@ export const usePermissions = () => {
       canManageResourceRequests: false,
       canManageHRQueries: false,
       canManageBulkAttendanceActions: false,
+      canManageITSupport: false,
       privilegeLevel: 'normal',
       restrictedFeatures: {
         canViewReports: false,
@@ -155,6 +156,20 @@ export const usePermissions = () => {
         return true;
       }
       return permissions.canManageHRQueries === true;
+    },
+
+    manageITSupport: () => {
+      if (user?.role === 'Admin') {
+        return true;
+      }
+      return permissions.canManageITSupport === true;
+    },
+
+    operationalDashboard: () => {
+      if (user?.role === 'Admin') {
+        return true;
+      }
+      return permissions.canManageHRQueries === true || permissions.canManageITSupport === true;
     },
   }), [permissions, user?.role, user?.leavesSectionEnabled]);
 

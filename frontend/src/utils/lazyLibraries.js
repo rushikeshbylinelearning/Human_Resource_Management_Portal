@@ -3,6 +3,11 @@
  * These libraries are only loaded when actually needed, reducing the initial bundle size
  */
 
+import {
+    applyPdfJsWorker,
+    setReactPdfJsVersion,
+} from './pdfjsConfig';
+
 /**
  * Lazy load xlsx library (413 KB)
  * Used for Excel file parsing and generation
@@ -40,10 +45,7 @@ let pdfjsWorkerConfigured = false;
 export async function loadPdfjs() {
     const pdfjs = await import('pdfjs-dist');
     if (!pdfjsWorkerConfigured) {
-        pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-            'pdfjs-dist/build/pdf.worker.min.mjs',
-            import.meta.url
-        ).toString();
+        applyPdfJsWorker(pdfjs);
         pdfjsWorkerConfigured = true;
     }
     return pdfjs;
@@ -61,10 +63,8 @@ export async function loadReactPdf() {
         import('react-pdf/dist/Page/TextLayer.css'),
     ]);
     if (!reactPdfConfigured) {
-        mod.pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-            'pdfjs-dist/build/pdf.worker.min.mjs',
-            import.meta.url
-        ).toString();
+        setReactPdfJsVersion(mod.pdfjs.version);
+        applyPdfJsWorker(mod.pdfjs);
         reactPdfConfigured = true;
     }
     return mod;

@@ -54,6 +54,7 @@ require('./models/EmployeeDocument');
 require('./models/DocumentTemplate');
 require('./models/EmployeeKycDocument');
 require('./models/HRQuery');
+require('./models/ITSupportTicket');
 
 // Route Imports
 const authRoutes = require('./routes/auth');
@@ -77,6 +78,8 @@ const analyticsRoutes = require('./routes/analytics');
 const leaveYearRoutes = require('./routes/leaveYearRoutes');
 const holidayRoutes = require('./routes/holidayRoutes');
 const datasetRoutes = require('./routes/datasetRoutes');
+const itSupportRoutes = require('./routes/itSupport');
+const logsRoutes = require('./routes/logs');
 
 const User = require('./models/User');
 
@@ -263,6 +266,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/new-notifications', newNotificationRoutes);
 app.use('/api/resource-requests', resourceRequestRoutes);
+app.use('/api/it-support', itSupportRoutes);
+app.use('/api/logs', logsRoutes);
 app.use('/api/admin/employees', employeeRoutes);
 app.use('/api/admin/shifts', authenticateToken, isAdminOrHr, shiftRoutes); // F-HIGH-003: auth at router level
 app.use('/api/admin/settings', settingsRoutes);

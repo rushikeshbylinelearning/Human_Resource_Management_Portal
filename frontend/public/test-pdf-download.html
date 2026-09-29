@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Download Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            cursor: pointer;
+            background: #0e639c;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #1177bb;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 15px;
+            background: #252526;
+            border: 1px solid #3e3e42;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-size: 12px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .success { color: #4ec9b0; }
+        .error { color: #f48771; }
+        .warning { color: #ce9178; }
+        .info { color: #9cdcfe; }
+    </style>
+</head>
+<body>
+    <h1>PDF Response Debugger</h1>
+    <p>Policy ID: <span class="info">69a17e9ede6e118491c4be0e</span></p>
+    
+    <div>
+        <button onclick="testPdfDownload()">Test PDF Download</button>
+        <button onclick="testPdfWithAuth()">Test with Auth Header</button>
+        <button onclick="clearOutput()">Clear Output</button>
+    </div>
+    
+    <div id="output"></div>
+
+    <script>
+        const output = document.getElementById('output');
+        const policyId = '69a17e9ede6e118491c4be0e';
+        const pdfUrl = `/api/policies-gridfs/${policyId}/file`;
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = type;
+            line.textContent = `[${timestamp}] ${message}`;
+            output.appendChild(line);
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            output.innerHTML = '';
+        }
+
+        async function testPdfDownload() {
+            clearOutput();
+            log('Starting PDF download test...', 'info');
+            log(`URL: ${pdfUrl}`, 'info');
+            
+            try {
+                // Get auth token from sessionStorage (like the app does)
+                const token = sessionStorage.getItem('ams_token') || sessionStorage.getItem('token');
+                log(`Auth token ${token ? 'FOUND' : 'NOT FOUND'}`, token ? 'success' : 'error');
+                
+                if (!token) {
+                    log('⚠️ No auth token! You need to login first.', 'warning');
+                    log('Go to: http://localhost:5173/login', 'info');
+                    return;
+                }
+                
+                log('Sending request...', 'info');
+                const response = await fetch(pdfUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                log(`Response status: ${response.status} ${response.statusText}`, 
+                    response.ok ? 'success' : 'error');
+                
+                // Log all response headers
+                log('Response Headers:', 'info');
+                for (const [key, value] of response.headers.entries()) {
+                    log(`  ${key}: ${value}`, 'info');
+                }
+                
+                // Check content-type
+                const contentType = response.headers.get('content-type');
+                log(`Content-Type: ${contentType}`, 
+                    contentType?.includes('pdf') ? 'success' : 'error');
+                
+                // Check content-length
+                const contentLength = response.headers.get('content-length');
+                log(`Content-Length: ${contentLength} bytes`, 
+                    contentLength > 0 ? 'success' : 'error');
+                
+                // Get the blob
+                const blob = await response.blob();
+                log(`Blob size: ${blob.size} bytes`, blob.size > 0 ? 'success' : 'error');
+                log(`Blob type: ${blob.type}`, 'info');
+                
+                if (blob.size === 0) {
+                    log('❌ ERROR: Blob is empty!', 'error');
+                    log('The response body has no content.', 'error');
+                    return;
+                }
+                
+                // Check if blob matches expected size
+                if (contentLength && parseInt(contentLength) !== blob.size) {
+                    log(`⚠️ WARNING: Size mismatch!`, 'warning');
+                    log(`  Expected: ${contentLength} bytes`, 'warning');
+                    log(`  Received: ${blob.size} bytes`, 'warning');
+                }
+                
+                // Read first bytes to verify it's a PDF
+                const arrayBuffer = await blob.slice(0, 8).arrayBuffer();
+                const bytes = new Uint8Array(arrayBuffer);
+                const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ');
+                const text = String.fromCharCode(...bytes);
+                
+                log(`First 8 bytes (hex): ${hex}`, 'info');
+                log(`First 8 bytes (text): ${text}`, 'info');
+                
+                const isPdf = text.startsWith('%PDF');
+                log(`Is valid PDF: ${isPdf ? '✅ YES' : '❌ NO'}`, isPdf ? 'success' : 'error');
+                
+                if (!isPdf) {
+                    log('❌ ERROR: Response is not a valid PDF!', 'error');
+                    log('The file may be corrupted or the server returned HTML/JSON instead.', 'error');
+                    
+                    // Try to read as text to see what we got
+                    const textBlob = await response.clone().text();
+                    log('First 500 chars of response:', 'info');
+                    log(textBlob.substring(0, 500), 'warning');
+                }
+                
+                if (isPdf && blob.size > 0) {
+                    log('✅ SUCCESS: Valid PDF received!', 'success');
+                    log('You can try downloading it...', 'info');
+                    
+                    // Offer to download
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'test-policy.pdf';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    log('Download triggered!', 'success');
+                }
+                
+            } catch (err) {
+                log(`❌ ERROR: ${err.message}`, 'error');
+                log(`Stack: ${err.stack}`, 'error');
+            }
+        }
+
+        async function testPdfWithAuth() {
+            await testPdfDownload();
+        }
+
+        log('PDF Debugger ready. Click "Test PDF Download" to start.', 'success');
+        log('Make sure you are logged in first!', 'warning');
+    </script>
+</body>
+</html>

@@ -73,6 +73,8 @@ const DEFAULT_FEATURE_PERMISSIONS = {
     canViewAnalytics: false,
     canViewLiveAttendance: false,
     canManageResourceRequests: false,
+    canManageHRQueries: false,
+    canManageITSupport: false,
     canManageBulkAttendanceActions: false,
     privilegeLevel: 'normal',
     restrictedFeatures: {
@@ -256,7 +258,7 @@ router.put('/bulk', [authenticateToken, isAdmin], async (req, res) => {
         // Validate the feature permissions structure (same as single user update)
         const validPermissionKeys = [
             'leaves', 'breaks', 'extraFeatures', 'maxBreaks', 'breakAfterHours',
-            'canCheckIn', 'canCheckOut', 'canTakeBreak', 'canViewAnalytics', 'canViewLiveAttendance', 'canManageResourceRequests', 'canManageHRQueries', 'canManageBulkAttendanceActions', 'privilegeLevel',
+            'canCheckIn', 'canCheckOut', 'canTakeBreak', 'canViewAnalytics', 'canViewLiveAttendance', 'canManageResourceRequests', 'canManageHRQueries', 'canManageITSupport', 'canManageBulkAttendanceActions', 'privilegeLevel',
             'restrictedFeatures', 'advancedFeatures', 'breakWindows',
             'autoBreakOnInactivity', 'inactivityThresholdMinutes', 'lateArrivalMarksHalfDay'
         ];
@@ -394,7 +396,7 @@ router.put('/:userId', [authenticateToken, isAdmin], async (req, res) => {
         // Validate the feature permissions structure
         const validPermissionKeys = [
             'leaves', 'breaks', 'extraFeatures', 'maxBreaks', 'breakAfterHours',
-            'canCheckIn', 'canCheckOut', 'canTakeBreak', 'canViewAnalytics', 'canViewLiveAttendance', 'canManageResourceRequests', 'canManageHRQueries', 'canManageBulkAttendanceActions', 'privilegeLevel',
+            'canCheckIn', 'canCheckOut', 'canTakeBreak', 'canViewAnalytics', 'canViewLiveAttendance', 'canManageResourceRequests', 'canManageHRQueries', 'canManageITSupport', 'canManageBulkAttendanceActions', 'privilegeLevel',
             'restrictedFeatures', 'advancedFeatures', 'breakWindows',
             'autoBreakOnInactivity', 'inactivityThresholdMinutes', 'lateArrivalMarksHalfDay'
         ];

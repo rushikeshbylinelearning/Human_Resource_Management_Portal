@@ -885,3 +885,17 @@
         padding-right: 16px;
     }
 }
+
+.pdf-native-iframe {
+    display: block;
+    width: 100%;
+    height: calc(100vh - 180px);
+    min-height: 480px;
+    border: 0;
+    background: #525659;
+}
+
+.custom-pdf-viewer:not(.onboarding-policy-mode) .pdf-viewer-content:has(.pdf-native-iframe) {
+    overflow: hidden;
+    padding: 0;
+}

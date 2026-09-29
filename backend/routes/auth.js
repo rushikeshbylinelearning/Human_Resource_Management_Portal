@@ -545,6 +545,9 @@ router.get('/me', async (req, res) => {
                 canViewAnalytics: false,
                 canViewLiveAttendance: false,
                 canManageResourceRequests: false,
+                canManageHRQueries: false,
+                canManageITSupport: false,
+                canManageBulkAttendanceActions: false,
                 privilegeLevel: 'normal',
                 restrictedFeatures: {
                     canViewReports: false,

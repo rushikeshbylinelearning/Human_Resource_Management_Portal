@@ -19,6 +19,41 @@ const User = require('../models/User');
 const { getPolicyBucket } = require('../db');
 const mongoose = require('mongoose');
 
+async function annotatePolicyFileAvailability(policies) {
+    if (!policies?.length) return policies;
+
+    const bucket = getPolicyBucket();
+    const fileIds = [
+        ...new Set(
+            policies
+                .filter((p) => p.fileId && p.sourceKind !== 'consent_template')
+                .map((p) => String(p.fileId))
+        ),
+    ];
+
+    const existing = new Set();
+    await Promise.all(
+        fileIds.map(async (id) => {
+            try {
+                const found = await bucket
+                    .find({ _id: new mongoose.Types.ObjectId(id) })
+                    .limit(1)
+                    .toArray();
+                if (found?.length) existing.add(id);
+            } catch (_) {
+                // treat as missing
+            }
+        })
+    );
+
+    return policies.map((p) => {
+        if (!p.fileId || p.sourceKind === 'consent_template') {
+            return { ...p, fileMissing: false };
+        }
+        return { ...p, fileMissing: !existing.has(String(p.fileId)) };
+    });
+}
+
 // Get all policies (accessible by all authenticated users)
 router.get('/', authenticateToken, async (req, res) => {
     try {
@@ -27,7 +62,8 @@ router.get('/', authenticateToken, async (req, res) => {
             .select('-__v')
             .lean();
 
-        res.json({ policies });
+        const enriched = await annotatePolicyFileAvailability(policies);
+        res.json({ policies: enriched });
     } catch (error) {
         console.error('Error fetching policies:', error);
         res.status(500).json({ error: 'Failed to fetch policies' });
@@ -52,8 +88,13 @@ router.get('/active', authenticateToken, async (req, res) => {
 // Stream policy PDF securely from GridFS
 router.get('/:id/file', authenticateToken, async (req, res) => {
     try {
+        console.log('================== PDF REQUEST START ==================');
         console.log('[Policy PDF] Request received for policy:', req.params.id);
         console.log('[Policy PDF] User authenticated:', req.user.email);
+        console.log('[Policy PDF] Request headers:', {
+            accept: req.headers.accept,
+            userAgent: req.headers['user-agent']?.substring(0, 50)
+        });
         
         const policy = await Policy.findById(req.params.id);
         if (!policy) {
@@ -67,38 +108,69 @@ router.get('/:id/file', authenticateToken, async (req, res) => {
         }
         
         const policyBucket = getPolicyBucket();
+        const fileObjectId = new mongoose.Types.ObjectId(policy.fileId);
         
-        // Set security headers
+        // First, verify the file exists in GridFS and get metadata
+        const files = await policyBucket.find({ _id: fileObjectId }).toArray();
+        if (!files || files.length === 0) {
+            console.error('[Policy PDF] File not found in GridFS:', policy.fileId);
+            return res.status(404).json({ error: 'File not found in storage' });
+        }
+        
+        const file = files[0];
+        console.log('[Policy PDF] File found in GridFS:', {
+            id: policy.fileId,
+            length: file.length,
+            filename: file.filename,
+            contentType: file.contentType
+        });
+        
+        // Set proper filename for Content-Disposition
+        const safePolicyName = (policy.name || 'policy').replace(/[^a-zA-Z0-9-_]/g, '_');
+        const filename = `${safePolicyName}_v${policy.version || '1.0'}.pdf`;
+        
+        // Set security and content headers BEFORE streaming
         res.set('Content-Type', 'application/pdf');
-        res.set('Content-Disposition', 'inline');
+        res.set('Content-Disposition', `inline; filename="${filename}"`);
+        res.set('Content-Length', file.length.toString());
+        res.set('Accept-Ranges', 'bytes');
         res.set('Cache-Control', 'private, no-store, no-cache, must-revalidate');
         res.set('Pragma', 'no-cache');
         res.set('Expires', '0');
         res.set('X-Content-Type-Options', 'nosniff');
         res.set('X-Frame-Options', 'SAMEORIGIN');
         
-        // Stream from GridFS
-        const downloadStream = policyBucket.openDownloadStream(
-            new mongoose.Types.ObjectId(policy.fileId)
-        );
+        // Create download stream from GridFS
+        const downloadStream = policyBucket.openDownloadStream(fileObjectId);
         
+        // Handle stream errors
         downloadStream.on('error', (error) => {
             console.error('[Policy PDF] Stream error:', error);
+            // Can't send JSON after headers are sent, just end the response
             if (!res.headersSent) {
-                res.status(404).json({ error: 'File not found in storage' });
+                res.status(500).end();
+            } else {
+                res.end();
             }
         });
         
         downloadStream.on('end', () => {
-            console.log('[Policy PDF] Stream complete for:', policy.name);
+            console.log('[Policy PDF] ✅ Stream complete for:', policy.name);
+            console.log('================== PDF REQUEST END (SUCCESS) ==================');
         });
         
+        // Pipe the stream to response
         downloadStream.pipe(res);
         
     } catch (error) {
+        console.error('================== PDF REQUEST ERROR ==================');
         console.error('[Policy PDF] Error:', error);
+        console.error('[Policy PDF] Stack:', error.stack);
+        console.error('========================================================');
         if (!res.headersSent) {
-            res.status(500).json({ error: 'Failed to load PDF' });
+            res.status(500).json({ error: 'Failed to load PDF', details: error.message });
+        } else {
+            res.end();
         }
     }
 });

@@ -2,43 +2,35 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
     Box,
     Fab,
-    Badge,
     Drawer,
     Typography,
     TextField,
     IconButton,
     Avatar,
-    Divider,
     Paper,
     Chip,
     InputAdornment,
     CircularProgress,
     Tooltip,
-    Button,
-    Select,
-    MenuItem,
-    FormControl,
-    InputLabel,
-    Alert,
 } from '@mui/material';
-import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PersonIcon from '@mui/icons-material/Person';
 import SearchIcon from '@mui/icons-material/Search';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import InventoryIcon from '@mui/icons-material/Inventory';
-import ComputerIcon from '@mui/icons-material/Computer';
-import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
-import api from '../api/axios';
-import { formatISTDate, formatISTDateTime } from '../utils/istTime';
-import useDraggableFab from '../hooks/useDraggableFab';
+import api from '../../api/axios';
+import { formatISTDateTime } from '../../utils/istTime';
+import useDraggableFab from '../../hooks/useDraggableFab';
+import {
+    buildThreadMessages,
+    formatStatusLabel,
+    statusStyleKey,
+    ticketLastActivityAt,
+} from './itTicketThreadUtils';
 import {
     RED, RED_DARK, RED_BG, RED_LIGHT, TEXT, MUTED, BORDER, SURFACE,
-    FONT, SUCCESS_BG, SUCCESS_TEXT, WARN_BG, WARN_TEXT, INFO_BG, INFO_TEXT,
-    fieldSx, primaryBtnSx, iconBoxSx,
-} from '../theme/policiesPageTheme';
+    FONT, fieldSx, primaryBtnSx, iconBoxSx,
+} from '../../theme/policiesPageTheme';
 
 const relativeTime = (value) => {
     const ms = Date.now() - new Date(value).getTime();
@@ -50,24 +42,20 @@ const relativeTime = (value) => {
     if (hours < 24) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
     const days = Math.floor(hours / 24);
     if (days < 7) return `${days} day${days === 1 ? '' : 's'} ago`;
-    return formatISTDate(value, { month: 'short', day: 'numeric' });
+    return formatISTDateTime(value);
 };
 
 const STATUS_COLORS = {
-    open: { bg: WARN_BG, color: WARN_TEXT },
-    'in-progress': { bg: INFO_BG, color: INFO_TEXT },
-    resolved: { bg: SUCCESS_BG, color: SUCCESS_TEXT },
+    open: { bg: '#FEF3C7', color: '#B45309' },
+    'in-progress': { bg: '#DBEAFE', color: '#1D4ED8' },
+    resolved: { bg: '#D1FAE5', color: '#047857' },
     closed: { bg: SURFACE, color: MUTED },
-    pending: { bg: WARN_BG, color: WARN_TEXT },
-    fulfilled: { bg: SUCCESS_BG, color: SUCCESS_TEXT },
-    rejected: { bg: RED_BG, color: RED_DARK },
-    cancelled: { bg: SURFACE, color: MUTED },
+    pending: { bg: '#FEF3C7', color: '#B45309' },
 };
 
-const statusKey = (status) => (status || '').toLowerCase().replace(/\s+/g, '-');
-
 const statusChipSx = (status) => {
-    const s = STATUS_COLORS[statusKey(status)] || STATUS_COLORS.closed;
+    const key = statusStyleKey(status);
+    const s = STATUS_COLORS[key] || STATUS_COLORS.closed;
     return {
         height: 22,
         fontSize: '0.65rem',
@@ -99,97 +87,69 @@ const scrollSx = {
     },
 };
 
-const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
+const ITTicketFloatingChat = ({ defaultOpen = false, onClose }) => {
     const [isOpen, setIsOpen] = useState(defaultOpen);
-    const [queries, setQueries] = useState([]);
-    const [selectedQuery, setSelectedQuery] = useState(null);
+    const [tickets, setTickets] = useState([]);
+    const [selectedTicket, setSelectedTicket] = useState(null);
     const [newMessage, setNewMessage] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(false);
     const [sending, setSending] = useState(false);
-    const [totalUnread, setTotalUnread] = useState(0);
     const messageListRef = useRef(null);
     const { isDragging, wrapClick, dragHandlers, positionSx } = useDraggableFab();
 
     useEffect(() => {
-        if (isOpen) {
-            fetchQueries();
-        }
+        if (isOpen) fetchTickets();
     }, [isOpen]);
 
     useEffect(() => {
-        if (isOpen) {
-            const interval = setInterval(fetchQueries, 30000);
-            return () => clearInterval(interval);
-        }
-    }, [isOpen]);
-
-    useEffect(() => {
-        fetchUnreadCount();
-        const interval = setInterval(fetchUnreadCount, 30000);
+        if (!isOpen) return undefined;
+        const interval = setInterval(fetchTickets, 30000);
         return () => clearInterval(interval);
-    }, []);
+    }, [isOpen]);
 
     useEffect(() => {
         const el = messageListRef.current;
         if (el) el.scrollTop = el.scrollHeight;
-    }, [selectedQuery?._id, selectedQuery?.messages]);
+    }, [selectedTicket?._id, selectedTicket?.messages]);
 
-    const fetchUnreadCount = async () => {
-        try {
-            const response = await api.get('/hr-queries/admin/all');
-            const unreadCount = response.data.reduce((sum, query) => sum + (query.unreadCount || 0), 0);
-            setTotalUnread(unreadCount);
-        } catch (error) {
-            console.error('Failed to fetch unread count:', error);
-        }
-    };
-
-    const fetchQueries = async () => {
+    const fetchTickets = async () => {
         setLoading(true);
         try {
-            const response = await api.get('/hr-queries/admin/all');
-            const sortedQueries = response.data.sort((a, b) =>
-                new Date(b.lastMessageAt) - new Date(a.lastMessageAt)
+            const { data } = await api.get('/it-support/tickets', { params: { limit: 100, page: 1 } });
+            const sorted = (data.tickets || []).sort(
+                (a, b) => new Date(ticketLastActivityAt(b)) - new Date(ticketLastActivityAt(a))
             );
-            setQueries(sortedQueries);
-
-            const unreadCount = sortedQueries.reduce((sum, query) => sum + (query.unreadCount || 0), 0);
-            setTotalUnread(unreadCount);
+            setTickets(sorted);
         } catch (error) {
-            console.error('Failed to fetch queries:', error);
+            console.error('Failed to fetch IT tickets:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    const fetchQueryDetails = async (queryId) => {
+    const fetchTicketDetails = async (ticketId) => {
         try {
-            const response = await api.get(`/hr-queries/${queryId}`);
-            setSelectedQuery(response.data);
-
-            setQueries(prevQueries =>
-                prevQueries.map(q =>
-                    q._id === queryId ? { ...q, unreadCount: 0 } : q
-                )
-            );
-
-            setTotalUnread(prev => Math.max(0, prev - (queries.find(q => q._id === queryId)?.unreadCount || 0)));
+            const { data } = await api.get(`/it-support/tickets/${ticketId}`);
+            const ticket = data.ticket;
+            setSelectedTicket({
+                ...ticket,
+                messages: buildThreadMessages(ticket),
+            });
         } catch (error) {
-            console.error('Failed to fetch query details:', error);
+            console.error('Failed to fetch ticket details:', error);
         }
     };
 
     const handleSendMessage = async () => {
-        if (!newMessage.trim() || !selectedQuery) return;
+        if (!newMessage.trim() || !selectedTicket) return;
 
         setSending(true);
         try {
-            await api.post(`/hr-queries/admin/${selectedQuery._id}/respond`, {
-                message: newMessage.trim()
+            await api.post(`/it-support/tickets/${selectedTicket._id}/comment`, {
+                comment: newMessage.trim(),
             });
-
-            await fetchQueryDetails(selectedQuery._id);
+            await fetchTicketDetails(selectedTicket._id);
             setNewMessage('');
         } catch (error) {
             console.error('Failed to send message:', error);
@@ -198,60 +158,30 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
         }
     };
 
-    const handleQueryClick = (query) => {
-        setSelectedQuery(null);
-
-        if (query.itemType === 'resource_request') {
-            setTimeout(() => {
-                setSelectedQuery(query);
-                setQueries(prevQueries =>
-                    prevQueries.map(q =>
-                        q._id === query._id ? { ...q, unreadCount: 0 } : q
-                    )
-                );
-                setTotalUnread(prev => Math.max(0, prev - (query.unreadCount || 0)));
-            }, 0);
-        } else {
-            setTimeout(() => fetchQueryDetails(query._id), 0);
-        }
-    };
-
     const handleBack = () => {
-        setSelectedQuery(null);
-        fetchQueries();
+        setSelectedTicket(null);
+        fetchTickets();
     };
 
-    const getItemIcon = (query) => {
-        if (query.itemType === 'resource_request') {
-            if (query.category?.toLowerCase().includes('hardware') || query.category?.toLowerCase().includes('it')) {
-                return <ComputerIcon sx={{ fontSize: 18 }} />;
-            }
-            if (query.category?.toLowerCase().includes('stationery')) {
-                return <AssignmentIcon sx={{ fontSize: 18 }} />;
-            }
-            return <InventoryIcon sx={{ fontSize: 18 }} />;
-        }
-        return null;
-    };
-
-    const filteredQueries = queries.filter(query => {
+    const filteredTickets = tickets.filter((ticket) => {
         const searchLower = searchTerm.toLowerCase();
         return (
-            query.subject?.toLowerCase().includes(searchLower) ||
-            query.employeeId?.fullName?.toLowerCase().includes(searchLower) ||
-            query.employeeId?.employeeId?.toLowerCase().includes(searchLower) ||
-            query.category?.toLowerCase().includes(searchLower)
+            ticket.title?.toLowerCase().includes(searchLower)
+            || ticket.ticketId?.toLowerCase().includes(searchLower)
+            || ticket.createdByName?.toLowerCase().includes(searchLower)
+            || ticket.createdByCode?.toLowerCase().includes(searchLower)
+            || ticket.category?.toLowerCase().includes(searchLower)
         );
     });
 
-    const isResource = selectedQuery?.itemType === 'resource_request';
+    const isClosed = selectedTicket && ['CLOSED', 'CANCELLED'].includes(selectedTicket.status);
 
     return (
         <>
-            <Tooltip title="HR Queries" placement="left" disableHoverListener={isDragging}>
+            <Tooltip title="IT Tickets" placement="left" disableHoverListener={isDragging}>
                 <Fab
                     color="primary"
-                    aria-label={totalUnread > 0 ? `HR Queries, ${totalUnread} unread` : 'HR Queries'}
+                    aria-label="IT Tickets"
                     onClick={wrapClick(() => setIsOpen(true))}
                     {...dragHandlers}
                     sx={{
@@ -264,13 +194,10 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                             : '0 8px 24px rgba(198, 40, 40, 0.28)',
                         '&:hover': {
                             background: `linear-gradient(135deg, ${RED_DARK} 0%, #B71C1C 100%)`,
-                            boxShadow: '0 12px 28px rgba(198, 40, 40, 0.35)',
                         },
                     }}
                 >
-                    <Badge badgeContent={totalUnread} color="error" max={99}>
-                        <QuestionAnswerIcon />
-                    </Badge>
+                    <SupportAgentIcon />
                 </Fab>
             </Tooltip>
 
@@ -281,7 +208,6 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                     setIsOpen(false);
                     onClose?.();
                 }}
-                className="hr-query-drawer"
                 PaperProps={{
                     sx: {
                         width: { xs: '100%', sm: 440 },
@@ -290,7 +216,7 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                         background: '#fff',
                         borderLeft: `1px solid ${BORDER}`,
                         boxShadow: '-8px 0 32px rgba(16, 24, 40, 0.08)',
-                    }
+                    },
                 }}
             >
                 <Box sx={{
@@ -301,7 +227,6 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                     fontFamily: FONT,
                     background: SURFACE,
                 }}>
-                    {/* Header */}
                     <Box
                         sx={{
                             px: 2.25,
@@ -314,7 +239,7 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                             flexShrink: 0,
                         }}
                     >
-                        {selectedQuery && (
+                        {selectedTicket && (
                             <IconButton
                                 onClick={handleBack}
                                 size="small"
@@ -326,13 +251,13 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                                 <ArrowBackIcon fontSize="small" />
                             </IconButton>
                         )}
-                        {!selectedQuery && (
+                        {!selectedTicket && (
                             <Box sx={iconBoxSx}>
-                                <QuestionAnswerIcon sx={{ fontSize: 18 }} />
+                                <SupportAgentIcon sx={{ fontSize: 18 }} />
                             </Box>
                         )}
                         <Box sx={{ flex: 1, minWidth: 0 }}>
-                            {!selectedQuery ? (
+                            {!selectedTicket ? (
                                 <>
                                     <Typography sx={{
                                         fontWeight: 700,
@@ -342,7 +267,7 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                                         fontFamily: FONT,
                                         lineHeight: 1.3,
                                     }}>
-                                        HR Query Center
+                                        IT Query Center
                                     </Typography>
                                     <Typography sx={{ fontSize: '0.75rem', color: MUTED, mt: 0.15 }}>
                                         Reply to employee tickets from one place
@@ -359,33 +284,20 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                                         textOverflow: 'ellipsis',
                                         whiteSpace: 'nowrap',
                                     }}>
-                                        {selectedQuery.subject}
+                                        {selectedTicket.title}
                                     </Typography>
                                     <Typography sx={{ fontSize: '0.75rem', color: MUTED }}>
-                                        {selectedQuery.employeeId?.fullName || 'Anonymous'}
-                                        {selectedQuery.employeeId?.employeeId
-                                            ? ` · ${selectedQuery.employeeId.employeeId}`
-                                            : ''}
+                                        {selectedTicket.createdByName || 'Employee'}
+                                        {selectedTicket.createdByCode ? ` · ${selectedTicket.createdByCode}` : ''}
                                     </Typography>
                                 </>
                             )}
                         </Box>
-                        {!selectedQuery && totalUnread > 0 && (
-                            <Chip
-                                label={`${totalUnread} unread`}
-                                size="small"
-                                sx={{
-                                    height: 22,
-                                    fontSize: '0.68rem',
-                                    fontWeight: 700,
-                                    background: RED_BG,
-                                    color: RED_DARK,
-                                    borderRadius: '6px',
-                                }}
-                            />
-                        )}
                         <IconButton
-                            onClick={() => setIsOpen(false)}
+                            onClick={() => {
+                                setIsOpen(false);
+                                onClose?.();
+                            }}
                             size="small"
                             sx={{
                                 color: MUTED,
@@ -396,8 +308,7 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                         </IconButton>
                     </Box>
 
-                    {/* Query List View */}
-                    {!selectedQuery && (
+                    {!selectedTicket && (
                         <>
                             <Box sx={{
                                 px: 2,
@@ -417,7 +328,7 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                                             <InputAdornment position="start">
                                                 <SearchIcon fontSize="small" sx={{ color: MUTED }} />
                                             </InputAdornment>
-                                        )
+                                        ),
                                     }}
                                     sx={fieldSx}
                                 />
@@ -428,7 +339,7 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
                                         <CircularProgress size={28} sx={{ color: RED }} />
                                     </Box>
-                                ) : filteredQueries.length === 0 ? (
+                                ) : filteredTickets.length === 0 ? (
                                     <Box sx={{
                                         p: 4,
                                         textAlign: 'center',
@@ -439,11 +350,11 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                                         mt: 6,
                                     }}>
                                         <Box sx={{ ...iconBoxSx, width: 56, height: 56, borderRadius: '14px' }}>
-                                            <QuestionAnswerIcon sx={{ fontSize: 26 }} />
+                                            <SupportAgentIcon sx={{ fontSize: 26 }} />
                                         </Box>
                                         <Box>
                                             <Typography sx={{ mb: 0.5, fontWeight: 700, color: TEXT, fontSize: '0.95rem' }}>
-                                                {searchTerm ? 'No matching queries' : 'No HR queries yet'}
+                                                {searchTerm ? 'No matching tickets' : 'No IT tickets yet'}
                                             </Typography>
                                             <Typography sx={{ color: MUTED, fontSize: '0.8rem' }}>
                                                 {searchTerm ? 'Try a different name or subject' : 'Employee tickets will show up here'}
@@ -451,26 +362,24 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                                         </Box>
                                     </Box>
                                 ) : (
-                                    filteredQueries.map((query) => {
-                                        const unread = query.unreadCount > 0;
-                                        const initial = query.employeeId?.fullName?.charAt(0) || '?';
-                                        const itemIcon = getItemIcon(query);
+                                    filteredTickets.map((ticket) => {
+                                        const initial = ticket.createdByName?.charAt(0) || '?';
                                         return (
                                             <Box
-                                                key={query._id}
-                                                onClick={() => handleQueryClick(query)}
+                                                key={ticket._id}
+                                                onClick={() => fetchTicketDetails(ticket._id)}
                                                 sx={{
                                                     display: 'flex',
                                                     gap: 1.5,
                                                     px: 2,
                                                     py: 1.75,
                                                     cursor: 'pointer',
-                                                    background: unread ? RED_LIGHT : '#fff',
+                                                    background: '#fff',
                                                     borderBottom: `1px solid ${BORDER}`,
-                                                    borderLeft: unread ? `3px solid ${RED}` : '3px solid transparent',
+                                                    borderLeft: '3px solid transparent',
                                                     transition: 'background 0.15s ease',
                                                     '&:hover': {
-                                                        background: unread ? RED_LIGHT : SURFACE,
+                                                        background: SURFACE,
                                                     },
                                                 }}
                                             >
@@ -484,14 +393,14 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                                                     border: '1px solid rgba(198, 40, 40, 0.12)',
                                                     flexShrink: 0,
                                                 }}>
-                                                    {itemIcon || initial}
+                                                    {initial}
                                                 </Avatar>
                                                 <Box sx={{ flex: 1, minWidth: 0 }}>
                                                     <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1, mb: 0.35 }}>
                                                         <Typography sx={{
                                                             flex: 1,
                                                             minWidth: 0,
-                                                            fontWeight: unread ? 700 : 600,
+                                                            fontWeight: 600,
                                                             color: TEXT,
                                                             fontSize: '0.875rem',
                                                             fontFamily: FONT,
@@ -499,7 +408,7 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                                                             textOverflow: 'ellipsis',
                                                             whiteSpace: 'nowrap',
                                                         }}>
-                                                            {query.employeeId?.fullName || 'Anonymous'}
+                                                            {ticket.createdByName || 'Employee'}
                                                         </Typography>
                                                         <Typography sx={{
                                                             color: MUTED,
@@ -507,14 +416,14 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                                                             flexShrink: 0,
                                                             whiteSpace: 'nowrap',
                                                         }}>
-                                                            {query.lastMessageAt
-                                                                ? relativeTime(query.lastMessageAt)
+                                                            {ticketLastActivityAt(ticket)
+                                                                ? relativeTime(ticketLastActivityAt(ticket))
                                                                 : ''}
                                                         </Typography>
                                                     </Box>
                                                     <Typography sx={{
-                                                        fontWeight: unread ? 600 : 400,
-                                                        color: unread ? TEXT : MUTED,
+                                                        fontWeight: 400,
+                                                        color: MUTED,
                                                         mb: 0.85,
                                                         overflow: 'hidden',
                                                         textOverflow: 'ellipsis',
@@ -522,48 +431,20 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                                                         fontSize: '0.8rem',
                                                         lineHeight: 1.4,
                                                     }}>
-                                                        {query.subject}
+                                                        {ticket.title}
                                                     </Typography>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, flexWrap: 'wrap' }}>
                                                         <Chip
-                                                            label={(query.status || 'open').replace('-', ' ')}
+                                                            label={formatStatusLabel(ticket.status)}
                                                             size="small"
-                                                            sx={statusChipSx(query.status)}
+                                                            sx={statusChipSx(ticket.status)}
                                                         />
-                                                        {query.category && (
+                                                        {ticket.category && (
                                                             <Chip
-                                                                label={query.category}
+                                                                label={ticket.category}
                                                                 size="small"
                                                                 sx={categoryChipSx}
                                                             />
-                                                        )}
-                                                        {query.itemType === 'resource_request' && (
-                                                            <Chip label="Request" size="small" sx={{
-                                                                ...categoryChipSx,
-                                                                background: INFO_BG,
-                                                                color: INFO_TEXT,
-                                                                border: 'none',
-                                                            }} />
-                                                        )}
-                                                        {unread && (
-                                                            <Box
-                                                                sx={{
-                                                                    ml: 'auto',
-                                                                    minWidth: 20,
-                                                                    height: 20,
-                                                                    px: 0.6,
-                                                                    borderRadius: '10px',
-                                                                    background: RED,
-                                                                    color: '#fff',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center',
-                                                                    fontSize: '0.65rem',
-                                                                    fontWeight: 700,
-                                                                }}
-                                                            >
-                                                                {query.unreadCount > 99 ? '99+' : query.unreadCount}
-                                                            </Box>
                                                         )}
                                                     </Box>
                                                 </Box>
@@ -575,8 +456,7 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                         </>
                     )}
 
-                    {/* Chat View */}
-                    {selectedQuery && !isResource && (
+                    {selectedTicket && (
                         <>
                             <Box sx={{
                                 px: 2.25,
@@ -587,25 +467,25 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                             }}>
                                 <Box sx={{ display: 'flex', gap: 0.75, flexWrap: 'wrap', alignItems: 'center' }}>
                                     <Chip
-                                        label={(selectedQuery.status || 'open').replace('-', ' ')}
+                                        label={formatStatusLabel(selectedTicket.status)}
                                         size="small"
-                                        sx={statusChipSx(selectedQuery.status)}
+                                        sx={statusChipSx(selectedTicket.status)}
                                     />
-                                    {selectedQuery.category && (
+                                    {selectedTicket.category && (
                                         <Chip
-                                            label={selectedQuery.category}
+                                            label={selectedTicket.category}
                                             size="small"
                                             sx={categoryChipSx}
                                         />
                                     )}
-                                    {selectedQuery.priority && selectedQuery.priority !== 'medium' && (
+                                    {selectedTicket.priority && selectedTicket.priority !== 'Medium' && (
                                         <Chip
-                                            label={selectedQuery.priority}
+                                            label={selectedTicket.priority}
                                             size="small"
                                             sx={statusChipSx(
-                                                selectedQuery.priority === 'urgent' || selectedQuery.priority === 'high'
-                                                    ? 'open'
-                                                    : 'closed'
+                                                selectedTicket.priority === 'Critical' || selectedTicket.priority === 'High'
+                                                    ? 'OPEN'
+                                                    : 'CLOSED'
                                             )}
                                         />
                                     )}
@@ -625,7 +505,7 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                                     ...scrollSx,
                                 }}
                             >
-                                {selectedQuery.messages?.map((msg, index) => {
+                                {(selectedTicket.messages || []).map((msg, index) => {
                                     const isEmployee = msg.sender === 'employee';
                                     return (
                                         <Box
@@ -681,7 +561,7 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                                 })}
                             </Box>
 
-                            {selectedQuery.status !== 'closed' && (
+                            {!isClosed && (
                                 <Box sx={{
                                     p: 2,
                                     borderTop: `1px solid ${BORDER}`,
@@ -728,180 +608,10 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
                             )}
                         </>
                     )}
-
-                    {isResource && (
-                        <ResourceRequestDetailView
-                            request={selectedQuery}
-                            onStatusUpdate={fetchQueries}
-                        />
-                    )}
                 </Box>
             </Drawer>
         </>
     );
 };
 
-const ResourceRequestDetailView = ({ request, onStatusUpdate }) => {
-    const [status, setStatus] = useState(request.status);
-    const [adminNotes, setAdminNotes] = useState(request.resourceRequestData?.adminNotes || '');
-    const [updating, setUpdating] = useState(false);
-    const [feedback, setFeedback] = useState('');
-    const [error, setError] = useState('');
-
-    const handleUpdateStatus = async () => {
-        setUpdating(true);
-        setError('');
-        setFeedback('');
-        try {
-            await api.patch(`/hr-queries/admin/resource-request/${request._id}/status`, {
-                status,
-                adminNotes
-            });
-
-            if (onStatusUpdate) {
-                await onStatusUpdate();
-            }
-            setFeedback('Request updated');
-        } catch (err) {
-            console.error('Failed to update resource request:', err);
-            setError(err.response?.data?.error || 'Failed to update resource request');
-        } finally {
-            setUpdating(false);
-        }
-    };
-
-    return (
-        <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 2, ...scrollSx }}>
-            <Paper elevation={0} sx={{
-                p: 2.25,
-                mb: 2,
-                borderRadius: '14px',
-                border: `1px solid ${BORDER}`,
-                background: '#fff',
-            }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25, mb: 2 }}>
-                    <Box sx={iconBoxSx}>
-                        <Inventory2OutlinedIcon sx={{ fontSize: 18 }} />
-                    </Box>
-                    <Box>
-                        <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                            Resource request
-                        </Typography>
-                        <Typography sx={{ fontWeight: 700, color: TEXT, fontSize: '1rem', letterSpacing: '-0.015em' }}>
-                            {request.resourceRequestData?.title || request.subject}
-                        </Typography>
-                    </Box>
-                </Box>
-
-                <Box sx={{ display: 'flex', gap: 0.75, mb: 2, flexWrap: 'wrap' }}>
-                    <Chip
-                        label={(status || 'pending').replace('-', ' ')}
-                        size="small"
-                        sx={statusChipSx(status)}
-                    />
-                    {request.category && (
-                        <Chip label={request.category} size="small" sx={categoryChipSx} />
-                    )}
-                </Box>
-
-                <Typography sx={{ fontSize: '0.75rem', color: MUTED, display: 'flex', alignItems: 'center', gap: 0.5, mb: 2 }}>
-                    <PersonIcon sx={{ fontSize: '0.95rem' }} />
-                    {request.employeeId?.fullName} · {request.employeeId?.employeeId || 'N/A'}
-                </Typography>
-
-                <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase', mb: 0.5 }}>
-                    Description
-                </Typography>
-                <Typography sx={{ color: TEXT, lineHeight: 1.6, whiteSpace: 'pre-wrap', fontSize: '0.85rem', mb: 2 }}>
-                    {request.resourceRequestData?.description || request.description || 'No description provided.'}
-                </Typography>
-
-                <Divider sx={{ my: 2, borderColor: BORDER }} />
-
-                <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
-                    {[
-                        { label: 'Quantity', value: request.quantity || 1 },
-                        { label: 'Requested', value: request.createdAt ? formatISTDate(request.createdAt, { month: 'short', day: 'numeric', year: 'numeric' }) : '—' },
-                    ].map((row) => (
-                        <Box key={row.label} sx={{ p: 1.25, borderRadius: '10px', background: SURFACE, border: `1px solid ${BORDER}` }}>
-                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, color: MUTED, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                                {row.label}
-                            </Typography>
-                            <Typography sx={{ fontWeight: 600, color: TEXT, mt: 0.35, fontSize: '0.85rem' }}>
-                                {row.value}
-                            </Typography>
-                        </Box>
-                    ))}
-                </Box>
-
-                {request.resourceRequestData?.reviewedByName && (
-                    <Typography sx={{ mt: 2, fontSize: '0.75rem', color: MUTED }}>
-                        Last reviewed by {request.resourceRequestData.reviewedByName}
-                        {request.resourceRequestData.reviewedAt
-                            ? ` on ${formatISTDate(request.resourceRequestData.reviewedAt, { month: 'short', day: 'numeric', year: 'numeric' })}`
-                            : ''}
-                    </Typography>
-                )}
-            </Paper>
-
-            <Paper elevation={0} sx={{
-                p: 2.25,
-                borderRadius: '14px',
-                border: `1px solid ${BORDER}`,
-                background: '#fff',
-            }}>
-                <Typography sx={{ fontWeight: 700, mb: 1.75, color: TEXT, fontSize: '0.9rem' }}>
-                    Update request
-                </Typography>
-
-                {error && (
-                    <Alert severity="error" sx={{ mb: 1.5, borderRadius: '10px' }} onClose={() => setError('')}>
-                        {error}
-                    </Alert>
-                )}
-                {feedback && (
-                    <Alert severity="success" sx={{ mb: 1.5, borderRadius: '10px' }} onClose={() => setFeedback('')}>
-                        {feedback}
-                    </Alert>
-                )}
-
-                <FormControl fullWidth size="small" sx={{ mb: 1.75, ...fieldSx }}>
-                    <InputLabel>Status</InputLabel>
-                    <Select
-                        value={status}
-                        onChange={(e) => setStatus(e.target.value)}
-                        label="Status"
-                    >
-                        <MenuItem value="Pending">Pending</MenuItem>
-                        <MenuItem value="In Progress">In Progress</MenuItem>
-                        <MenuItem value="Fulfilled">Fulfilled</MenuItem>
-                        <MenuItem value="Rejected">Rejected</MenuItem>
-                    </Select>
-                </FormControl>
-
-                <TextField
-                    fullWidth
-                    multiline
-                    rows={3}
-                    label="Admin notes"
-                    value={adminNotes}
-                    onChange={(e) => setAdminNotes(e.target.value)}
-                    placeholder="Add notes about this request…"
-                    sx={{ mb: 2, ...fieldSx }}
-                />
-
-                <Button
-                    fullWidth
-                    variant="contained"
-                    onClick={handleUpdateStatus}
-                    disabled={updating}
-                    sx={primaryBtnSx}
-                >
-                    {updating ? 'Saving…' : 'Update request'}
-                </Button>
-            </Paper>
-        </Box>
-    );
-};
-
-export default HRQueryFloatingChat;
+export default ITTicketFloatingChat;

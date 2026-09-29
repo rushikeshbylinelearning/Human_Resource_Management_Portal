@@ -1,7 +1,7 @@
 // backend/models/EmployeeResourceRequest.js
 const mongoose = require('mongoose');
 
-const CATEGORIES = ['Stationery', 'IT Hardware', 'Furniture', 'Office Supplies', 'Other'];
+const CATEGORIES = ['IT_Hardware', 'Stationery', 'Office Supplies', 'Furniture', 'Other'];
 const STATUSES = ['Pending', 'In Progress', 'Fulfilled', 'Rejected', 'Cancelled'];
 const PRIORITIES = ['low', 'medium', 'high'];
 

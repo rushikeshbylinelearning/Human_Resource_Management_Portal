@@ -78,14 +78,16 @@
     contain: layout style !important;
 }
 
-.profile-policies {
-    /* HARD LOCK: Exact width, no flexibility */
-    width: 320px !important;
-    min-width: 320px !important;
-    max-width: 320px !important;
-    flex: 0 0 320px !important;
-    
-    /* HARD LOCK: Prevent internal recalculation */
+.profile-page .profile-policies {
+    /* Match ProfilePage.css grid column (296px) — 320px caused overflow/clipped clicks */
+    width: 296px !important;
+    min-width: 296px !important;
+    max-width: 296px !important;
+    flex: 0 0 296px !important;
+    position: relative !important;
+    z-index: 2 !important;
+    pointer-events: auto !important;
+
     contain: layout style !important;
 }
 
@@ -277,17 +279,7 @@
    Disable all runtime style changes
    ============================================ */
 
-/* Disable MUI sx prop mutations */
-.profile-page *[style*="padding"],
-.profile-page *[style*="margin"],
-.profile-page *[style*="width"],
-.profile-page *[style*="height"] {
-    /* HARD LOCK: Inline styles cannot override */
-    padding: revert !important;
-    margin: revert !important;
-    width: revert !important;
-    height: revert !important;
-}
+/* Phase 8 removed: reverting inline width/height broke MUI controls and hit targets in Policies column */
 
 /* Disable transition-based layout changes */
 .profile-page * {

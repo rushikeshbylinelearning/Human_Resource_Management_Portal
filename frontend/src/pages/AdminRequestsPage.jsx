@@ -68,7 +68,7 @@ const KpiCard = ({ variant, label, value, icon }) => (
   </div>
 );
 
-const AdminRequestsPage = ({ embedded = false }) => {
+const AdminRequestsPage = ({ embedded = false, resourceScope = '' }) => {
   const { user } = useAuth();
   const isDelegatedView = !embedded && user?.role !== 'Admin';
   const [searchParams, setSearchParams] = useSearchParams();
@@ -96,6 +96,7 @@ const AdminRequestsPage = ({ embedded = false }) => {
       const params = { page: page + 1, limit: rowsPerPage };
       if (statusFilter) params.status = statusFilter;
       if (search.trim()) params.search = search.trim();
+      if (resourceScope === 'hr' || resourceScope === 'it') params.scope = resourceScope;
       const { data } = await api.get('/resource-requests', { params });
       setRequests(data.requests || []);
       setTotalCount(data.totalCount || 0);
@@ -105,7 +106,7 @@ const AdminRequestsPage = ({ embedded = false }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [page, rowsPerPage, statusFilter, search]);
+  }, [page, rowsPerPage, statusFilter, search, resourceScope]);
 
   const fetchStatusCounts = useCallback(async () => {
     try {
