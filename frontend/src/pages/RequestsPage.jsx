@@ -1,4 +1,4 @@
-// Employee resource requests (IT tickets and HR queries use the FAB)
+// Employee HR resource requests + IT support tickets
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -6,9 +6,10 @@ import {
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert,
 } from '@mui/material';
-import { Add, Inventory2, BusinessCenter as HRIcon } from '@mui/icons-material';
+import { Add, Inventory2, BusinessCenter as HRIcon, SupportAgent as ITIcon } from '@mui/icons-material';
 import api from '../api/axios';
 import PageHeroHeader from '../components/PageHeroHeader';
+import ITTicketForm from '../components/ITSupport/ITTicketForm';
 import { TableSkeleton } from '../components/SkeletonLoaders';
 import '../styles/RequestsPage.css';
 
@@ -36,6 +37,7 @@ const RequestsPage = () => {
   const [categories, setCategories] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
   const [hrFormOpen, setHrFormOpen] = useState(false);
+  const [itFormOpen, setItFormOpen] = useState(false);
   const [hrDetailOpen, setHrDetailOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [submittingRequest, setSubmittingRequest] = useState(false);
@@ -122,12 +124,29 @@ const RequestsPage = () => {
       <PageHeroHeader
         eyebrow="Workplace"
         title="Requests"
-        description="Submit resource requests for stationery, IT hardware, furniture, and other workplace items. Use the + button for HR queries and IT tickets."
+        description="Submit HR resource requests for stationery, furniture, and workplace items, or raise IT support tickets for technical issues."
         icon={<Inventory2 />}
         actionArea={
-          <Button variant="contained" size="large" startIcon={<Add />} onClick={() => setHrFormOpen(true)}>
-            New Request
-          </Button>
+          <Box className="requests-header-actions">
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<Add />}
+              onClick={() => setHrFormOpen(true)}
+              className="requests-btn-hr"
+            >
+              HR Request
+            </Button>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<ITIcon />}
+              onClick={() => setItFormOpen(true)}
+              className="requests-btn-it"
+            >
+              IT Request
+            </Button>
+          </Box>
         }
       />
 
@@ -137,7 +156,7 @@ const RequestsPage = () => {
         ) : requests.length === 0 ? (
           <Box className="requests-empty">
             <HRIcon sx={{ fontSize: 48, color: '#94a3b8', mb: 1 }} />
-            <Typography>No requests yet. Click &quot;New Request&quot; to get started.</Typography>
+            <Typography>No HR requests yet. Click &quot;HR Request&quot; to get started.</Typography>
           </Box>
         ) : (
           <TableContainer>
@@ -182,9 +201,9 @@ const RequestsPage = () => {
         className="resource-request-dialog"
       >
         <DialogTitle>
-          New Resource Request
+          New HR Request
           <Typography component="span" className="resource-dialog-subtitle">
-            Fill in the details below. All fields marked with * are required.
+            Resource request for HR (stationery, furniture, supplies, etc.). Required fields are marked with *.
           </Typography>
         </DialogTitle>
         <form onSubmit={handleRequestSubmit}>
@@ -262,7 +281,7 @@ const RequestsPage = () => {
           <DialogActions>
             <Button onClick={() => setHrFormOpen(false)} disabled={submittingRequest}>Cancel</Button>
             <Button type="submit" variant="contained" disabled={submittingRequest}>
-              {submittingRequest ? 'Submitting...' : 'Submit Request'}
+              {submittingRequest ? 'Submitting...' : 'Submit HR Request'}
             </Button>
           </DialogActions>
         </form>
@@ -293,6 +312,21 @@ const RequestsPage = () => {
           </>
         )}
       </Dialog>
+
+      <ITTicketForm
+        open={itFormOpen}
+        onClose={() => setItFormOpen(false)}
+        onSuccess={(ticket) => {
+          setItFormOpen(false);
+          setSnackbar({
+            open: true,
+            message: ticket?.ticketId
+              ? `IT ticket ${ticket.ticketId} created successfully.`
+              : 'IT request submitted successfully.',
+            severity: 'success',
+          });
+        }}
+      />
 
       <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar((s) => ({ ...s, open: false }))}>
         <Alert severity={snackbar.severity}>{snackbar.message}</Alert>

@@ -4,6 +4,37 @@
   box-sizing: border-box;
 }
 
+.requests-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.requests-btn-hr {
+  text-transform: none;
+  font-weight: 600;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+}
+
+.requests-btn-hr:hover {
+  background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+}
+
+.requests-btn-it {
+  text-transform: none;
+  font-weight: 600;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: #fff;
+}
+
+.requests-btn-it:hover {
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+}
+
 .requests-page--embedded .requests-list-card {
   margin-bottom: 0;
 }
