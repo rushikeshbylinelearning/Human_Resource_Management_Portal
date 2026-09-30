@@ -12,6 +12,11 @@ import {
     InputAdornment,
     CircularProgress,
     Tooltip,
+    MenuItem,
+    Select,
+    FormControl,
+    InputLabel,
+    Button,
 } from '@mui/material';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import CloseIcon from '@mui/icons-material/Close';
@@ -21,6 +26,8 @@ import SearchIcon from '@mui/icons-material/Search';
 import api from '../../api/axios';
 import { formatISTDateTime } from '../../utils/istTime';
 import useDraggableFab from '../../hooks/useDraggableFab';
+import { usePermissions } from '../../hooks/usePermissions';
+import socket from '../../socket';
 import {
     buildThreadMessages,
     formatStatusLabel,
@@ -88,6 +95,9 @@ const scrollSx = {
 };
 
 const ITTicketFloatingChat = ({ defaultOpen = false, onClose }) => {
+    const { canAccess } = usePermissions();
+    const isAdmin = canAccess.manageITSupport();
+    
     const [isOpen, setIsOpen] = useState(defaultOpen);
     const [tickets, setTickets] = useState([]);
     const [selectedTicket, setSelectedTicket] = useState(null);
@@ -95,6 +105,11 @@ const ITTicketFloatingChat = ({ defaultOpen = false, onClose }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(false);
     const [sending, setSending] = useState(false);
+    const [updatingStatus, setUpdatingStatus] = useState(false);
+    const [statusForm, setStatusForm] = useState({
+        status: '',
+        adminNotes: ''
+    });
     const messageListRef = useRef(null);
     const { isDragging, wrapClick, dragHandlers, positionSx } = useDraggableFab();
 
@@ -107,6 +122,31 @@ const ITTicketFloatingChat = ({ defaultOpen = false, onClose }) => {
         const interval = setInterval(fetchTickets, 30000);
         return () => clearInterval(interval);
     }, [isOpen]);
+
+    // Real-time socket updates for IT tickets
+    useEffect(() => {
+        const handleTicketUpdate = (data) => {
+            // Update the ticket in the list
+            setTickets(prev => prev.map(ticket => 
+                ticket._id === data.ticketId ? { ...ticket, ...data.ticket } : ticket
+            ));
+            
+            // Update selected ticket if it's the one being viewed
+            if (selectedTicket && selectedTicket._id === data.ticketId) {
+                setSelectedTicket(prev => ({
+                    ...prev,
+                    ...data.ticket,
+                    messages: buildThreadMessages(data.ticket)
+                }));
+            }
+        };
+
+        socket.on('it_ticket_updated', handleTicketUpdate);
+
+        return () => {
+            socket.off('it_ticket_updated', handleTicketUpdate);
+        };
+    }, [selectedTicket]);
 
     useEffect(() => {
         const el = messageListRef.current;
@@ -136,8 +176,32 @@ const ITTicketFloatingChat = ({ defaultOpen = false, onClose }) => {
                 ...ticket,
                 messages: buildThreadMessages(ticket),
             });
+            setStatusForm({
+                status: ticket.status || '',
+                adminNotes: ''
+            });
         } catch (error) {
             console.error('Failed to fetch ticket details:', error);
+        }
+    };
+
+    const handleUpdateStatus = async () => {
+        if (!statusForm.status || !selectedTicket) return;
+
+        setUpdatingStatus(true);
+        try {
+            const response = await api.patch(`/it-support/tickets/${selectedTicket._id}/status`, {
+                status: statusForm.status,
+                adminNotes: statusForm.adminNotes.trim() || undefined
+            });
+
+            await fetchTicketDetails(selectedTicket._id);
+            setStatusForm(prev => ({ ...prev, adminNotes: '' }));
+            await fetchTickets();
+        } catch (error) {
+            console.error('Failed to update status:', error);
+        } finally {
+            setUpdatingStatus(false);
         }
     };
 
@@ -364,6 +428,7 @@ const ITTicketFloatingChat = ({ defaultOpen = false, onClose }) => {
                                 ) : (
                                     filteredTickets.map((ticket) => {
                                         const initial = ticket.createdByName?.charAt(0) || '?';
+                                        const unread = ticket.status !== 'CLOSED' && ticket.status !== 'RESOLVED';
                                         return (
                                             <Box
                                                 key={ticket._id}
@@ -374,12 +439,12 @@ const ITTicketFloatingChat = ({ defaultOpen = false, onClose }) => {
                                                     px: 2,
                                                     py: 1.75,
                                                     cursor: 'pointer',
-                                                    background: '#fff',
+                                                    background: unread ? RED_LIGHT : '#fff',
                                                     borderBottom: `1px solid ${BORDER}`,
-                                                    borderLeft: '3px solid transparent',
+                                                    borderLeft: unread ? `3px solid ${RED}` : '3px solid transparent',
                                                     transition: 'background 0.15s ease',
                                                     '&:hover': {
-                                                        background: SURFACE,
+                                                        background: unread ? RED_LIGHT : SURFACE,
                                                     },
                                                 }}
                                             >
@@ -400,7 +465,7 @@ const ITTicketFloatingChat = ({ defaultOpen = false, onClose }) => {
                                                         <Typography sx={{
                                                             flex: 1,
                                                             minWidth: 0,
-                                                            fontWeight: 600,
+                                                            fontWeight: unread ? 700 : 600,
                                                             color: TEXT,
                                                             fontSize: '0.875rem',
                                                             fontFamily: FONT,
@@ -422,8 +487,8 @@ const ITTicketFloatingChat = ({ defaultOpen = false, onClose }) => {
                                                         </Typography>
                                                     </Box>
                                                     <Typography sx={{
-                                                        fontWeight: 400,
-                                                        color: MUTED,
+                                                        fontWeight: unread ? 600 : 400,
+                                                        color: unread ? TEXT : MUTED,
                                                         mb: 0.85,
                                                         overflow: 'hidden',
                                                         textOverflow: 'ellipsis',
@@ -445,6 +510,25 @@ const ITTicketFloatingChat = ({ defaultOpen = false, onClose }) => {
                                                                 size="small"
                                                                 sx={categoryChipSx}
                                                             />
+                                                        )}
+                                                        {unread && (
+                                                            <Box
+                                                                sx={{
+                                                                    ml: 'auto',
+                                                                    width: 20,
+                                                                    height: 20,
+                                                                    borderRadius: '50%',
+                                                                    background: RED,
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    fontSize: '0.65rem',
+                                                                    fontWeight: 700,
+                                                                    color: '#fff',
+                                                                }}
+                                                            >
+                                                                !
+                                                            </Box>
                                                         )}
                                                     </Box>
                                                 </Box>
@@ -491,6 +575,78 @@ const ITTicketFloatingChat = ({ defaultOpen = false, onClose }) => {
                                     )}
                                 </Box>
                             </Box>
+
+                            {/* Admin Status Update Section */}
+                            {isAdmin && (
+                                <Box sx={{
+                                    px: 2,
+                                    py: 2,
+                                    borderBottom: `1px solid ${BORDER}`,
+                                    background: SURFACE,
+                                    flexShrink: 0,
+                                }}>
+                                    <Typography sx={{
+                                        fontWeight: 700,
+                                        fontSize: '0.8rem',
+                                        color: TEXT,
+                                        mb: 1.5,
+                                        letterSpacing: '-0.01em',
+                                    }}>
+                                        Update request
+                                    </Typography>
+
+                                    <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
+                                        <InputLabel>Status</InputLabel>
+                                        <Select
+                                            value={statusForm.status}
+                                            onChange={(e) => setStatusForm(prev => ({ ...prev, status: e.target.value }))}
+                                            label="Status"
+                                            disabled={updatingStatus}
+                                            sx={fieldSx}
+                                        >
+                                            <MenuItem value="OPEN">Open</MenuItem>
+                                            <MenuItem value="ACKNOWLEDGED">Acknowledged</MenuItem>
+                                            <MenuItem value="IN_PROGRESS">In Progress</MenuItem>
+                                            <MenuItem value="WAITING_FOR_USER">Waiting for User</MenuItem>
+                                            <MenuItem value="RESOLVED">Resolved</MenuItem>
+                                            <MenuItem value="CLOSED">Closed</MenuItem>
+                                        </Select>
+                                    </FormControl>
+
+                                    <TextField
+                                        fullWidth
+                                        multiline
+                                        rows={2}
+                                        placeholder="Admin notes (optional)"
+                                        value={statusForm.adminNotes}
+                                        onChange={(e) => setStatusForm(prev => ({ ...prev, adminNotes: e.target.value }))}
+                                        disabled={updatingStatus}
+                                        size="small"
+                                        sx={{ ...fieldSx, mb: 1.5 }}
+                                    />
+
+                                    <Button
+                                        fullWidth
+                                        variant="contained"
+                                        onClick={handleUpdateStatus}
+                                        disabled={updatingStatus || statusForm.status === selectedTicket?.status}
+                                        sx={{
+                                            ...primaryBtnSx,
+                                            height: 36,
+                                            fontSize: '0.85rem',
+                                        }}
+                                    >
+                                        {updatingStatus ? (
+                                            <>
+                                                <CircularProgress size={16} sx={{ color: '#fff', mr: 1 }} />
+                                                Updating...
+                                            </>
+                                        ) : (
+                                            'Update request'
+                                        )}
+                                    </Button>
+                                </Box>
+                            )}
 
                             <Box
                                 ref={messageListRef}

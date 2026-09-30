@@ -3,6 +3,7 @@ const ITSupportTicket = require('../models/ITSupportTicket');
 const { ISSUE_CATEGORIES, PRIORITIES, STATUSES } = require('../models/ITSupportTicket');
 const User = require('../models/User');
 const NewNotificationService = require('../services/NewNotificationService');
+const { getIO } = require('../socketManager');
 
 const userCanManageITSupport = async (userId, role) => {
     if (role === 'Admin') return true;
@@ -50,6 +51,21 @@ const createTicket = async (req, res) => {
         // Generate ticket ID
         const ticketId = await ITSupportTicket.generateTicketId();
 
+        // Prepare image attachments if uploaded
+        const images = [];
+        if (req.uploadedImages && req.uploadedImages.length > 0) {
+            req.uploadedImages.forEach(img => {
+                images.push({
+                    fileId: img.fileId,
+                    filename: img.filename,
+                    originalName: img.originalName,
+                    mimetype: img.mimetype,
+                    size: img.size,
+                    uploadedAt: new Date()
+                });
+            });
+        }
+
         // Create ticket
         const ticket = await ITSupportTicket.create({
             ticketId,
@@ -62,6 +78,7 @@ const createTicket = async (req, res) => {
             description: String(description).trim(),
             priority: priority || 'Medium',
             location: location ? String(location).trim() : undefined,
+            images,
             status: 'OPEN'
         });
 
@@ -70,7 +87,7 @@ const createTicket = async (req, res) => {
         await ticket.save();
 
         // Notify IT managers/admins
-        await NewNotificationService.broadcastToAdmins({
+        await NewNotificationService.broadcastToITSupportManagers({
             message: `New IT Support ticket: ${ticket.ticketId} - ${ticket.title}`,
             type: 'it_ticket_created',
             category: 'it_support',
@@ -328,6 +345,22 @@ const updateTicketStatus = async (req, res) => {
 
         await ticket.save();
 
+        // Emit socket event for real-time updates across all views
+        try {
+            const io = getIO();
+            // Broadcast to all IT support managers and ticket creator
+            io.emit('it_ticket_updated', {
+                ticketId: ticket._id.toString(),
+                ticket: ticket.toObject(),
+                updateType: 'status_change',
+                oldStatus,
+                newStatus: status
+            });
+        } catch (socketError) {
+            console.error('Error emitting socket event:', socketError);
+            // Don't fail the request if socket emission fails
+        }
+
         // Notify ticket creator
         const statusMessages = {
             ACKNOWLEDGED: `Your IT Support ticket ${ticket.ticketId} has been acknowledged.`,
@@ -554,23 +587,24 @@ const addComment = async (req, res) => {
 
         // Notify relevant parties
         if (!internalComment) {
-            // Notify ticket owner if comment is from IT
+            // Notify ticket owner if comment is from IT staff
             if (!isOwner) {
                 await NewNotificationService.createAndEmitNotification({
                     userId: ticket.createdBy,
                     userName: ticket.createdByName,
-                    message: `New comment on your IT Support ticket ${ticket.ticketId}`,
+                    message: `${user?.fullName || 'IT Staff'} added a comment on your IT Support ticket ${ticket.ticketId}`,
                     type: 'it_ticket_comment',
                     category: 'it_support',
                     priority: 'medium',
                     recipientType: 'user',
                     navigationData: {
-                        page: '/it-support',
+                        page: '/requests',
                         params: { ticketId: ticket._id.toString() }
                     },
                     metadata: {
                         ticketId: ticket.ticketId,
-                        ticketMongoId: ticket._id.toString()
+                        ticketMongoId: ticket._id.toString(),
+                        type: 'IT_TICKET_COMMENT'
                     }
                 });
             }
@@ -580,20 +614,41 @@ const addComment = async (req, res) => {
                 await NewNotificationService.createAndEmitNotification({
                     userId: ticket.assignedTo,
                     userName: ticket.assignedToName,
-                    message: `New comment on IT Support ticket ${ticket.ticketId}`,
+                    message: `${user?.fullName || 'User'} added a comment on IT Support ticket ${ticket.ticketId}`,
                     type: 'it_ticket_comment',
                     category: 'it_support',
                     priority: 'medium',
                     recipientType: 'user',
                     navigationData: {
-                        page: '/it-support/manage',
-                        params: { ticketId: ticket._id.toString() }
+                        page: '/operational-dashboard',
+                        params: { tab: 'it', ticketId: ticket._id.toString() }
                     },
                     metadata: {
                         ticketId: ticket.ticketId,
-                        ticketMongoId: ticket._id.toString()
+                        ticketMongoId: ticket._id.toString(),
+                        type: 'IT_TICKET_COMMENT'
                     }
                 });
+            }
+
+            // If ticket is not assigned and comment is from user, notify all IT support managers
+            if (isOwner && !ticket.assignedTo) {
+                await NewNotificationService.broadcastToITSupportManagers({
+                    message: `${user?.fullName || 'User'} added a comment on unassigned IT Support ticket ${ticket.ticketId}`,
+                    type: 'it_ticket_comment',
+                    category: 'it_support',
+                    priority: 'medium',
+                    navigationData: {
+                        page: '/operational-dashboard',
+                        params: { tab: 'it', ticketId: ticket._id.toString() }
+                    },
+                    metadata: {
+                        ticketId: ticket.ticketId,
+                        ticketMongoId: ticket._id.toString(),
+                        type: 'IT_TICKET_COMMENT',
+                        unassigned: true
+                    }
+                }, req.user.userId);
             }
         }
 
@@ -676,6 +731,144 @@ const cancelTicket = async (req, res) => {
     }
 };
 
+/**
+ * View/Download IT Support ticket image
+ */
+const getTicketImage = async (req, res) => {
+    try {
+        const { ticketId, imageId } = req.params;
+        const download = req.query.download === 'true';
+
+        // Find the ticket
+        const ticket = await ITSupportTicket.findById(ticketId).lean();
+
+        if (!ticket) {
+            return res.status(404).json({ error: 'Ticket not found.' });
+        }
+
+        // Check authorization
+        const isOwner = ticket.createdBy.toString() === req.user.userId;
+        const isAdmin = req.user.role === 'Admin';
+        const isAssigned = ticket.assignedTo && ticket.assignedTo.toString() === req.user.userId;
+        const isITStaff = await userCanManageITSupport(req.user.userId, req.user.role);
+
+        if (!isOwner && !isAdmin && !isAssigned && !isITStaff) {
+            return res.status(403).json({ error: 'Access denied.' });
+        }
+
+        // Find the image in the ticket
+        const image = ticket.images?.find(img => img.fileId.toString() === imageId);
+
+        if (!image) {
+            return res.status(404).json({ error: 'Image not found in this ticket.' });
+        }
+
+        // Get GridFS bucket
+        const mongoose = require('mongoose');
+        const bucket = new mongoose.mongo.GridFSBucket(
+            mongoose.connection.db,
+            { bucketName: "itSupportImages" }
+        );
+
+        // Check if file exists in GridFS
+        const files = await bucket.find({ _id: new mongoose.Types.ObjectId(imageId) }).toArray();
+
+        if (files.length === 0) {
+            return res.status(404).json({ error: 'Image file not found in storage.' });
+        }
+
+        const file = files[0];
+
+        // Set appropriate headers
+        res.set('Content-Type', image.mimetype || file.contentType || 'image/jpeg');
+        res.set('Content-Length', file.length);
+        
+        if (download) {
+            res.set('Content-Disposition', `attachment; filename="${image.originalName}"`);
+        } else {
+            res.set('Content-Disposition', `inline; filename="${image.originalName}"`);
+        }
+
+        // Stream the file
+        const downloadStream = bucket.openDownloadStream(new mongoose.Types.ObjectId(imageId));
+        
+        downloadStream.on('error', (error) => {
+            console.error('[IT Support Image] Download stream error:', error);
+            if (!res.headersSent) {
+                res.status(500).json({ error: 'Failed to retrieve image.' });
+            }
+        });
+
+        downloadStream.pipe(res);
+    } catch (error) {
+        console.error('Error retrieving IT support ticket image:', error);
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'Failed to retrieve image.' });
+        }
+    }
+};
+
+/**
+ * Delete IT Support ticket image (only by ticket owner before resolution)
+ */
+const deleteTicketImage = async (req, res) => {
+    try {
+        const { ticketId, imageId } = req.params;
+
+        // Find the ticket
+        const ticket = await ITSupportTicket.findById(ticketId);
+
+        if (!ticket) {
+            return res.status(404).json({ error: 'Ticket not found.' });
+        }
+
+        // Only ticket owner can delete images
+        if (ticket.createdBy.toString() !== req.user.userId) {
+            return res.status(403).json({ error: 'Only ticket creator can delete images.' });
+        }
+
+        // Can only delete images from OPEN or ACKNOWLEDGED tickets
+        if (!['OPEN', 'ACKNOWLEDGED'].includes(ticket.status)) {
+            return res.status(400).json({ 
+                error: 'Images can only be deleted from open or acknowledged tickets.' 
+            });
+        }
+
+        // Find the image
+        const imageIndex = ticket.images.findIndex(img => img.fileId.toString() === imageId);
+
+        if (imageIndex === -1) {
+            return res.status(404).json({ error: 'Image not found in this ticket.' });
+        }
+
+        // Delete from GridFS
+        const mongoose = require('mongoose');
+        const bucket = new mongoose.mongo.GridFSBucket(
+            mongoose.connection.db,
+            { bucketName: "itSupportImages" }
+        );
+
+        try {
+            await bucket.delete(new mongoose.Types.ObjectId(imageId));
+        } catch (gridfsError) {
+            console.error('[IT Support Image] GridFS delete error:', gridfsError);
+            // Continue even if GridFS delete fails (image might not exist)
+        }
+
+        // Remove from ticket
+        ticket.images.splice(imageIndex, 1);
+        await ticket.save();
+
+        res.json({
+            message: 'Image deleted successfully.',
+            ticket
+        });
+    } catch (error) {
+        console.error('Error deleting IT support ticket image:', error);
+        res.status(500).json({ error: 'Failed to delete image.' });
+    }
+};
+
 module.exports = {
     createTicket,
     getMyTickets,
@@ -685,5 +878,7 @@ module.exports = {
     assignTicket,
     updateTicketPriority,
     addComment,
-    cancelTicket
+    cancelTicket,
+    getTicketImage,
+    deleteTicketImage
 };

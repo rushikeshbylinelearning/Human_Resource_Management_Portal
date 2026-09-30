@@ -14,9 +14,11 @@ import {
     Box,
     Alert,
     CircularProgress,
-    Typography
+    Typography,
+    Divider
 } from '@mui/material';
 import api from '../../api/axios';
+import ImageUploadInput from '../ImageUpload/ImageUploadInput';
 
 const ISSUE_CATEGORIES = [
     'Computer / Laptop',
@@ -41,6 +43,7 @@ const ITTicketForm = ({ open, onClose, onSuccess }) => {
         priority: 'Medium',
         location: ''
     });
+    const [selectedImages, setSelectedImages] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
@@ -74,7 +77,26 @@ const ITTicketForm = ({ open, onClose, onSuccess }) => {
         setLoading(true);
 
         try {
-            const response = await api.post('/it-support/tickets', formData);
+            // Create FormData for multipart/form-data
+            const submitData = new FormData();
+            submitData.append('category', formData.category);
+            submitData.append('title', formData.title.trim());
+            submitData.append('description', formData.description.trim());
+            submitData.append('priority', formData.priority);
+            if (formData.location.trim()) {
+                submitData.append('location', formData.location.trim());
+            }
+
+            // Append images
+            selectedImages.forEach((image) => {
+                submitData.append('images', image);
+            });
+
+            const response = await api.post('/it-support/tickets', submitData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
             
             if (onSuccess) {
                 onSuccess(response.data.ticket);
@@ -88,6 +110,7 @@ const ITTicketForm = ({ open, onClose, onSuccess }) => {
                 priority: 'Medium',
                 location: ''
             });
+            setSelectedImages([]);
 
             onClose();
         } catch (err) {
@@ -107,6 +130,7 @@ const ITTicketForm = ({ open, onClose, onSuccess }) => {
                 priority: 'Medium',
                 location: ''
             });
+            setSelectedImages([]);
             setError('');
             onClose();
         }
@@ -219,6 +243,24 @@ const ITTicketForm = ({ open, onClose, onSuccess }) => {
                             disabled={loading}
                             placeholder="e.g., Floor 2, Desk 45 or Building A, Room 101"
                             inputProps={{ maxLength: 200 }}
+                        />
+
+                        {/* Divider */}
+                        <Divider sx={{ my: 1 }}>
+                            <Typography variant="caption" color="text.secondary">
+                                Attachments (Optional)
+                            </Typography>
+                        </Divider>
+
+                        {/* Image Upload */}
+                        <ImageUploadInput
+                            value={selectedImages}
+                            onChange={setSelectedImages}
+                            maxFiles={5}
+                            maxSizeKB={500}
+                            disabled={loading}
+                            showPreview={true}
+                            helperText="Attach screenshots or photos to help us understand the issue better"
                         />
                     </Box>
                 </DialogContent>

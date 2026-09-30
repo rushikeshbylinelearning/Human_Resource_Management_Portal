@@ -12,7 +12,8 @@ import {
 import {
     Visibility as ViewIcon,
     AccessTime as TimeIcon,
-    PersonOutline as PersonIcon
+    PersonOutline as PersonIcon,
+    Image as ImageIcon
 } from '@mui/icons-material';
 import { formatISTDate, formatISTTime } from '../../utils/istTime';
 
@@ -129,7 +130,7 @@ const ITTicketCard = ({ ticket, onClick, showAssignee = false }) => {
 
                 {/* Footer Row */}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
                         {/* Created Date */}
                         <Tooltip title="Created">
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -139,6 +140,18 @@ const ITTicketCard = ({ ticket, onClick, showAssignee = false }) => {
                                 </Typography>
                             </Box>
                         </Tooltip>
+
+                        {/* Image count */}
+                        {ticket.images && ticket.images.length > 0 && (
+                            <Tooltip title={`${ticket.images.length} image${ticket.images.length > 1 ? 's' : ''} attached`}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <ImageIcon fontSize="small" color="action" />
+                                    <Typography variant="caption" color="text.secondary">
+                                        {ticket.images.length}
+                                    </Typography>
+                                </Box>
+                            </Tooltip>
+                        )}
 
                         {/* Assignee (if shown) */}
                         {showAssignee && ticket.assignedToName && (

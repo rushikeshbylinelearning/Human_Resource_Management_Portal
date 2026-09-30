@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/authenticateToken');
 const requireITSupportAccess = require('../middleware/requireITSupportAccess');
+const uploadITSupportImageGridFS = require('../middleware/uploadITSupportImageGridFS');
 const {
     createTicket,
     getMyTickets,
@@ -12,15 +13,21 @@ const {
     assignTicket,
     updateTicketPriority,
     addComment,
-    cancelTicket
+    cancelTicket,
+    getTicketImage,
+    deleteTicketImage
 } = require('../controllers/itSupportController');
 
 // Employee routes - any authenticated user can create and view their own tickets
-router.post('/tickets', authenticateToken, createTicket);
+router.post('/tickets', authenticateToken, uploadITSupportImageGridFS, createTicket);
 router.get('/tickets/mine', authenticateToken, getMyTickets);
 router.get('/tickets/:id', authenticateToken, getTicketById);
 router.post('/tickets/:id/comment', authenticateToken, addComment);
 router.patch('/tickets/:id/cancel', authenticateToken, cancelTicket);
+
+// Image viewing/downloading - accessible by ticket owner, assigned IT staff, or admins
+router.get('/tickets/:ticketId/images/:imageId', authenticateToken, getTicketImage);
+router.delete('/tickets/:ticketId/images/:imageId', authenticateToken, deleteTicketImage);
 
 // Admin/IT Staff routes - require IT support access permission
 router.get('/tickets', [authenticateToken, requireITSupportAccess], getAllTickets);

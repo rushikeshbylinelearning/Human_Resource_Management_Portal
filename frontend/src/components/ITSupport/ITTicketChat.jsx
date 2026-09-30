@@ -29,6 +29,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CloseIcon from '@mui/icons-material/Close';
 import PersonIcon from '@mui/icons-material/Person';
 import api from '../../api/axios';
+import socket from '../../socket';
 import {
     buildThreadMessages,
     formatStatusLabel,
@@ -78,6 +79,31 @@ const ITTicketChat = () => {
     useEffect(() => {
         fetchTickets();
     }, []);
+
+    // Real-time socket updates for IT tickets
+    useEffect(() => {
+        const handleTicketUpdate = (data) => {
+            // Update the ticket in the list
+            setTickets(prev => prev.map(ticket => 
+                ticket._id === data.ticketId ? { ...ticket, ...data.ticket } : ticket
+            ));
+            
+            // Update selected ticket if it's the one being viewed
+            if (selectedTicket && selectedTicket._id === data.ticketId) {
+                setSelectedTicket(prev => ({
+                    ...prev,
+                    ...data.ticket,
+                    messages: buildThreadMessages(data.ticket)
+                }));
+            }
+        };
+
+        socket.on('it_ticket_updated', handleTicketUpdate);
+
+        return () => {
+            socket.off('it_ticket_updated', handleTicketUpdate);
+        };
+    }, [selectedTicket]);
 
     useEffect(() => {
         scrollToBottom();
@@ -264,8 +290,10 @@ const ITTicketChat = () => {
                                         borderRadius: '8px',
                                         cursor: 'pointer',
                                         transition: 'all 0.2s ease',
+                                        backgroundColor: (ticket.status !== 'CLOSED' && ticket.status !== 'RESOLVED') ? '#FEF3F3' : '#fff',
+                                        borderLeft: (ticket.status !== 'CLOSED' && ticket.status !== 'RESOLVED') ? '3px solid #C62828' : '3px solid transparent',
                                         '&:hover': {
-                                            backgroundColor: '#f5f5f5',
+                                            backgroundColor: (ticket.status !== 'CLOSED' && ticket.status !== 'RESOLVED') ? '#FDDEDE' : '#f5f5f5',
                                             borderColor: '#1976d2',
                                         },
                                     }}

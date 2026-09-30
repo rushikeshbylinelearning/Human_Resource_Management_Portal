@@ -5,6 +5,7 @@ const User = require('../models/User');
 const NewNotificationService = require('../services/NewNotificationService');
 const authenticateToken = require('../middleware/authenticateToken');
 const requireHRQueryAccess = require('../middleware/requireHRQueryAccess');
+const uploadHRQueryImageGridFS = require('../middleware/uploadHRQueryImageGridFS');
 const { logger } = require('../utils/logger');
 
 // ─── EMPLOYEE ROUTES ────────────────────────────────────────────────────────
@@ -32,7 +33,7 @@ router.get('/my-queries', authenticateToken, async (req, res) => {
 });
 
 // Create a new HR query
-router.post('/create', authenticateToken, async (req, res) => {
+router.post('/create', authenticateToken, uploadHRQueryImageGridFS, async (req, res) => {
     try {
         const { subject, category, message, anonymousToHR } = req.body;
         
@@ -46,6 +47,21 @@ router.post('/create', authenticateToken, async (req, res) => {
             return res.status(404).json({ error: 'Employee not found' });
         }
         
+        // Prepare image attachments if uploaded
+        const attachments = [];
+        if (req.uploadedImages && req.uploadedImages.length > 0) {
+            req.uploadedImages.forEach(img => {
+                attachments.push({
+                    fileId: img.fileId,
+                    filename: img.filename,
+                    originalName: img.originalName,
+                    mimetype: img.mimetype,
+                    size: img.size,
+                    uploadedAt: new Date()
+                });
+            });
+        }
+        
         const query = new HRQuery({
             employeeId: req.user.userId,
             subject,
@@ -57,7 +73,8 @@ router.post('/create', authenticateToken, async (req, res) => {
                 senderId: req.user.userId,
                 message,
                 timestamp: new Date(),
-                read: false
+                read: false,
+                attachments
             }],
             ipAddress: req.ip,
             userAgent: req.headers['user-agent']
@@ -67,26 +84,27 @@ router.post('/create', authenticateToken, async (req, res) => {
         
         logger.info(`HR Query created by employee ${req.user.userId}: ${subject}`);
         
-        // Create notification for Admin/HR using the service
+        // Create notification for HR Query managers using the service
         try {
-            await NewNotificationService.broadcastToAdmins({
+            await NewNotificationService.broadcastToHRQueryManagers({
                 message: `New HR Query: ${subject}`,
                 type: 'hr_query_new',
                 category: 'hr_query',
                 priority: 'high',
                 actionData: {
                     actionType: 'navigate',
-                    actionUrl: `/admin/hr-queries`,
+                    actionUrl: `/operational-dashboard?tab=hr`,
                     requiresAction: true
                 },
                 navigationData: {
-                    page: 'hr-queries',
-                    params: { queryId: query._id }
+                    page: 'operational-dashboard',
+                    params: { tab: 'hr', queryId: query._id }
                 },
                 metadata: {
                     queryId: query._id,
                     queryCategory: query.category,
-                    status: query.status
+                    status: query.status,
+                    type: 'HR_QUERY_CREATED'
                 }
             }, req.user.userId);
         } catch (notifError) {
@@ -104,7 +122,7 @@ router.post('/create', authenticateToken, async (req, res) => {
 });
 
 // Add a message to an existing query
-router.post('/:queryId/message', authenticateToken, async (req, res) => {
+router.post('/:queryId/message', authenticateToken, uploadHRQueryImageGridFS, async (req, res) => {
     try {
         const { message } = req.body;
         
@@ -126,28 +144,44 @@ router.post('/:queryId/message', authenticateToken, async (req, res) => {
         // Get employee name
         const employee = await User.findById(req.user.userId).select('fullName');
         
-        await query.addMessage('employee', employee.fullName, req.user.userId, message);
+        // Prepare image attachments if uploaded
+        const attachments = [];
+        if (req.uploadedImages && req.uploadedImages.length > 0) {
+            req.uploadedImages.forEach(img => {
+                attachments.push({
+                    fileId: img.fileId,
+                    filename: img.filename,
+                    originalName: img.originalName,
+                    mimetype: img.mimetype,
+                    size: img.size,
+                    uploadedAt: new Date()
+                });
+            });
+        }
         
-        // Create notification for Admin/HR using the service
+        await query.addMessage('employee', employee.fullName, req.user.userId, message, attachments);
+        
+        // Create notification for HR Query managers using the service
         try {
-            await NewNotificationService.broadcastToAdmins({
-                message: `New message in HR Query: ${query.subject}`,
+            await NewNotificationService.broadcastToHRQueryManagers({
+                message: `${employee.fullName} added a message to HR Query: ${query.subject}`,
                 type: 'hr_query_response',
                 category: 'hr_query',
                 priority: 'medium',
                 actionData: {
                     actionType: 'navigate',
-                    actionUrl: `/admin/hr-queries`,
+                    actionUrl: `/operational-dashboard?tab=hr`,
                     requiresAction: true
                 },
                 navigationData: {
-                    page: 'hr-queries',
-                    params: { queryId: query._id }
+                    page: 'operational-dashboard',
+                    params: { tab: 'hr', queryId: query._id }
                 },
                 metadata: {
                     queryId: query._id,
                     queryCategory: query.category,
-                    status: query.status
+                    status: query.status,
+                    type: 'HR_QUERY_MESSAGE'
                 }
             }, req.user.userId);
         } catch (notifError) {
@@ -357,7 +391,7 @@ router.get('/admin/all', authenticateToken, requireHRQueryAccess, async (req, re
 });
 
 // Admin/HR/Delegated respond to a query
-router.post('/admin/:queryId/respond', authenticateToken, requireHRQueryAccess, async (req, res) => {
+router.post('/admin/:queryId/respond', authenticateToken, requireHRQueryAccess, uploadHRQueryImageGridFS, async (req, res) => {
     try {
         
         const { message } = req.body;
@@ -375,19 +409,34 @@ router.post('/admin/:queryId/respond', authenticateToken, requireHRQueryAccess, 
         // Get HR/Admin name
         const responder = await User.findById(req.user.userId).select('fullName');
         
+        // Prepare image attachments if uploaded
+        const attachments = [];
+        if (req.uploadedImages && req.uploadedImages.length > 0) {
+            req.uploadedImages.forEach(img => {
+                attachments.push({
+                    fileId: img.fileId,
+                    filename: img.filename,
+                    originalName: img.originalName,
+                    mimetype: img.mimetype,
+                    size: img.size,
+                    uploadedAt: new Date()
+                });
+            });
+        }
+        
         const senderType = req.user.role === 'Admin' ? 'admin' : 'hr';
-        await query.addMessage(senderType, responder.fullName, req.user.userId, message);
+        await query.addMessage(senderType, responder.fullName, req.user.userId, message, attachments);
         
         // Create notification for employee using the service
         try {
             const notifMessage = query.anonymousToHR 
                 ? `HR responded to your query: ${query.subject}`
-                : `${responder.fullName} responded to your query: ${query.subject}`;
+                : `${responder.fullName} responded to your HR query: ${query.subject}`;
                 
             await NewNotificationService.createAndEmitNotification({
                 message: notifMessage,
                 userId: query.employeeId,
-                userName: responder.fullName,
+                userName: query.anonymousToHR ? 'Anonymous Employee' : (await User.findById(query.employeeId).select('fullName').lean())?.fullName || 'Employee',
                 type: 'hr_query_response',
                 recipientType: 'user',
                 category: 'hr_query',
@@ -404,7 +453,9 @@ router.post('/admin/:queryId/respond', authenticateToken, requireHRQueryAccess, 
                 metadata: {
                     queryId: query._id,
                     queryCategory: query.category,
-                    status: query.status
+                    status: query.status,
+                    type: 'HR_QUERY_RESPONSE',
+                    respondedBy: responder.fullName
                 }
             });
         } catch (notifError) {
@@ -581,6 +632,93 @@ router.patch('/admin/resource-request/:requestId/status', authenticateToken, req
     } catch (error) {
         logger.error('Failed to update resource request:', error);
         res.status(500).json({ error: 'Failed to update resource request' });
+    }
+});
+
+// ─── IMAGE HANDLING ROUTES ──────────────────────────────────────────────────
+
+// View/Download HR Query message image
+router.get('/:queryId/images/:imageId', authenticateToken, async (req, res) => {
+    try {
+        const { queryId, imageId } = req.params;
+        const download = req.query.download === 'true';
+
+        // Find the query
+        const query = await HRQuery.findById(queryId).lean();
+
+        if (!query) {
+            return res.status(404).json({ error: 'Query not found.' });
+        }
+
+        // Check authorization
+        const isOwner = query.employeeId.toString() === req.user.userId;
+        const isAdmin = req.user.role === 'Admin' || req.user.role === 'HR';
+        
+        let canManage = isAdmin;
+        if (!isOwner && !canManage) {
+            const dbUser = await User.findById(req.user.userId).select('featurePermissions').lean();
+            canManage = dbUser?.featurePermissions?.canManageHRQueries === true;
+        }
+
+        if (!isOwner && !canManage) {
+            return res.status(403).json({ error: 'Access denied.' });
+        }
+
+        // Find the image in all messages
+        let foundImage = null;
+        for (const message of query.messages) {
+            if (message.attachments && message.attachments.length > 0) {
+                foundImage = message.attachments.find(att => att.fileId && att.fileId.toString() === imageId);
+                if (foundImage) break;
+            }
+        }
+
+        if (!foundImage) {
+            return res.status(404).json({ error: 'Image not found in this query.' });
+        }
+
+        // Get GridFS bucket
+        const mongoose = require('mongoose');
+        const bucket = new mongoose.mongo.GridFSBucket(
+            mongoose.connection.db,
+            { bucketName: "hrQueryImages" }
+        );
+
+        // Check if file exists in GridFS
+        const files = await bucket.find({ _id: new mongoose.Types.ObjectId(imageId) }).toArray();
+
+        if (files.length === 0) {
+            return res.status(404).json({ error: 'Image file not found in storage.' });
+        }
+
+        const file = files[0];
+
+        // Set appropriate headers
+        res.set('Content-Type', foundImage.mimetype || file.contentType || 'image/jpeg');
+        res.set('Content-Length', file.length);
+        
+        if (download) {
+            res.set('Content-Disposition', `attachment; filename="${foundImage.originalName}"`);
+        } else {
+            res.set('Content-Disposition', `inline; filename="${foundImage.originalName}"`);
+        }
+
+        // Stream the file
+        const downloadStream = bucket.openDownloadStream(new mongoose.Types.ObjectId(imageId));
+        
+        downloadStream.on('error', (error) => {
+            console.error('[HR Query Image] Download stream error:', error);
+            if (!res.headersSent) {
+                res.status(500).json({ error: 'Failed to retrieve image.' });
+            }
+        });
+
+        downloadStream.pipe(res);
+    } catch (error) {
+        logger.error('Error retrieving HR query image:', error);
+        if (!res.headersSent) {
+            res.status(500).json({ error: 'Failed to retrieve image.' });
+        }
     }
 });
 

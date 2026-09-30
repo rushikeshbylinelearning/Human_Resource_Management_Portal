@@ -1,0 +1,453 @@
+{
+  "info": {
+    "name": "Image Upload - IT Support & HR Queries",
+    "description": "Test collection for image upload functionality in IT Support tickets and HR Queries",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{auth_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:5000",
+      "type": "string"
+    },
+    {
+      "key": "auth_token",
+      "value": "YOUR_JWT_TOKEN_HERE",
+      "type": "string"
+    },
+    {
+      "key": "ticket_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "query_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "image_id",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "IT Support Tickets",
+      "item": [
+        {
+          "name": "Create Ticket with Images",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "category",
+                  "value": "Computer / Laptop",
+                  "type": "text"
+                },
+                {
+                  "key": "title",
+                  "value": "Screen flickering issue",
+                  "type": "text"
+                },
+                {
+                  "key": "description",
+                  "value": "My laptop screen flickers when I open certain applications. Attached screenshots of the issue.",
+                  "type": "text"
+                },
+                {
+                  "key": "priority",
+                  "value": "High",
+                  "type": "text"
+                },
+                {
+                  "key": "location",
+                  "value": "Desk 42, 3rd Floor",
+                  "type": "text"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": "",
+                  "description": "Upload image 1 (max 500KB)"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": "",
+                  "description": "Upload image 2 (optional)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/it-support/tickets",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "it-support",
+                "tickets"
+              ]
+            },
+            "description": "Create a new IT Support ticket with up to 5 images (500KB each)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Tickets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/it-support/tickets/mine",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "it-support",
+                "tickets",
+                "mine"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Ticket by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/it-support/tickets/{{ticket_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "it-support",
+                "tickets",
+                "{{ticket_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "View Ticket Image",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/it-support/tickets/{{ticket_id}}/images/{{image_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "it-support",
+                "tickets",
+                "{{ticket_id}}",
+                "images",
+                "{{image_id}}"
+              ]
+            },
+            "description": "View image inline in browser"
+          },
+          "response": []
+        },
+        {
+          "name": "Download Ticket Image",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/it-support/tickets/{{ticket_id}}/images/{{image_id}}?download=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "it-support",
+                "tickets",
+                "{{ticket_id}}",
+                "images",
+                "{{image_id}}"
+              ],
+              "query": [
+                {
+                  "key": "download",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Download image as file"
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Ticket Image",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/it-support/tickets/{{ticket_id}}/images/{{image_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "it-support",
+                "tickets",
+                "{{ticket_id}}",
+                "images",
+                "{{image_id}}"
+              ]
+            },
+            "description": "Delete image (owner only, OPEN/ACKNOWLEDGED tickets)"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "HR Queries",
+      "item": [
+        {
+          "name": "Create Query with Images",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "subject",
+                  "value": "Question about leave policy",
+                  "type": "text"
+                },
+                {
+                  "key": "message",
+                  "value": "I need clarification on the annual leave carryover policy. Attached is a screenshot of my leave balance.",
+                  "type": "text"
+                },
+                {
+                  "key": "category",
+                  "value": "Leave",
+                  "type": "text"
+                },
+                {
+                  "key": "anonymousToHR",
+                  "value": "false",
+                  "type": "text"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": "",
+                  "description": "Upload image 1 (max 500KB)"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": "",
+                  "description": "Upload image 2 (optional)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/hr-queries/create",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "hr-queries",
+                "create"
+              ]
+            },
+            "description": "Create a new HR query with up to 5 images (500KB each)"
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Queries",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hr-queries/my-queries",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "hr-queries",
+                "my-queries"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Query by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hr-queries/{{query_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "hr-queries",
+                "{{query_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add Message with Images",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "message",
+                  "value": "Here is additional information with screenshots",
+                  "type": "text"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": "",
+                  "description": "Upload image (max 500KB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/hr-queries/{{query_id}}/message",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "hr-queries",
+                "{{query_id}}",
+                "message"
+              ]
+            },
+            "description": "Add a message to an existing query with images (employee)"
+          },
+          "response": []
+        },
+        {
+          "name": "Admin Respond with Images",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "message",
+                  "value": "Here is the policy document you requested",
+                  "type": "text"
+                },
+                {
+                  "key": "images",
+                  "type": "file",
+                  "src": "",
+                  "description": "Upload image (max 500KB)"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/api/hr-queries/admin/{{query_id}}/respond",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "hr-queries",
+                "admin",
+                "{{query_id}}",
+                "respond"
+              ]
+            },
+            "description": "Admin/HR respond to query with images"
+          },
+          "response": []
+        },
+        {
+          "name": "View Query Message Image",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hr-queries/{{query_id}}/images/{{image_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "hr-queries",
+                "{{query_id}}",
+                "images",
+                "{{image_id}}"
+              ]
+            },
+            "description": "View image inline in browser"
+          },
+          "response": []
+        },
+        {
+          "name": "Download Query Message Image",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hr-queries/{{query_id}}/images/{{image_id}}?download=true",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "hr-queries",
+                "{{query_id}}",
+                "images",
+                "{{image_id}}"
+              ],
+              "query": [
+                {
+                  "key": "download",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Download image as file"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

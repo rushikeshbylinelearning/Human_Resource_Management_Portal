@@ -63,10 +63,12 @@ const hrQuerySchema = new mongoose.Schema({
             default: false
         },
         attachments: [{
-            filename: String,
-            url: String,
-            fileType: String,
-            uploadedAt: Date
+            fileId: mongoose.Schema.Types.ObjectId,      // GridFS file ID
+            filename: String,                             // Generated secure filename
+            originalName: String,                         // User's original filename
+            mimetype: String,                             // Image MIME type
+            size: Number,                                 // File size in bytes
+            uploadedAt: Date                             // Upload timestamp
         }]
     }],
     

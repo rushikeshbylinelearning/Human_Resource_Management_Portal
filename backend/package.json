@@ -17,7 +17,8 @@
     "init:leave-system": "node scripts/initialize-leave-accrual-system.js",
     "init:leave-system:full": "node scripts/initialize-leave-accrual-system.js --run-accrual --live",
     "setup:public-form": "node scripts/create-public-form-indexes.js",
-    "test:public-form": "node scripts/test-public-form-system.js"
+    "test:public-form": "node scripts/test-public-form-system.js",
+    "test:image-upload": "node scripts/test-image-upload.js"
   },
   "keywords": [],
   "author": "",

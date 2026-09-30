@@ -203203,3 +203203,157 @@
   message: 'Request',
   timestamp: '2026-09-29 16:22:42'
 }
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/login',
+  statusCode: 401,
+  duration: '284ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-30 12:12:53'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-30 13:50:49'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-30 13:50:50'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/tickets/6abce5d35f538f450c597ec3/images/6abce5d35f538f450c597ebe',
+  statusCode: 401,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-30 16:08:49'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/tickets/6abce5d35f538f450c597ec3/images/6abce5d35f538f450c597ebe',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-30 16:08:49'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/tickets/6abce5d35f538f450c597ec3/images/6abce5d35f538f450c597ebe',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-30 16:09:05'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/tickets/6abce5d35f538f450c597ec3/images/6abce5d35f538f450c597ebe',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-30 16:09:05'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/tickets/6abce5d35f538f450c597ec3/images/6abce5d35f538f450c597ebe',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-30 16:09:42'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/tickets/6abce5d35f538f450c597ec3/images/6abce5d35f538f450c597ebe',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-30 16:09:42'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/tickets/6abce5d35f538f450c597ec3/images/6abce5d35f538f450c597ebe',
+  statusCode: 401,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-30 16:10:25'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/tickets/6abce5d35f538f450c597ec3/images/6abce5d35f538f450c597ebe',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-30 16:10:25'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/tickets/6abce9895f538f450c598a6a/images/6abce9895f538f450c598a66',
+  statusCode: 401,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-30 16:22:56'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/tickets/6abce9895f538f450c598a6a/images/6abce9895f538f450c598a66',
+  statusCode: 401,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-30 16:26:56'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/tickets/6abce9895f538f450c598a6a/images/6abce9895f538f450c598a66',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-09-30 16:28:27'
+}

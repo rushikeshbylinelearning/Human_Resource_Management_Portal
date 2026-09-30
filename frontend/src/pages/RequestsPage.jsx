@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
-  Box, Button, Paper, Typography, TextField, MenuItem, Chip,
+  Box, Button, Paper, Typography, TextField, MenuItem, Chip, Tabs, Tab,
   Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
   Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert,
 } from '@mui/material';
@@ -10,7 +10,10 @@ import { Add, Inventory2, BusinessCenter as HRIcon, SupportAgent as ITIcon } fro
 import api from '../api/axios';
 import PageHeroHeader from '../components/PageHeroHeader';
 import ITTicketForm from '../components/ITSupport/ITTicketForm';
+import ITTicketDetailsModal from '../components/ITSupport/ITTicketDetailsModal';
 import { TableSkeleton } from '../components/SkeletonLoaders';
+import { formatISTDate } from '../utils/istTime';
+import socket from '../socket';
 import '../styles/RequestsPage.css';
 
 const PRIORITIES = [
@@ -30,16 +33,33 @@ const statusColor = (status) => {
   return map[status] || 'default';
 };
 
+const itStatusColor = (status) => {
+  const s = (status || '').toUpperCase();
+  if (s === 'OPEN' || s === 'PENDING') return 'warning';
+  if (s.includes('PROGRESS')) return 'info';
+  if (s === 'RESOLVED' || s === 'CLOSED') return 'success';
+  return 'default';
+};
+
+const formatITStatus = (status) => {
+  return status?.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' ') || '';
+};
+
 const RequestsPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
+  const [activeTab, setActiveTab] = useState(0);
   const [requests, setRequests] = useState([]);
+  const [itTickets, setItTickets] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
+  const [loadingTickets, setLoadingTickets] = useState(true);
   const [hrFormOpen, setHrFormOpen] = useState(false);
   const [itFormOpen, setItFormOpen] = useState(false);
   const [hrDetailOpen, setHrDetailOpen] = useState(false);
+  const [itDetailOpen, setItDetailOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [selectedTicket, setSelectedTicket] = useState(null);
   const [submittingRequest, setSubmittingRequest] = useState(false);
   const [requestForm, setRequestForm] = useState({
     category: 'Stationery',
@@ -65,20 +85,68 @@ const RequestsPage = () => {
     }
   }, []);
 
+  const fetchITTickets = useCallback(async () => {
+    setLoadingTickets(true);
+    try {
+      const { data } = await api.get('/it-support/tickets/mine');
+      setItTickets(data.tickets || []);
+    } catch (err) {
+      setSnackbar({ open: true, message: err.response?.data?.error || 'Failed to load IT tickets.', severity: 'error' });
+    } finally {
+      setLoadingTickets(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchRequests();
-  }, [fetchRequests]);
+    fetchITTickets();
+  }, [fetchRequests, fetchITTickets]);
 
   useEffect(() => {
     const requestId = searchParams.get('requestId');
-    if (!requestId || !requests.length) return;
-    const match = requests.find((r) => r._id === requestId);
-    if (match) {
-      setSelectedRequest(match);
-      setHrDetailOpen(true);
-      setSearchParams({}, { replace: true });
+    const ticketId = searchParams.get('ticketId');
+    
+    if (requestId && requests.length) {
+      const match = requests.find((r) => r._id === requestId);
+      if (match) {
+        setSelectedRequest(match);
+        setHrDetailOpen(true);
+        setActiveTab(0);
+        setSearchParams({}, { replace: true });
+      }
     }
-  }, [requests, searchParams, setSearchParams]);
+    
+    if (ticketId && itTickets.length) {
+      const match = itTickets.find((t) => t._id === ticketId);
+      if (match) {
+        setSelectedTicket(match);
+        setItDetailOpen(true);
+        setActiveTab(1);
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [requests, itTickets, searchParams, setSearchParams]);
+
+  // Real-time socket updates for IT tickets
+  useEffect(() => {
+    const handleTicketUpdate = (data) => {
+      // Update the ticket in the list
+      setItTickets(prev => prev.map(ticket => 
+        ticket._id === data.ticketId ? { ...ticket, ...data.ticket } : ticket
+      ));
+      
+      // Update selected ticket if it's the one being viewed
+      if (selectedTicket && selectedTicket._id === data.ticketId) {
+        setSelectedTicket(prev => ({ ...prev, ...data.ticket }));
+      }
+    };
+
+    socket.on('it_ticket_updated', handleTicketUpdate);
+
+    return () => {
+      socket.off('it_ticket_updated', handleTicketUpdate);
+    };
+  }, [selectedTicket]);
 
   const handleRequestSubmit = async (e) => {
     e.preventDefault();
@@ -151,45 +219,113 @@ const RequestsPage = () => {
       />
 
       <Paper elevation={0} className="requests-table-panel" sx={{ mt: 2 }}>
-        {loadingRequests ? (
-          <TableSkeleton rows={5} columns={5} />
-        ) : requests.length === 0 ? (
-          <Box className="requests-empty">
-            <HRIcon sx={{ fontSize: 48, color: '#94a3b8', mb: 1 }} />
-            <Typography>No HR requests yet. Click &quot;HR Request&quot; to get started.</Typography>
-          </Box>
-        ) : (
-          <TableContainer>
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Date</TableCell>
-                  <TableCell>Category</TableCell>
-                  <TableCell>Title</TableCell>
-                  <TableCell>Qty</TableCell>
-                  <TableCell>Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {requests.map((req) => (
-                  <TableRow
-                    key={req._id}
-                    hover
-                    sx={{ cursor: 'pointer' }}
-                    onClick={() => { setSelectedRequest(req); setHrDetailOpen(true); }}
-                  >
-                    <TableCell>{new Date(req.createdAt).toLocaleDateString('en-IN')}</TableCell>
-                    <TableCell>{categoryLabel(req)}</TableCell>
-                    <TableCell>{req.title}</TableCell>
-                    <TableCell>{req.quantity}</TableCell>
-                    <TableCell>
-                      <Chip size="small" label={req.status} color={statusColor(req.status)} className="requests-status-chip" />
-                    </TableCell>
+        <Tabs
+          value={activeTab}
+          onChange={(_, newValue) => setActiveTab(newValue)}
+          sx={{ borderBottom: 1, borderColor: 'divider', px: 2 }}
+        >
+          <Tab icon={<HRIcon />} label="HR Requests" iconPosition="start" />
+          <Tab icon={<ITIcon />} label="IT Requests" iconPosition="start" />
+        </Tabs>
+
+        {activeTab === 0 && (
+          loadingRequests ? (
+            <TableSkeleton rows={5} columns={5} />
+          ) : requests.length === 0 ? (
+            <Box className="requests-empty">
+              <HRIcon sx={{ fontSize: 48, color: '#94a3b8', mb: 1 }} />
+              <Typography>No HR requests yet. Click &quot;HR Request&quot; to get started.</Typography>
+            </Box>
+          ) : (
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Category</TableCell>
+                    <TableCell>Title</TableCell>
+                    <TableCell>Qty</TableCell>
+                    <TableCell>Status</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+                </TableHead>
+                <TableBody>
+                  {requests.map((req) => (
+                    <TableRow
+                      key={req._id}
+                      hover
+                      sx={{ cursor: 'pointer' }}
+                      onClick={() => { setSelectedRequest(req); setHrDetailOpen(true); }}
+                    >
+                      <TableCell>{new Date(req.createdAt).toLocaleDateString('en-IN')}</TableCell>
+                      <TableCell>{categoryLabel(req)}</TableCell>
+                      <TableCell>{req.title}</TableCell>
+                      <TableCell>{req.quantity}</TableCell>
+                      <TableCell>
+                        <Chip size="small" label={req.status} color={statusColor(req.status)} className="requests-status-chip" />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )
+        )}
+
+        {activeTab === 1 && (
+          loadingTickets ? (
+            <TableSkeleton rows={5} columns={5} />
+          ) : itTickets.length === 0 ? (
+            <Box className="requests-empty">
+              <ITIcon sx={{ fontSize: 48, color: '#94a3b8', mb: 1 }} />
+              <Typography>No IT requests yet. Click &quot;IT Request&quot; to get started.</Typography>
+            </Box>
+          ) : (
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Date</TableCell>
+                    <TableCell>Ticket ID</TableCell>
+                    <TableCell>Category</TableCell>
+                    <TableCell>Title</TableCell>
+                    <TableCell>Priority</TableCell>
+                    <TableCell>Status</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {itTickets.map((ticket) => {
+                    const isUnresolved = ticket.status !== 'CLOSED' && ticket.status !== 'RESOLVED';
+                    return (
+                      <TableRow
+                        key={ticket._id}
+                        hover
+                        sx={{ 
+                          cursor: 'pointer',
+                          backgroundColor: isUnresolved ? '#FEF3F3' : 'inherit',
+                          borderLeft: isUnresolved ? '3px solid #C62828' : '3px solid transparent',
+                          '&:hover': {
+                            backgroundColor: isUnresolved ? '#FDDEDE !important' : undefined,
+                          },
+                        }}
+                        onClick={() => { setSelectedTicket(ticket); setItDetailOpen(true); }}
+                      >
+                      <TableCell>{formatISTDate(ticket.createdAt)}</TableCell>
+                      <TableCell sx={{ fontWeight: 600 }}>{ticket.ticketId}</TableCell>
+                      <TableCell>{ticket.category}</TableCell>
+                      <TableCell>{ticket.title}</TableCell>
+                      <TableCell>
+                        <Chip size="small" label={ticket.priority} color={itStatusColor(ticket.priority)} />
+                      </TableCell>
+                      <TableCell>
+                        <Chip size="small" label={formatITStatus(ticket.status)} color={itStatusColor(ticket.status)} className="requests-status-chip" />
+                      </TableCell>
+                    </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )
         )}
       </Paper>
 
@@ -325,7 +461,23 @@ const RequestsPage = () => {
               : 'IT request submitted successfully.',
             severity: 'success',
           });
+          fetchITTickets();
         }}
+      />
+
+      <ITTicketDetailsModal
+        open={itDetailOpen}
+        onClose={() => setItDetailOpen(false)}
+        ticket={selectedTicket}
+        onUpdate={(updatedTicket) => {
+          if (updatedTicket) {
+            setItTickets(prev => prev.map(t => t._id === updatedTicket._id ? updatedTicket : t));
+            setSelectedTicket(updatedTicket);
+          } else {
+            fetchITTickets();
+          }
+        }}
+        isAdmin={false}
       />
 
       <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar((s) => ({ ...s, open: false }))}>

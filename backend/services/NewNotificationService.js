@@ -148,6 +148,111 @@ class NewNotificationService {
         }
     }
 
+    /** Notify Admin users and employees granted canManageITSupport. */
+    static async broadcastToITSupportManagers(commonData, originatingUserId = null) {
+        try {
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('[SVC] Broadcasting IT support notification:', commonData);
+            }
+
+            const managers = await User.find({
+                isActive: true,
+                $or: [
+                    { role: 'Admin' },
+                    { 'featurePermissions.canManageITSupport': true },
+                ],
+            }).select('_id fullName').lean();
+
+            const filteredManagers = managers.filter((manager) =>
+                !originatingUserId || manager._id.toString() !== originatingUserId.toString()
+            );
+
+            const notificationData = {
+                ...commonData,
+                userId: null,
+                userName: 'System',
+                recipientType: 'admin',
+                isSystemNotification: true,
+                targetRoles: ['Admin'],
+                metadata: {
+                    ...(commonData.metadata || {}),
+                    requiresITSupportAccess: true,
+                },
+            };
+
+            const notification = await this.createNotification(notificationData);
+
+            const io = getIO();
+            if (io) {
+                for (const manager of filteredManagers) {
+                    io.to(`user_${manager._id}`).emit('new_notification', {
+                        ...notification.toObject(),
+                        userName: 'System',
+                    });
+                }
+            }
+
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`[SVC] IT support notification sent to ${filteredManagers.length} managers.`);
+            }
+        } catch (error) {
+            console.error('[SVC] CRITICAL ERROR in broadcastToITSupportManagers:', error);
+        }
+    }
+
+    /** Notify Admin users and employees granted canManageHRQueries. */
+    static async broadcastToHRQueryManagers(commonData, originatingUserId = null) {
+        try {
+            if (process.env.NODE_ENV !== 'production') {
+                console.log('[SVC] Broadcasting HR query notification:', commonData);
+            }
+
+            const managers = await User.find({
+                isActive: true,
+                $or: [
+                    { role: 'Admin' },
+                    { role: 'HR' },
+                    { 'featurePermissions.canManageHRQueries': true },
+                ],
+            }).select('_id fullName').lean();
+
+            const filteredManagers = managers.filter((manager) =>
+                !originatingUserId || manager._id.toString() !== originatingUserId.toString()
+            );
+
+            const notificationData = {
+                ...commonData,
+                userId: null,
+                userName: 'System',
+                recipientType: 'admin',
+                isSystemNotification: true,
+                targetRoles: ['Admin', 'HR'],
+                metadata: {
+                    ...(commonData.metadata || {}),
+                    requiresHRQueryAccess: true,
+                },
+            };
+
+            const notification = await this.createNotification(notificationData);
+
+            const io = getIO();
+            if (io) {
+                for (const manager of filteredManagers) {
+                    io.to(`user_${manager._id}`).emit('new_notification', {
+                        ...notification.toObject(),
+                        userName: 'System',
+                    });
+                }
+            }
+
+            if (process.env.NODE_ENV !== 'production') {
+                console.log(`[SVC] HR query notification sent to ${filteredManagers.length} managers.`);
+            }
+        } catch (error) {
+            console.error('[SVC] CRITICAL ERROR in broadcastToHRQueryManagers:', error);
+        }
+    }
+
     // --- Specific Notification Event Handlers ---
     // Pass originatingUserId to broadcastToAdmins to prevent self-notifications
     static async notifyCheckIn(userId, userName) {

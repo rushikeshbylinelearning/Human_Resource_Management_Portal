@@ -37,6 +37,7 @@ import ITTicketDetailsModal from '../components/ITSupport/ITTicketDetailsModal';
 import { formatISTDate, formatISTTime } from '../utils/istTime';
 import { usePermissions } from '../hooks/usePermissions';
 import api from '../api/axios';
+import socket from '../socket';
 import './OperationalDashboardPage.css';
 
 const priorityColor = (priority) => {
@@ -189,6 +190,29 @@ const OperationalDashboardPage = () => {
     useEffect(() => {
         loadData();
     }, [loadData]);
+
+    // Real-time socket updates for IT tickets
+    useEffect(() => {
+        const handleTicketUpdate = (data) => {
+            if (currentKey === 'it') {
+                // Update the ticket in the list
+                setItTickets(prev => prev.map(ticket => 
+                    ticket._id === data.ticketId ? { ...ticket, ...data.ticket } : ticket
+                ));
+                
+                // Update selected ticket if it's the one being viewed
+                if (selectedTicket && selectedTicket._id === data.ticketId) {
+                    setSelectedTicket(prev => ({ ...prev, ...data.ticket }));
+                }
+            }
+        };
+
+        socket.on('it_ticket_updated', handleTicketUpdate);
+
+        return () => {
+            socket.off('it_ticket_updated', handleTicketUpdate);
+        };
+    }, [currentKey, selectedTicket]);
 
     const handleTabChange = (_, value) => {
         setActiveTab(value);

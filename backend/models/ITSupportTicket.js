@@ -121,12 +121,32 @@ const itSupportTicketSchema = new mongoose.Schema({
         maxlength: 200
     },
     
-    // Attachment support (using R2 or GridFS)
-    attachments: [{
-        filename: String,
-        url: String,
-        fileType: String,
-        uploadedAt: Date
+    // Image attachments (using GridFS, max 500KB per image)
+    images: [{
+        fileId: {
+            type: mongoose.Schema.Types.ObjectId,
+            required: true
+        },
+        filename: {
+            type: String,
+            required: true
+        },
+        originalName: {
+            type: String,
+            required: true
+        },
+        mimetype: {
+            type: String,
+            required: true
+        },
+        size: {
+            type: Number,
+            required: true
+        },
+        uploadedAt: {
+            type: Date,
+            default: Date.now
+        }
     }],
     
     // Internal notes (visible to IT staff only)
