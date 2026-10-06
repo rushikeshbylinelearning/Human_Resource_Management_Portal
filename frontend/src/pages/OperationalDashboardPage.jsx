@@ -26,11 +26,13 @@ import {
     FormControl,
     InputLabel,
     Select,
+    Button,
 } from '@mui/material';
 import {
     Assessment as AssessmentIcon,
     Search as SearchIcon,
     Refresh as RefreshIcon,
+    Download as DownloadIcon,
 } from '@mui/icons-material';
 import PageHeroHeader from '../components/PageHeroHeader';
 import ITTicketDetailsModal from '../components/ITSupport/ITTicketDetailsModal';
@@ -121,6 +123,7 @@ const OperationalDashboardPage = () => {
     const [itCategories, setItCategories] = useState([]);
     const [selectedTicket, setSelectedTicket] = useState(null);
     const [ticketModalOpen, setTicketModalOpen] = useState(false);
+    const [exportingExcel, setExportingExcel] = useState(false);
 
     const [logs, setLogs] = useState([]);
     const [logsSearch, setLogsSearch] = useState('');
@@ -140,7 +143,8 @@ const OperationalDashboardPage = () => {
         setError('');
         try {
             if (currentKey === 'hr' && hasHR) {
-                const params = new URLSearchParams({ includeResourceRequests: 'false' });
+                const params = new URLSearchParams();
+                // Include resource requests to match FAB button behavior
                 if (hrStatus) params.append('status', hrStatus);
                 const { data } = await api.get(`/hr-queries/admin/all?${params}`);
                 let rows = Array.isArray(data) ? data : [];
@@ -151,6 +155,7 @@ const OperationalDashboardPage = () => {
                             item.subject?.toLowerCase().includes(q)
                             || item.employeeId?.fullName?.toLowerCase().includes(q)
                             || item._id?.toString().includes(q)
+                            || item.category?.toLowerCase().includes(q)
                     );
                 }
                 setHrQueries(rows);
@@ -190,6 +195,34 @@ const OperationalDashboardPage = () => {
     useEffect(() => {
         loadData();
     }, [loadData]);
+
+    const handleExportITTickets = async () => {
+        setExportingExcel(true);
+        try {
+            const params = {};
+            if (itStatus) params.status = itStatus;
+            if (itPriority) params.priority = itPriority;
+            if (itCategory) params.category = itCategory;
+            if (itSearch.trim()) params.search = itSearch.trim();
+
+            const { data } = await api.get('/it-support/tickets/export/excel', {
+                params,
+                responseType: 'blob',
+            });
+
+            const url = window.URL.createObjectURL(new Blob([data]));
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'IT_Support_Tickets.xlsx';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        } catch (err) {
+            console.error('[OperationalDashboard] IT export error:', err.message);
+            setError(err.response?.data?.error || 'Failed to export tickets.');
+        } finally {
+            setExportingExcel(false);
+        }
+    };
 
     // Real-time socket updates for IT tickets
     useEffect(() => {
@@ -276,12 +309,14 @@ const OperationalDashboardPage = () => {
                         <MenuItem value="">All</MenuItem>
                         <MenuItem value="open">Open</MenuItem>
                         <MenuItem value="in-progress">In progress</MenuItem>
+                        <MenuItem value="pending">Pending</MenuItem>
                         <MenuItem value="resolved">Resolved</MenuItem>
                         <MenuItem value="closed">Closed</MenuItem>
+                        <MenuItem value="fulfilled">Fulfilled</MenuItem>
                     </Select>
                 </FormControl>
                 <Typography variant="body2" className="operational-toolbar-meta">
-                    {filteredHr.length} {filteredHr.length === 1 ? 'query' : 'queries'}
+                    {filteredHr.length} {filteredHr.length === 1 ? 'item' : 'items'}
                 </Typography>
             </Box>
             <TableContainer className="operational-table-scroll">
@@ -291,6 +326,7 @@ const OperationalDashboardPage = () => {
                             <TableCell>Query ID</TableCell>
                             <TableCell>Date</TableCell>
                             <TableCell>Employee</TableCell>
+                            <TableCell>Category</TableCell>
                             <TableCell className="operational-cell-subject">Subject</TableCell>
                             <TableCell>Status</TableCell>
                             <TableCell>Assigned To</TableCell>
@@ -305,9 +341,24 @@ const OperationalDashboardPage = () => {
                                 </TableCell>
                                 <TableCell>{formatISTDate(q.createdAt)}</TableCell>
                                 <TableCell>{q.employeeId?.fullName || '—'}</TableCell>
+                                <TableCell>
+                                    {q.category && (
+                                        <Chip 
+                                            size="small" 
+                                            label={q.category} 
+                                            variant="outlined"
+                                            sx={{ fontSize: '0.7rem' }}
+                                        />
+                                    )}
+                                    {!q.category && '—'}
+                                </TableCell>
                                 <TableCell className="operational-cell-subject">{q.subject}</TableCell>
                                 <TableCell>
-                                    <Chip size="small" label={q.status} color={statusColor(q.status)} />
+                                    <Chip 
+                                        size="small" 
+                                        label={q.status ? String(q.status).replace('-', ' ') : 'open'} 
+                                        color={statusColor(q.status)} 
+                                    />
                                 </TableCell>
                                 <TableCell>{q.assignedTo?.fullName || '—'}</TableCell>
                                 <TableCell>{formatISTDate(q.lastMessageAt || q.updatedAt)}</TableCell>
@@ -315,8 +366,8 @@ const OperationalDashboardPage = () => {
                         ))}
                         {!filteredHr.length && !loading && (
                             <TableRow>
-                                <TableCell colSpan={7} align="center" className="operational-table-empty">
-                                    No HR queries found
+                                <TableCell colSpan={8} align="center" className="operational-table-empty">
+                                    No HR queries or requests found
                                 </TableCell>
                             </TableRow>
                         )}
@@ -373,6 +424,16 @@ const OperationalDashboardPage = () => {
                             </Select>
                         </FormControl>
                     )}
+                    <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={<DownloadIcon />}
+                        onClick={handleExportITTickets}
+                        disabled={exportingExcel || loading}
+                        sx={{ ml: 1 }}
+                    >
+                        {exportingExcel ? 'Exporting...' : 'Export to Excel'}
+                    </Button>
                     <Typography variant="body2" className="operational-toolbar-meta">
                         {itTotal} {itTotal === 1 ? 'ticket' : 'tickets'}
                     </Typography>
