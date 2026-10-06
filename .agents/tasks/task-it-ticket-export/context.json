@@ -1,0 +1,23 @@
+{
+  "project_type": "Node.js/Express backend + React frontend with Material-UI, attendance management system",
+  "language": "JavaScript (CommonJS backend, JSX frontend)",
+  "build_system": "npm workspaces with separate backend and frontend directories",
+  "test_framework": "Jest for backend (npm test), no frontend test suite found",
+  "build_command": "npm run build (backend echoes completion message, frontend would use standard React build)",
+  "test_command": "npm test (in backend directory)",
+  "verification_instructions": "Backend: Start server with 'npm run dev' in backend directory on port 5050. Frontend: Start with 'npm start' in frontend directory on port 3000. Test via browser or API client.",
+  "snapshot_or_generated_files": null,
+  "environment_constraints": "Backend runs on port 5050. MongoDB connection required. Frontend connects to backend via api/axios configured base URL. No restart of dev servers required for this task.",
+  "contribution_requirements": "No explicit CONTRIBUTING.md or AGENTS.md found. Follow existing code patterns and conventions. Maintain middleware chains for auth/authorization. Use existing ExcelJS and MUI component patterns.",
+  "key_patterns": "Backend controllers use async/await with try/catch, return JSON errors with 4xx/5xx status codes. Routes use middleware arrays for auth. Frontend components use React hooks (useState, useEffect, useCallback), Material-UI components, and axios for API calls with responseType:'blob' for file downloads. Export pattern: fetch blob, create URL, programmatic anchor click, revoke URL.",
+  "relevant_files": [
+    "backend/controllers/itSupportController.js",
+    "backend/routes/itSupport.js",
+    "backend/models/ITSupportTicket.js",
+    "backend/controllers/analyticsExportController.js",
+    "frontend/src/pages/OperationalDashboardPage.jsx",
+    "frontend/src/components/onboarding/ComplianceDashboard.jsx",
+    "backend/package.json"
+  ],
+  "directory_structure": "Root contains backend/ and frontend/ subdirectories. Backend: controllers/, routes/, models/, middleware/, services/, utils/. Frontend: src/pages/, src/components/, src/api/, src/utils/. FEAT artifacts and plans go in .agents/tasks/ at workspace root (never inside worktree)."
+}

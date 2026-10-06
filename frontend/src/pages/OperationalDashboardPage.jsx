@@ -397,6 +397,7 @@ const OperationalDashboardPage = () => {
                         <Select label="Status" value={itStatus} onChange={(e) => { setItStatus(e.target.value); setItPage(0); }}>
                             <MenuItem value="">All</MenuItem>
                             <MenuItem value="OPEN">Open</MenuItem>
+                            <MenuItem value="ACKNOWLEDGED">Acknowledged</MenuItem>
                             <MenuItem value="IN_PROGRESS">In progress</MenuItem>
                             <MenuItem value="WAITING_FOR_USER">Waiting</MenuItem>
                             <MenuItem value="RESOLVED">Resolved</MenuItem>

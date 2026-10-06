@@ -1,0 +1,7 @@
+{
+  "task_id": "task-it-ticket-export",
+  "task_description": "Add Excel export feature for IT support tickets on the admin operational dashboard",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}
