@@ -15,7 +15,8 @@ const {
     addComment,
     cancelTicket,
     getTicketImage,
-    deleteTicketImage
+    deleteTicketImage,
+    exportITTicketsToExcel
 } = require('../controllers/itSupportController');
 
 // Employee routes - any authenticated user can create and view their own tickets
@@ -30,6 +31,7 @@ router.get('/tickets/:ticketId/images/:imageId', authenticateToken, getTicketIma
 router.delete('/tickets/:ticketId/images/:imageId', authenticateToken, deleteTicketImage);
 
 // Admin/IT Staff routes - require IT support access permission
+router.get('/tickets/export/excel', [authenticateToken, requireITSupportAccess], exportITTicketsToExcel);
 router.get('/tickets', [authenticateToken, requireITSupportAccess], getAllTickets);
 router.patch('/tickets/:id/status', [authenticateToken, requireITSupportAccess], updateTicketStatus);
 router.patch('/tickets/:id/assign', [authenticateToken, requireITSupportAccess], assignTicket);

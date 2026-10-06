@@ -1,0 +1,35 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Backend: Implement IT tickets Excel export endpoint with ExcelJS. Add exportITTicketsToExcel controller function to backend/controllers/itSupportController.js that accepts filter query params (status, priority, category, assignedTo, search), builds Mongoose query matching getAllTickets filter logic (lines 172-200), fetches all matching tickets (no pagination), creates Excel workbook with columns: Ticket ID, Created By, Employee Code, Department, Category, Title, Description, Priority, Status, Assigned To, Location, Created At, Updated At, Resolved At, Resolution Notes, Image Count. Format dates to IST, style header row (bold + gray background per analyticsExportController pattern), set column widths, write buffer, send with Content-Type 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' and Content-Disposition 'attachment; filename=IT_Support_Tickets_YYYY-MM-DD.xlsx'. Add route GET /api/it-support/tickets/export/excel with middleware [authenticateToken, requireITSupportAccess] to backend/routes/itSupport.js before the :id route.",
+  "status": "completed",
+  "steps": [
+    "Read backend/controllers/itSupportController.js fully to understand getAllTickets filter logic (lines 172-200) and error handling patterns",
+    "Read backend/controllers/analyticsExportController.js exportEmployeeAnalytics function (lines 450-720) to understand ExcelJS workbook creation, header styling (lines 655-660), column width setting, and response header pattern",
+    "Add exportITTicketsToExcel async function to backend/controllers/itSupportController.js after getAllTickets (around line 240). Extract query params: status, priority, category, assignedTo, search. Build query object exactly as getAllTickets does (include status/priority/category enum validation, assignedTo null handling for 'unassigned', search regex on ticketId/title/description/createdByName/createdByCode). Use ITSupportTicket.find(query).sort({ createdAt: -1 }).lean() with NO skip/limit to fetch all matching tickets",
+    "In exportITTicketsToExcel: Create ExcelJS workbook and worksheet 'IT Support Tickets'. Define 15 columns with headers and widths: 'Ticket ID' (15), 'Created By' (20), 'Employee Code' (15), 'Department' (15), 'Category' (20), 'Title' (30), 'Description' (40), 'Priority' (10), 'Status' (15), 'Assigned To' (20), 'Location' (20), 'Created At' (18), 'Updated At' (18), 'Resolved At' (18), 'Resolution Notes' (30), 'Image Count' (12). Style header row: bold font, gray fill (pattern: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0E0E0' } })",
+    "In exportITTicketsToExcel: Iterate tickets, add rows. For each ticket: ticketId, createdByName, createdByCode || 'N/A', department || 'N/A', category, title, description (truncate to 500 chars if needed), priority, status, assignedToName || '—', location || '—', formatISTDate(createdAt), formatISTDate(updatedAt), ticket.resolvedAt ? formatISTDate(resolvedAt) : '—', resolutionNotes || '—', images?.length || 0. Check if formatISTDate helper exists in backend/utils, if not use new Date(dateString).toLocaleDateString('en-IN', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' })",
+    "In exportITTicketsToExcel: Set response headers: res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'); const filename = `IT_Support_Tickets_${new Date().toISOString().split('T')[0]}.xlsx`; res.setHeader('Content-Disposition', `attachment; filename=\"${filename}\"`); const buffer = await workbook.xlsx.writeBuffer(); res.send(buffer). Wrap entire function body in try/catch, in catch: console.error, if (!res.headersSent) return res.status(500).json({ error: 'Failed to export IT tickets.' })",
+    "In backend/routes/itSupport.js: Import exportITTicketsToExcel in the destructured require from '../controllers/itSupportController' (line 7). Add route BEFORE line 18 (the tickets/:id route): router.get('/tickets/export/excel', [authenticateToken, requireITSupportAccess], exportITTicketsToExcel);",
+    "Test backend: Start server with 'cd backend && npm run dev'. Use curl or Postman to call GET http://localhost:5050/api/it-support/tickets/export/excel with valid auth token in Authorization header. Verify Excel file downloads with correct columns and data. Test with query params: ?status=OPEN&priority=High to verify filters work. Test with no results to verify empty Excel (headers only) is produced"
+  ],
+  "acceptance_criteria": [
+    "GET /api/it-support/tickets/export/excel returns Excel file with Content-Type 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'",
+    "Excel file contains 15 columns: Ticket ID, Created By, Employee Code, Department, Category, Title, Description, Priority, Status, Assigned To, Location, Created At, Updated At, Resolved At, Resolution Notes, Image Count",
+    "All query params (status, priority, category, assignedTo, search) filter results correctly matching getAllTickets behavior",
+    "Dates are formatted in IST timezone",
+    "Header row has bold font and gray background",
+    "Null/undefined values display as '—' or 'N/A' appropriately",
+    "Route requires authentication and IT support access permission",
+    "Error responses return JSON with 500 status when export fails"
+  ],
+  "verification": [
+    "Run 'cd backend && npm run dev' to start backend server on port 5050",
+    "Use curl or Postman: curl -H 'Authorization: Bearer <valid-token>' http://localhost:5050/api/it-support/tickets/export/excel -o test.xlsx",
+    "Open test.xlsx, verify 15 columns with styled headers and correct data",
+    "Test filters: curl -H 'Authorization: Bearer <valid-token>' 'http://localhost:5050/api/it-support/tickets/export/excel?status=OPEN&priority=High' -o filtered.xlsx, verify only matching tickets appear",
+    "Run backend tests if available: cd backend && npm test"
+  ],
+  "blocked_reason": null,
+  "findings": "Implementation successful. Added exportITTicketsToExcel controller function with ExcelJS support. Route added with authentication and IT support access middleware. All filters (status, priority, category, assignedTo, search) match getAllTickets logic. Excel file includes 15 columns with styled headers, IST-formatted dates, and proper null handling. All backend tests pass."
+}

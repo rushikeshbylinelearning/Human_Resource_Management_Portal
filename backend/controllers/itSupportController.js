@@ -261,6 +261,149 @@ const getAllTickets = async (req, res) => {
 };
 
 /**
+ * Export IT tickets to Excel
+ */
+const exportITTicketsToExcel = async (req, res) => {
+    try {
+        const ExcelJS = require('exceljs');
+        const { formatISTDate } = require('../utils/istTime');
+
+        const query = {};
+
+        // Filters - matching getAllTickets logic
+        if (req.query.status && STATUSES.includes(req.query.status)) {
+            query.status = req.query.status;
+        }
+
+        if (req.query.priority && PRIORITIES.includes(req.query.priority)) {
+            query.priority = req.query.priority;
+        }
+
+        if (req.query.category && ISSUE_CATEGORIES.includes(req.query.category)) {
+            query.category = req.query.category;
+        }
+
+        if (req.query.assignedTo) {
+            if (req.query.assignedTo === 'unassigned') {
+                query.assignedTo = null;
+            } else {
+                query.assignedTo = req.query.assignedTo;
+            }
+        }
+
+        // Search - matching getAllTickets logic
+        if (req.query.search) {
+            const searchRegex = new RegExp(req.query.search, 'i');
+            query.$or = [
+                { ticketId: searchRegex },
+                { title: searchRegex },
+                { description: searchRegex },
+                { createdByName: searchRegex },
+                { createdByCode: searchRegex }
+            ];
+        }
+
+        // Fetch all matching tickets without pagination
+        const tickets = await ITSupportTicket.find(query)
+            .sort({ createdAt: -1 })
+            .lean();
+
+        // Create workbook and worksheet
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = 'Attendance System';
+        workbook.created = new Date();
+        
+        const worksheet = workbook.addWorksheet('IT Support Tickets');
+
+        // Define columns with headers and widths
+        worksheet.columns = [
+            { header: 'Ticket ID', key: 'ticketId', width: 15 },
+            { header: 'Created By', key: 'createdBy', width: 20 },
+            { header: 'Employee Code', key: 'employeeCode', width: 15 },
+            { header: 'Department', key: 'department', width: 15 },
+            { header: 'Category', key: 'category', width: 20 },
+            { header: 'Title', key: 'title', width: 30 },
+            { header: 'Description', key: 'description', width: 40 },
+            { header: 'Priority', key: 'priority', width: 10 },
+            { header: 'Status', key: 'status', width: 15 },
+            { header: 'Assigned To', key: 'assignedTo', width: 20 },
+            { header: 'Location', key: 'location', width: 20 },
+            { header: 'Created At', key: 'createdAt', width: 18 },
+            { header: 'Updated At', key: 'updatedAt', width: 18 },
+            { header: 'Resolved At', key: 'resolvedAt', width: 18 },
+            { header: 'Resolution Notes', key: 'resolutionNotes', width: 30 },
+            { header: 'Image Count', key: 'imageCount', width: 12 }
+        ];
+
+        // Style header row
+        const headerRow = worksheet.getRow(1);
+        headerRow.font = { bold: true };
+        headerRow.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFE0E0E0' }
+        };
+
+        // Add data rows
+        tickets.forEach(ticket => {
+            worksheet.addRow({
+                ticketId: ticket.ticketId || '',
+                createdBy: ticket.createdByName || '',
+                employeeCode: ticket.createdByCode || 'N/A',
+                department: ticket.department || 'N/A',
+                category: ticket.category || '',
+                title: ticket.title || '',
+                description: ticket.description ? 
+                    (ticket.description.length > 500 ? 
+                        ticket.description.substring(0, 500) + '...' : 
+                        ticket.description) : '',
+                priority: ticket.priority || '',
+                status: ticket.status || '',
+                assignedTo: ticket.assignedToName || '—',
+                location: ticket.location || '—',
+                createdAt: ticket.createdAt ? formatISTDate(ticket.createdAt, { 
+                    day: '2-digit', 
+                    month: 'short', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : '',
+                updatedAt: ticket.updatedAt ? formatISTDate(ticket.updatedAt, { 
+                    day: '2-digit', 
+                    month: 'short', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : '',
+                resolvedAt: ticket.resolvedAt ? formatISTDate(ticket.resolvedAt, { 
+                    day: '2-digit', 
+                    month: 'short', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }) : '—',
+                resolutionNotes: ticket.resolutionNotes || '—',
+                imageCount: ticket.images?.length || 0
+            });
+        });
+
+        // Set response headers
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        const filename = `IT_Support_Tickets_${new Date().toISOString().split('T')[0]}.xlsx`;
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+        // Write to buffer and send
+        const buffer = await workbook.xlsx.writeBuffer();
+        res.send(buffer);
+    } catch (error) {
+        console.error('Error exporting IT tickets to Excel:', error);
+        if (!res.headersSent) {
+            return res.status(500).json({ error: 'Failed to export IT tickets.' });
+        }
+    }
+};
+
+/**
  * Get single ticket by ID
  */
 const getTicketById = async (req, res) => {
@@ -880,5 +1023,6 @@ module.exports = {
     addComment,
     cancelTicket,
     getTicketImage,
-    deleteTicketImage
+    deleteTicketImage,
+    exportITTicketsToExcel
 };
