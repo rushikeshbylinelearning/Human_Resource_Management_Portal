@@ -92,10 +92,10 @@ const ITTicketForm = ({ open, onClose, onSuccess }) => {
                 submitData.append('images', image);
             });
 
+            // Let the browser set the multipart boundary. A bare
+            // Content-Type: multipart/form-data header is rejected by the parser.
             const response = await api.post('/it-support/tickets', submitData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data'
-                }
+                headers: { 'Content-Type': undefined },
             });
             
             if (onSuccess) {

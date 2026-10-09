@@ -112,6 +112,8 @@ class NewNotificationService {
                 $or: [
                     { role: 'Admin' },
                     { 'featurePermissions.canManageResourceRequests': true },
+                    // Resource requests also appear on the HR operational queue.
+                    { 'featurePermissions.canManageHRQueries': true },
                 ],
             }).select('_id fullName').lean();
 

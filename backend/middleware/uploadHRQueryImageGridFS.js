@@ -106,8 +106,11 @@ async function uploadToGridFS(buffer, originalName, mimetype, userId) {
  */
 function uploadHRQueryImageGridFS(req, res, next) {
     const contentType = req.headers['content-type'] || '';
+    // Chat and FAB clients post JSON when there are no images. express.json()
+    // has already parsed those bodies; only multipart requests need busboy.
     if (!contentType.includes('multipart/form-data')) {
-        return res.status(400).json({ error: 'Content-Type must be multipart/form-data.' });
+        req.uploadedImages = [];
+        return next();
     }
     
     if (!req.user || (!req.user.userId && !req.user._id)) {

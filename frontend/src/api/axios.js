@@ -72,6 +72,18 @@ api.interceptors.request.use(
       config.params = { ...config.params, _t: Date.now() };
     }
 
+    // FormData must not inherit application/json. The runtime sets the boundary.
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+      if (config.headers) {
+        if (typeof config.headers.delete === 'function') {
+          config.headers.delete('Content-Type');
+        } else {
+          delete config.headers['Content-Type'];
+          delete config.headers['content-type'];
+        }
+      }
+    }
+
     return config;
   },
   (error) => Promise.reject(error)

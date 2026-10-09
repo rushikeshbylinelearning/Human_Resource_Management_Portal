@@ -50,6 +50,7 @@ const RequestsPage = () => {
 
   const [activeTab, setActiveTab] = useState(0);
   const [requests, setRequests] = useState([]);
+  const [hrQueries, setHrQueries] = useState([]);
   const [itTickets, setItTickets] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loadingRequests, setLoadingRequests] = useState(true);
@@ -59,6 +60,7 @@ const RequestsPage = () => {
   const [hrDetailOpen, setHrDetailOpen] = useState(false);
   const [itDetailOpen, setItDetailOpen] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
+  const [selectedQuery, setSelectedQuery] = useState(null);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [submittingRequest, setSubmittingRequest] = useState(false);
   const [requestForm, setRequestForm] = useState({
@@ -85,6 +87,15 @@ const RequestsPage = () => {
     }
   }, []);
 
+  const fetchHrQueries = useCallback(async () => {
+    try {
+      const { data } = await api.get('/hr-queries/my-queries');
+      setHrQueries(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setSnackbar({ open: true, message: err.response?.data?.error || 'Failed to load HR queries.', severity: 'error' });
+    }
+  }, []);
+
   const fetchITTickets = useCallback(async () => {
     setLoadingTickets(true);
     try {
@@ -99,12 +110,14 @@ const RequestsPage = () => {
 
   useEffect(() => {
     fetchRequests();
+    fetchHrQueries();
     fetchITTickets();
-  }, [fetchRequests, fetchITTickets]);
+  }, [fetchRequests, fetchHrQueries, fetchITTickets]);
 
   useEffect(() => {
     const requestId = searchParams.get('requestId');
     const ticketId = searchParams.get('ticketId');
+    const hrQueryId = searchParams.get('hrQueryId');
     
     if (requestId && requests.length) {
       const match = requests.find((r) => r._id === requestId);
@@ -125,15 +138,26 @@ const RequestsPage = () => {
         setSearchParams({}, { replace: true });
       }
     }
-  }, [requests, itTickets, searchParams, setSearchParams]);
+    if (hrQueryId && hrQueries.length) {
+      const match = hrQueries.find((q) => q._id === hrQueryId);
+      if (match) {
+        setSelectedQuery(match);
+        setActiveTab(0);
+        setSearchParams({}, { replace: true });
+      }
+    }
+  }, [requests, hrQueries, itTickets, searchParams, setSearchParams]);
 
   // Real-time socket updates for IT tickets
   useEffect(() => {
     const handleTicketUpdate = (data) => {
-      // Update the ticket in the list
-      setItTickets(prev => prev.map(ticket => 
-        ticket._id === data.ticketId ? { ...ticket, ...data.ticket } : ticket
-      ));
+      setItTickets((prev) => {
+        const exists = prev.some((ticket) => ticket._id === data.ticketId);
+        if (!exists && data.ticket) return [data.ticket, ...prev];
+        return prev.map((ticket) => (
+          ticket._id === data.ticketId ? { ...ticket, ...data.ticket } : ticket
+        ));
+      });
       
       // Update selected ticket if it's the one being viewed
       if (selectedTicket && selectedTicket._id === data.ticketId) {
@@ -142,11 +166,16 @@ const RequestsPage = () => {
     };
 
     socket.on('it_ticket_updated', handleTicketUpdate);
+    const handleHrQueryCreated = () => {
+      fetchHrQueries();
+    };
+    socket.on('hr_query_created', handleHrQueryCreated);
 
     return () => {
       socket.off('it_ticket_updated', handleTicketUpdate);
+      socket.off('hr_query_created', handleHrQueryCreated);
     };
-  }, [selectedTicket]);
+  }, [selectedTicket, fetchHrQueries]);
 
   const handleRequestSubmit = async (e) => {
     e.preventDefault();
@@ -231,10 +260,10 @@ const RequestsPage = () => {
         {activeTab === 0 && (
           loadingRequests ? (
             <TableSkeleton rows={5} columns={5} />
-          ) : requests.length === 0 ? (
+          ) : requests.length === 0 && hrQueries.length === 0 ? (
             <Box className="requests-empty">
               <HRIcon sx={{ fontSize: 48, color: '#94a3b8', mb: 1 }} />
-              <Typography>No HR requests yet. Click &quot;HR Request&quot; to get started.</Typography>
+              <Typography>No HR requests yet. Use HR Request here or HR Query from the help button.</Typography>
             </Box>
           ) : (
             <TableContainer>
@@ -242,6 +271,7 @@ const RequestsPage = () => {
                 <TableHead>
                   <TableRow>
                     <TableCell>Date</TableCell>
+                    <TableCell>Type</TableCell>
                     <TableCell>Category</TableCell>
                     <TableCell>Title</TableCell>
                     <TableCell>Qty</TableCell>
@@ -249,6 +279,28 @@ const RequestsPage = () => {
                   </TableRow>
                 </TableHead>
                 <TableBody>
+                  {hrQueries.map((query) => (
+                    <TableRow
+                      key={`hrq-${query._id}`}
+                      hover
+                      sx={{ cursor: 'pointer' }}
+                      onClick={() => setSelectedQuery(query)}
+                    >
+                      <TableCell>{new Date(query.createdAt).toLocaleDateString('en-IN')}</TableCell>
+                      <TableCell>HR Query</TableCell>
+                      <TableCell>{query.category || 'General'}</TableCell>
+                      <TableCell>{query.subject}</TableCell>
+                      <TableCell>—</TableCell>
+                      <TableCell>
+                        <Chip
+                          size="small"
+                          label={String(query.status || 'open').replace('-', ' ')}
+                          color={query.status === 'resolved' || query.status === 'closed' ? 'success' : 'warning'}
+                          className="requests-status-chip"
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
                   {requests.map((req) => (
                     <TableRow
                       key={req._id}
@@ -257,6 +309,7 @@ const RequestsPage = () => {
                       onClick={() => { setSelectedRequest(req); setHrDetailOpen(true); }}
                     >
                       <TableCell>{new Date(req.createdAt).toLocaleDateString('en-IN')}</TableCell>
+                      <TableCell>Resource</TableCell>
                       <TableCell>{categoryLabel(req)}</TableCell>
                       <TableCell>{req.title}</TableCell>
                       <TableCell>{req.quantity}</TableCell>
@@ -444,6 +497,28 @@ const RequestsPage = () => {
                 <Button color="error" onClick={() => handleRequestCancel(selectedRequest._id)}>Cancel Request</Button>
               )}
               <Button onClick={() => setHrDetailOpen(false)}>Close</Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
+
+      <Dialog open={Boolean(selectedQuery)} onClose={() => setSelectedQuery(null)} maxWidth="sm" fullWidth className="resource-request-dialog">
+        {selectedQuery && (
+          <>
+            <DialogTitle>{selectedQuery.subject}</DialogTitle>
+            <DialogContent>
+              <div className="resource-summary-panel">
+                <Typography className="resource-summary-meta">
+                  HR Query · {selectedQuery.category || 'General'}
+                </Typography>
+                <Chip size="small" label={String(selectedQuery.status || 'open').replace('-', ' ')} />
+              </div>
+              <Typography variant="body2" sx={{ mt: 2, whiteSpace: 'pre-wrap' }}>
+                {selectedQuery.messages?.[0]?.message || 'No message yet.'}
+              </Typography>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setSelectedQuery(null)}>Close</Button>
             </DialogActions>
           </>
         )}

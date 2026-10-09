@@ -32,7 +32,7 @@ import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import api from '../api/axios';
 
-const HRQueryChat = () => {
+const HRQueryChat = ({ onClose }) => {
     const [queries, setQueries] = useState([]);
     const [selectedQuery, setSelectedQuery] = useState(null);
     const [newMessage, setNewMessage] = useState('');
@@ -127,7 +127,7 @@ const HRQueryChat = () => {
             await fetchQueries();
         } catch (error) {
             console.error('Failed to create query:', error);
-            setError('Failed to submit query');
+            setError(error.response?.data?.error || 'Failed to submit query');
         } finally {
             setSending(false);
         }
@@ -145,7 +145,7 @@ const HRQueryChat = () => {
             await fetchQueryDetails(selectedQuery._id);
         } catch (error) {
             console.error('Failed to send message:', error);
-            setError('Failed to send message');
+            setError(error.response?.data?.error || 'Failed to send message');
         } finally {
             setSending(false);
         }
@@ -195,110 +195,132 @@ const HRQueryChat = () => {
     // List View
     if (!selectedQuery) {
         return (
-            <Box>
+            <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', bgcolor: '#f6f7f9' }}>
+                <Box sx={{
+                    px: 2,
+                    py: 1.5,
+                    bgcolor: '#fff',
+                    borderBottom: '1px solid #eceef2',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    flexShrink: 0,
+                }}>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', letterSpacing: '-0.02em', color: '#1a1a1a', lineHeight: 1.2 }}>
+                            HR support
+                        </Typography>
+                        <Typography sx={{ fontSize: '0.75rem', color: '#6b7280', mt: 0.25 }}>
+                            Your queries
+                        </Typography>
+                    </Box>
+                    <Button
+                        size="small"
+                        startIcon={<AddIcon sx={{ fontSize: 16 }} />}
+                        onClick={() => setCreateDialogOpen(true)}
+                        sx={{
+                            textTransform: 'none',
+                            fontSize: '0.78rem',
+                            fontWeight: 650,
+                            backgroundColor: '#C62828',
+                            color: '#fff',
+                            borderRadius: '8px',
+                            px: 1.25,
+                            boxShadow: 'none',
+                            '&:hover': { backgroundColor: '#B71C1C', boxShadow: 'none' },
+                        }}
+                    >
+                        New
+                    </Button>
+                    {onClose && (
+                        <IconButton size="small" onClick={onClose} aria-label="Close HR queries" sx={{ color: '#6b7280' }}>
+                            <CloseIcon fontSize="small" />
+                        </IconButton>
+                    )}
+                </Box>
+
                 {error && (
-                    <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+                    <Alert severity="error" sx={{ m: 1.5, mb: 0, borderRadius: '10px' }} onClose={() => setError('')}>
                         {error}
                     </Alert>
                 )}
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="body2" fontWeight={600} color="#666">
-                        Your HR Queries
-                    </Typography>
-                    <Button
-                        size="small"
-                        startIcon={<AddIcon />}
-                        onClick={() => setCreateDialogOpen(true)}
-                        sx={{
-                            textTransform: 'none',
-                            fontSize: '0.75rem',
-                            backgroundColor: '#1976d2',
-                            color: 'white',
-                            '&:hover': {
-                                backgroundColor: '#1565c0'
-                            }
-                        }}
-                    >
-                        New Query
-                    </Button>
-                </Box>
-
-                {loading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                        <CircularProgress size={30} />
-                    </Box>
-                ) : queries.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 4 }}>
-                        <QuestionAnswerIcon sx={{ fontSize: 48, color: '#ccc', mb: 2 }} />
-                        <Typography variant="body2" color="text.secondary">
-                            No queries yet. Start a conversation with HR!
-                        </Typography>
-                        <Button
-                            size="small"
-                            startIcon={<AddIcon />}
-                            onClick={() => setCreateDialogOpen(true)}
-                            sx={{ mt: 2, textTransform: 'none' }}
-                        >
-                            Ask a Question
-                        </Button>
-                    </Box>
-                ) : (
-                    <Stack spacing={1}>
-                        {queries.map((query) => (
-                            <Paper
-                                key={query._id}
-                                elevation={0}
-                                onClick={() => fetchQueryDetails(query._id)}
-                                sx={{
-                                    p: 1.5,
-                                    border: '1px solid #e8e8e8',
-                                    borderRadius: '8px',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s ease',
-                                    '&:hover': {
-                                        backgroundColor: '#f5f5f5',
-                                        borderColor: '#1976d2'
-                                    }
-                                }}
+                <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', p: 1.5 }}>
+                    {loading ? (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
+                            <CircularProgress size={26} sx={{ color: '#C62828' }} />
+                        </Box>
+                    ) : queries.length === 0 ? (
+                        <Box sx={{ textAlign: 'center', py: 6, px: 2 }}>
+                            <QuestionAnswerIcon sx={{ fontSize: 40, color: '#d1d5db', mb: 1.5 }} />
+                            <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>
+                                No queries yet
+                            </Typography>
+                            <Typography sx={{ fontSize: '0.8rem', color: '#6b7280', mt: 0.5, mb: 2 }}>
+                                Ask HR about leave, payroll, policy, or anything else.
+                            </Typography>
+                            <Button
+                                size="small"
+                                startIcon={<AddIcon />}
+                                onClick={() => setCreateDialogOpen(true)}
+                                sx={{ textTransform: 'none', color: '#C62828' }}
                             >
-                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 0.5 }}>
-                                    <Typography variant="body2" fontWeight={600} sx={{ flex: 1, fontSize: '0.8rem' }}>
-                                        {query.subject}
-                                    </Typography>
-                                    {query.unreadCount > 0 && (
-                                        <Badge badgeContent={query.unreadCount} color="error" sx={{ ml: 1 }} />
-                                    )}
-                                </Box>
-                                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-                                    <Chip
-                                        label={query.status}
-                                        size="small"
-                                        sx={{
-                                            height: '18px',
-                                            fontSize: '0.65rem',
-                                            backgroundColor: statusColors[query.status],
-                                            color: 'white',
-                                            fontWeight: 600
-                                        }}
-                                    />
-                                    <Chip
-                                        label={query.category}
-                                        size="small"
-                                        variant="outlined"
-                                        sx={{
-                                            height: '18px',
-                                            fontSize: '0.65rem'
-                                        }}
-                                    />
-                                    <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto', fontSize: '0.65rem' }}>
-                                        {formatTimestamp(query.lastMessageAt)}
-                                    </Typography>
-                                </Box>
-                            </Paper>
-                        ))}
-                    </Stack>
-                )}
+                                New query
+                            </Button>
+                        </Box>
+                    ) : (
+                        <Stack spacing={1}>
+                            {queries.map((query) => (
+                                <Paper
+                                    key={query._id}
+                                    elevation={0}
+                                    onClick={() => fetchQueryDetails(query._id)}
+                                    sx={{
+                                        p: 1.5,
+                                        border: '1px solid #eceef2',
+                                        borderRadius: '12px',
+                                        cursor: 'pointer',
+                                        backgroundColor: '#fff',
+                                        boxShadow: (query.status === 'open' || query.status === 'in-progress') ? 'inset 3px 0 0 #C62828' : 'none',
+                                        '&:hover': { borderColor: '#e0e0e0', backgroundColor: '#fafafa' },
+                                    }}
+                                >
+                                    <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 0.75 }}>
+                                        <Typography sx={{ flex: 1, minWidth: 0, fontWeight: 650, fontSize: '0.84rem', color: '#1a1a1a', lineHeight: 1.35 }}>
+                                            {query.subject}
+                                        </Typography>
+                                        <Typography sx={{ fontSize: '0.7rem', color: '#9ca3af', flexShrink: 0 }}>
+                                            {formatTimestamp(query.lastMessageAt)}
+                                        </Typography>
+                                    </Box>
+                                    <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'center', flexWrap: 'wrap' }}>
+                                        <Chip
+                                            label={String(query.status || 'open').replace('-', ' ')}
+                                            size="small"
+                                            sx={{
+                                                height: 20,
+                                                fontSize: '0.68rem',
+                                                backgroundColor: statusColors[query.status] || '#9e9e9e',
+                                                color: '#fff',
+                                                fontWeight: 650,
+                                                textTransform: 'capitalize',
+                                            }}
+                                        />
+                                        <Chip
+                                            label={query.category}
+                                            size="small"
+                                            variant="outlined"
+                                            sx={{ height: 20, fontSize: '0.68rem', borderColor: '#e5e7eb', color: '#4b5563' }}
+                                        />
+                                        {query.unreadCount > 0 && (
+                                            <Badge badgeContent={query.unreadCount} color="error" sx={{ ml: 'auto' }} />
+                                        )}
+                                    </Box>
+                                </Paper>
+                            ))}
+                        </Stack>
+                    )}
+                </Box>
 
                 {/* Create Query Dialog */}
                 <Dialog
@@ -369,104 +391,86 @@ const HRQueryChat = () => {
 
     // Chat View
     return (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            {error && (
-                <Alert severity="error" sx={{ mb: 1 }} onClose={() => setError('')}>
-                    {error}
-                </Alert>
-            )}
-
-            {/* Header */}
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2, pb: 1, borderBottom: '1px solid #e8e8e8' }}>
-                <IconButton size="small" onClick={() => setSelectedQuery(null)}>
+        <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column', bgcolor: '#f6f7f9' }}>
+            <Box sx={{
+                px: 1.5,
+                py: 1.25,
+                bgcolor: '#fff',
+                borderBottom: '1px solid #eceef2',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                flexShrink: 0,
+            }}>
+                <IconButton size="small" onClick={() => setSelectedQuery(null)} aria-label="Back to queries">
                     <ArrowBackIcon fontSize="small" />
                 </IconButton>
-                <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2" fontWeight={600} sx={{ fontSize: '0.85rem' }}>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography noWrap sx={{ fontWeight: 700, fontSize: '0.9rem', color: '#1a1a1a' }}>
                         {selectedQuery.subject}
                     </Typography>
-                    <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
+                    <Box sx={{ display: 'flex', gap: 0.5, mt: 0.4 }}>
                         <Chip
-                            label={selectedQuery.status}
+                            label={String(selectedQuery.status || 'open').replace('-', ' ')}
                             size="small"
                             sx={{
-                                height: '16px',
-                                fontSize: '0.6rem',
-                                backgroundColor: statusColors[selectedQuery.status],
-                                color: 'white',
-                                fontWeight: 600
+                                height: 18,
+                                fontSize: '0.65rem',
+                                backgroundColor: statusColors[selectedQuery.status] || '#9e9e9e',
+                                color: '#fff',
+                                fontWeight: 650,
+                                textTransform: 'capitalize',
                             }}
                         />
                         <Chip
                             label={selectedQuery.category}
                             size="small"
                             variant="outlined"
-                            sx={{
-                                height: '16px',
-                                fontSize: '0.6rem'
-                            }}
+                            sx={{ height: 18, fontSize: '0.65rem', borderColor: '#e5e7eb' }}
                         />
                     </Box>
                 </Box>
                 {selectedQuery.status !== 'closed' && (
-                    <Tooltip title="Close Query">
-                        <IconButton
-                            size="small"
-                            onClick={() => handleCloseQuery(selectedQuery._id)}
-                        >
+                    <Tooltip title="Close query">
+                        <IconButton size="small" onClick={() => handleCloseQuery(selectedQuery._id)}>
                             <CloseIcon fontSize="small" />
                         </IconButton>
                     </Tooltip>
                 )}
             </Box>
 
-            {/* Messages */}
-            <Box
-                sx={{
-                    flex: 1,
-                    overflowY: 'auto',
-                    mb: 2,
-                    maxHeight: '300px',
-                    '&::-webkit-scrollbar': {
-                        width: '6px'
-                    },
-                    '&::-webkit-scrollbar-thumb': {
-                        backgroundColor: '#ccc',
-                        borderRadius: '3px'
-                    }
-                }}
-            >
-                <Stack spacing={1.5}>
+            {error && (
+                <Alert severity="error" sx={{ m: 1.5, mb: 0, borderRadius: '10px' }} onClose={() => setError('')}>
+                    {error}
+                </Alert>
+            )}
+
+            <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', px: 1.5, py: 1.5 }}>
+                <Stack spacing={1.25}>
                     {selectedQuery.messages.map((msg, index) => {
                         const isEmployee = msg.sender === 'employee';
                         return (
-                            <Box
-                                key={index}
-                                sx={{
-                                    display: 'flex',
-                                    justifyContent: isEmployee ? 'flex-end' : 'flex-start'
-                                }}
-                            >
+                            <Box key={index} sx={{ display: 'flex', justifyContent: isEmployee ? 'flex-end' : 'flex-start' }}>
                                 <Paper
                                     elevation={0}
                                     sx={{
-                                        p: 1.5,
-                                        maxWidth: '75%',
-                                        backgroundColor: isEmployee ? '#e3f2fd' : '#f5f5f5',
-                                        borderRadius: '12px',
-                                        border: `1px solid ${isEmployee ? '#90caf9' : '#e0e0e0'}`
+                                        p: 1.25,
+                                        maxWidth: '82%',
+                                        backgroundColor: isEmployee ? '#fff' : '#f3f4f6',
+                                        borderRadius: isEmployee ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
+                                        border: '1px solid #eceef2',
                                     }}
                                 >
-                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.4 }}>
                                         {getSenderIcon(msg.sender)}
-                                        <Typography variant="caption" fontWeight={600} sx={{ fontSize: '0.7rem' }}>
+                                        <Typography sx={{ fontSize: '0.7rem', fontWeight: 650, color: '#374151' }}>
                                             {msg.senderName}
                                         </Typography>
-                                        <Typography variant="caption" color="text.secondary" sx={{ ml: 'auto', fontSize: '0.65rem' }}>
+                                        <Typography sx={{ ml: 'auto', fontSize: '0.65rem', color: '#9ca3af' }}>
                                             {formatTimestamp(msg.timestamp)}
                                         </Typography>
                                     </Box>
-                                    <Typography variant="body2" sx={{ fontSize: '0.8rem', whiteSpace: 'pre-wrap' }}>
+                                    <Typography sx={{ fontSize: '0.82rem', whiteSpace: 'pre-wrap', color: '#1a1a1a', lineHeight: 1.45 }}>
                                         {msg.message}
                                     </Typography>
                                 </Paper>
@@ -477,15 +481,14 @@ const HRQueryChat = () => {
                 </Stack>
             </Box>
 
-            {/* Input */}
             {selectedQuery.status !== 'closed' && (
-                <Box sx={{ display: 'flex', gap: 1 }}>
+                <Box sx={{ display: 'flex', gap: 1, p: 1.5, bgcolor: '#fff', borderTop: '1px solid #eceef2', flexShrink: 0 }}>
                     <TextField
                         fullWidth
                         size="small"
                         multiline
                         maxRows={3}
-                        placeholder="Type your message..."
+                        placeholder="Write a reply"
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyPress={(e) => {
@@ -494,27 +497,20 @@ const HRQueryChat = () => {
                                 handleSendMessage();
                             }
                         }}
-                        sx={{
-                            '& .MuiOutlinedInput-root': {
-                                borderRadius: '8px',
-                                fontSize: '0.8rem'
-                            }
-                        }}
+                        sx={{ '& .MuiOutlinedInput-root': { borderRadius: '10px', fontSize: '0.84rem', bgcolor: '#f9fafb' } }}
                     />
                     <IconButton
-                        color="primary"
                         onClick={handleSendMessage}
                         disabled={sending || !newMessage.trim()}
+                        aria-label="Send message"
                         sx={{
-                            backgroundColor: '#1976d2',
-                            color: 'white',
-                            '&:hover': {
-                                backgroundColor: '#1565c0'
-                            },
-                            '&:disabled': {
-                                backgroundColor: '#e0e0e0',
-                                color: '#999'
-                            }
+                            backgroundColor: '#C62828',
+                            color: '#fff',
+                            borderRadius: '10px',
+                            width: 40,
+                            height: 40,
+                            '&:hover': { backgroundColor: '#B71C1C' },
+                            '&:disabled': { backgroundColor: '#e5e7eb', color: '#9ca3af' },
                         }}
                     >
                         <SendIcon fontSize="small" />

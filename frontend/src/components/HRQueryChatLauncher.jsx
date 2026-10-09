@@ -7,7 +7,6 @@ import {
     Typography,
     ClickAwayListener,
     Drawer,
-    IconButton,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
@@ -44,14 +43,22 @@ const HRQueryChatLauncher = () => {
 
     if (hrOpen && !isHrOperator) {
         return (
-            <Drawer anchor="right" open onClose={() => setHrOpen(false)} PaperProps={{ sx: { width: { xs: '100%', sm: 420 } } }}>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
-                    <IconButton onClick={() => setHrOpen(false)} aria-label="Close HR Query">
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
+            <Drawer
+                anchor="right"
+                open
+                onClose={() => setHrOpen(false)}
+                PaperProps={{
+                    sx: {
+                        width: { xs: '100%', sm: 400 },
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden',
+                    },
+                }}
+            >
                 <Suspense fallback={null}>
-                    <HRQueryChat />
+                    <HRQueryChat onClose={() => setHrOpen(false)} />
                 </Suspense>
             </Drawer>
         );
@@ -67,14 +74,22 @@ const HRQueryChatLauncher = () => {
 
     if (itOpen && !isItOperator) {
         return (
-            <Drawer anchor="right" open onClose={() => setItOpen(false)} PaperProps={{ sx: { width: { xs: '100%', sm: 420 } } }}>
-                <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
-                    <IconButton onClick={() => setItOpen(false)} aria-label="Close IT Tickets">
-                        <CloseIcon />
-                    </IconButton>
-                </Box>
+            <Drawer
+                anchor="right"
+                open
+                onClose={() => setItOpen(false)}
+                PaperProps={{
+                    sx: {
+                        width: { xs: '100%', sm: 400 },
+                        height: '100%',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        overflow: 'hidden',
+                    },
+                }}
+            >
                 <Suspense fallback={null}>
-                    <ITTicketChat />
+                    <ITTicketChat onClose={() => setItOpen(false)} />
                 </Suspense>
             </Drawer>
         );

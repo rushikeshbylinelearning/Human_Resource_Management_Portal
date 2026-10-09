@@ -86,6 +86,19 @@ const createTicket = async (req, res) => {
         ticket.addStatusHistory('OPEN', req.user.userId, employee.fullName, 'Ticket created');
         await ticket.save();
 
+        try {
+            const io = getIO();
+            if (io) {
+                io.emit('it_ticket_updated', {
+                    ticketId: ticket._id.toString(),
+                    ticket: ticket.toObject(),
+                    updateType: 'created',
+                });
+            }
+        } catch (socketError) {
+            console.error('Error emitting IT ticket create event:', socketError);
+        }
+
         // Notify IT managers/admins
         await NewNotificationService.broadcastToITSupportManagers({
             message: `New IT Support ticket: ${ticket.ticketId} - ${ticket.title}`,
@@ -441,7 +454,8 @@ const getTicketById = async (req, res) => {
  */
 const updateTicketStatus = async (req, res) => {
     try {
-        const { status, notes } = req.body;
+        const { status } = req.body;
+        const notes = req.body.notes ?? req.body.adminNotes;
 
         if (!status || !STATUSES.includes(status)) {
             return res.status(400).json({ 

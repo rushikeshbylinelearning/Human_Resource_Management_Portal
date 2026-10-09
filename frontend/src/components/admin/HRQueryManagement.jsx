@@ -498,6 +498,7 @@ const HRQueryManagement = () => {
                         </Paper>
                     ) : selectedQuery.itemType === 'resource_request' ? (
                         <ResourceRequestPanel
+                            key={selectedQuery._id}
                             request={selectedQuery}
                             onUpdated={async () => {
                                 await fetchQueries();
@@ -652,11 +653,22 @@ const HRQueryManagement = () => {
 
 const RESOURCE_STATUSES = ['Pending', 'In Progress', 'Fulfilled', 'Rejected'];
 
+const toResourceStatus = (status) => {
+    const aliases = {
+        pending: 'Pending',
+        'in-progress': 'In Progress',
+        'in progress': 'In Progress',
+        fulfilled: 'Fulfilled',
+        rejected: 'Rejected',
+        cancelled: 'Cancelled',
+    };
+    if ([...RESOURCE_STATUSES, 'Cancelled'].includes(status)) return status;
+    const mapped = aliases[String(status || '').toLowerCase()];
+    return RESOURCE_STATUSES.includes(mapped) ? mapped : 'Pending';
+};
+
 const ResourceRequestPanel = ({ request, onUpdated }) => {
-    const canonicalStatus = (request.status || 'Pending')
-        .split('-')
-        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-        .join(' ');
+    const canonicalStatus = toResourceStatus(request.status);
     const [status, setStatus] = useState(
         RESOURCE_STATUSES.includes(canonicalStatus) ? canonicalStatus : 'Pending'
     );

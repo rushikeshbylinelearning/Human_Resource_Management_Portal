@@ -203357,3 +203357,179 @@
   message: 'Request',
   timestamp: '2026-09-30 16:28:27'
 }
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/dashboard-summary?includePendingLeaves=true',
+  statusCode: 200,
+  duration: '4504ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:01:56'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:01:59'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:01:59'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/login',
+  statusCode: 200,
+  duration: '1242ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:02:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/current-status?_t=1791549124863',
+  statusCode: 200,
+  duration: '1024ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:02:05'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/',
+  statusCode: 200,
+  duration: '1167ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:02:06'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/status?_t=1791549124863',
+  statusCode: 200,
+  duration: '1296ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:02:06'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/dashboard/employee?date=2026-10-09',
+  statusCode: 200,
+  duration: '1566ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:02:06'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:02:10'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:02:11'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/login',
+  statusCode: 200,
+  duration: '1226ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:02:15'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/',
+  statusCode: 200,
+  duration: '1157ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:02:17'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/status?_t=1791549136274',
+  statusCode: 200,
+  duration: '1195ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:02:17'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/dashboard/employee?date=2026-10-09',
+  statusCode: 200,
+  duration: '1440ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:02:18'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/dashboard/employee?date=2026-10-09',
+  statusCode: 200,
+  duration: '1598ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:03:22'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/dashboard/employee?date=2026-10-09',
+  statusCode: 200,
+  duration: '1401ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:05:08'
+}

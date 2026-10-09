@@ -7,6 +7,25 @@ const authenticateToken = require('../middleware/authenticateToken');
 const requireHRQueryAccess = require('../middleware/requireHRQueryAccess');
 const uploadHRQueryImageGridFS = require('../middleware/uploadHRQueryImageGridFS');
 const { logger } = require('../utils/logger');
+const { getIO } = require('../socketManager');
+
+const RESOURCE_STATUS_ALIASES = {
+    pending: 'Pending',
+    'in-progress': 'In Progress',
+    'in progress': 'In Progress',
+    fulfilled: 'Fulfilled',
+    rejected: 'Rejected',
+    cancelled: 'Cancelled',
+    canceled: 'Cancelled',
+};
+
+const canonicalResourceStatus = (status) => {
+    if (!status) return '';
+    const raw = String(status).trim();
+    const { STATUSES } = require('../models/EmployeeResourceRequest');
+    if (STATUSES.includes(raw)) return raw;
+    return RESOURCE_STATUS_ALIASES[raw.toLowerCase()] || raw;
+};
 
 // ─── EMPLOYEE ROUTES ────────────────────────────────────────────────────────
 
@@ -66,7 +85,7 @@ router.post('/create', authenticateToken, uploadHRQueryImageGridFS, async (req, 
             employeeId: req.user.userId,
             subject,
             category: category || 'General',
-            anonymousToHR: anonymousToHR || false,
+            anonymousToHR: anonymousToHR === true || anonymousToHR === 'true',
             messages: [{
                 sender: 'employee',
                 senderName: employee.fullName,
@@ -81,6 +100,18 @@ router.post('/create', authenticateToken, uploadHRQueryImageGridFS, async (req, 
         });
         
         await query.save();
+
+        try {
+            const io = getIO();
+            if (io) {
+                io.emit('hr_query_created', {
+                    queryId: query._id.toString(),
+                    employeeId: req.user.userId,
+                });
+            }
+        } catch (socketError) {
+            logger.error('Error emitting HR query create event:', socketError);
+        }
         
         logger.info(`HR Query created by employee ${req.user.userId}: ${subject}`);
         
@@ -325,8 +356,10 @@ router.get('/admin/all', authenticateToken, requireHRQueryAccess, async (req, re
             const User = require('../models/User');
             
             const resourceRequestFilter = {};
-            // Only show pending and in-progress requests as notifications
-            resourceRequestFilter.status = { $in: ['Pending', 'In Progress'] };
+            const resourceStatus = canonicalResourceStatus(status);
+            if (resourceStatus) {
+                resourceRequestFilter.status = resourceStatus;
+            }
             
             const resourceRequests = await EmployeeResourceRequest.find(resourceRequestFilter)
                 .sort({ createdAt: -1 })
@@ -348,7 +381,7 @@ router.get('/admin/all', authenticateToken, requireHRQueryAccess, async (req, re
                     itemType: 'resource_request',
                     subject: `${req.category}: ${req.title}`,
                     category: req.category,
-                    status: req.status.toLowerCase().replace(' ', '-'),
+                    status: req.status,
                     priority: req.priority,
                     employeeId: user ? {
                         _id: user._id,
@@ -576,7 +609,8 @@ router.get('/admin/stats/overview', authenticateToken, requireHRQueryAccess, asy
 router.patch('/admin/resource-request/:requestId/status', authenticateToken, requireHRQueryAccess, async (req, res) => {
     try {
         
-        const { status, adminNotes } = req.body;
+        const { adminNotes } = req.body;
+        const status = canonicalResourceStatus(req.body.status);
         const EmployeeResourceRequest = require('../models/EmployeeResourceRequest');
         const { STATUSES } = require('../models/EmployeeResourceRequest');
         

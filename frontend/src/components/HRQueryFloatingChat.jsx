@@ -731,6 +731,7 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
 
                     {isResource && (
                         <ResourceRequestDetailView
+                            key={selectedQuery._id}
                             request={selectedQuery}
                             onStatusUpdate={fetchQueries}
                         />
@@ -741,8 +742,23 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
     );
 };
 
+const RESOURCE_STATUS_OPTIONS = ['Pending', 'In Progress', 'Fulfilled', 'Rejected', 'Cancelled'];
+
+const toResourceStatus = (status) => {
+    const aliases = {
+        pending: 'Pending',
+        'in-progress': 'In Progress',
+        'in progress': 'In Progress',
+        fulfilled: 'Fulfilled',
+        rejected: 'Rejected',
+        cancelled: 'Cancelled',
+    };
+    if (RESOURCE_STATUS_OPTIONS.includes(status)) return status;
+    return aliases[String(status || '').toLowerCase()] || 'Pending';
+};
+
 const ResourceRequestDetailView = ({ request, onStatusUpdate }) => {
-    const [status, setStatus] = useState(request.status);
+    const [status, setStatus] = useState(toResourceStatus(request.status));
     const [adminNotes, setAdminNotes] = useState(request.resourceRequestData?.adminNotes || '');
     const [updating, setUpdating] = useState(false);
     const [feedback, setFeedback] = useState('');
@@ -876,6 +892,7 @@ const ResourceRequestDetailView = ({ request, onStatusUpdate }) => {
                         <MenuItem value="In Progress">In Progress</MenuItem>
                         <MenuItem value="Fulfilled">Fulfilled</MenuItem>
                         <MenuItem value="Rejected">Rejected</MenuItem>
+                        <MenuItem value="Cancelled">Cancelled</MenuItem>
                     </Select>
                 </FormControl>
 

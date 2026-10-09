@@ -28,27 +28,44 @@ const buildUserNotificationQuery = async (userId, role) => {
     }
 
     const dbUser = await User.findById(userId).select('featurePermissions').lean();
-    const canManageResourceRequests = dbUser?.featurePermissions?.canManageResourceRequests === true;
+    const perms = dbUser?.featurePermissions || {};
+    const or = [
+        { userId, recipientType: { $in: ['user', 'both'] } },
+    ];
 
-    if (canManageResourceRequests) {
+    if (perms.canManageResourceRequests === true || perms.canManageHRQueries === true) {
+        or.push({
+            type: { $in: ['resource_request', 'resource_request_status'] },
+            recipientType: 'admin',
+            isSystemNotification: true,
+        });
+    }
+
+    if (perms.canManageHRQueries === true) {
+        or.push({
+            category: 'hr_query',
+            recipientType: 'admin',
+            isSystemNotification: true,
+        });
+    }
+
+    if (perms.canManageITSupport === true) {
+        or.push({
+            category: 'it_support',
+            recipientType: 'admin',
+            isSystemNotification: true,
+        });
+    }
+
+    if (or.length === 1) {
         return {
             ...base,
-            $or: [
-                { userId, recipientType: { $in: ['user', 'both'] } },
-                {
-                    type: 'resource_request',
-                    recipientType: 'admin',
-                    isSystemNotification: true,
-                },
-            ],
+            userId,
+            recipientType: { $in: ['user', 'both'] },
         };
     }
 
-    return {
-        ...base,
-        userId,
-        recipientType: { $in: ['user', 'both'] },
-    };
+    return { ...base, $or: or };
 };
 
 const userCanAccessNotification = async (notification, reqUser) => {
@@ -66,14 +83,22 @@ const userCanAccessNotification = async (notification, reqUser) => {
         return true;
     }
 
-    if (
-        notification.type === 'resource_request'
-        && notification.recipientType === 'admin'
-        && notification.isSystemNotification
-    ) {
+    if (notification.recipientType === 'admin' && notification.isSystemNotification) {
         const dbUser = await User.findById(userId).select('featurePermissions role').lean();
-        if (dbUser?.role === 'Admin') return true;
-        return dbUser?.featurePermissions?.canManageResourceRequests === true;
+        if (dbUser?.role === 'Admin' || dbUser?.role === 'HR') return true;
+        const perms = dbUser?.featurePermissions || {};
+        if (
+            ['resource_request', 'resource_request_status'].includes(notification.type)
+            && (perms.canManageResourceRequests === true || perms.canManageHRQueries === true)
+        ) {
+            return true;
+        }
+        if (notification.category === 'hr_query' && perms.canManageHRQueries === true) {
+            return true;
+        }
+        if (notification.category === 'it_support' && perms.canManageITSupport === true) {
+            return true;
+        }
     }
 
     return false;

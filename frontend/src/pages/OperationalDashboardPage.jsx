@@ -227,25 +227,30 @@ const OperationalDashboardPage = () => {
     // Real-time socket updates for IT tickets
     useEffect(() => {
         const handleTicketUpdate = (data) => {
-            if (currentKey === 'it') {
-                // Update the ticket in the list
-                setItTickets(prev => prev.map(ticket => 
+            if (currentKey !== 'it') return;
+            setItTickets((prev) => {
+                const exists = prev.some((ticket) => ticket._id === data.ticketId);
+                if (!exists && data.ticket) return [data.ticket, ...prev];
+                return prev.map((ticket) => (
                     ticket._id === data.ticketId ? { ...ticket, ...data.ticket } : ticket
                 ));
-                
-                // Update selected ticket if it's the one being viewed
-                if (selectedTicket && selectedTicket._id === data.ticketId) {
-                    setSelectedTicket(prev => ({ ...prev, ...data.ticket }));
-                }
+            });
+            if (selectedTicket && selectedTicket._id === data.ticketId) {
+                setSelectedTicket((prev) => ({ ...prev, ...data.ticket }));
             }
         };
 
         socket.on('it_ticket_updated', handleTicketUpdate);
+        const handleHrQueryCreated = () => {
+            if (currentKey === 'hr') loadData();
+        };
+        socket.on('hr_query_created', handleHrQueryCreated);
 
         return () => {
             socket.off('it_ticket_updated', handleTicketUpdate);
+            socket.off('hr_query_created', handleHrQueryCreated);
         };
-    }, [currentKey, selectedTicket]);
+    }, [currentKey, selectedTicket, loadData]);
 
     const handleTabChange = (_, value) => {
         setActiveTab(value);

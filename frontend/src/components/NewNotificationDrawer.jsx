@@ -420,14 +420,40 @@ const NewNotificationDrawer = ({ open, onClose, onOpenECRModal }) => {
             }
         }
         
-        if (notificationType === 'resource_request' || notificationType === 'resource_request_status') {
+        if (notificationType === 'resource_request_status') {
             const requestId = metadata?.requestId || navigationData?.params?.requestId;
-            if (user?.role === 'Admin') {
-                navigate(requestId ? `/admin/requests?requestId=${requestId}` : '/admin/requests');
-            } else if (canAccess.manageResourceRequests()) {
+            navigate(requestId ? `/requests?requestId=${requestId}` : '/requests');
+            return;
+        }
+
+        if (notificationType === 'resource_request') {
+            const requestId = metadata?.requestId || navigationData?.params?.requestId;
+            if (user?.role === 'Admin' || canAccess.manageResourceRequests()) {
                 navigate(requestId ? `/resource-requests/manage?requestId=${requestId}` : '/resource-requests/manage');
+            } else if (canAccess.manageHRQueries() || canAccess.operationalDashboard()) {
+                navigate('/operational-dashboard?tab=hr');
             } else {
                 navigate(requestId ? `/requests?requestId=${requestId}` : '/requests');
+            }
+            return;
+        }
+
+        if (notificationType?.startsWith('hr_query')) {
+            const queryId = metadata?.queryId || navigationData?.params?.queryId;
+            if (user?.role === 'Admin' || user?.role === 'HR' || canAccess.manageHRQueries()) {
+                navigate(queryId ? `/operational-dashboard?tab=hr&queryId=${queryId}` : '/operational-dashboard?tab=hr');
+            } else {
+                navigate(queryId ? `/requests?hrQueryId=${queryId}` : '/requests');
+            }
+            return;
+        }
+
+        if (notificationType?.startsWith('it_ticket')) {
+            const ticketId = metadata?.ticketMongoId || navigationData?.params?.ticketId;
+            if (user?.role === 'Admin' || canAccess.manageITSupport()) {
+                navigate(ticketId ? `/operational-dashboard?tab=it&ticketId=${ticketId}` : '/operational-dashboard?tab=it');
+            } else {
+                navigate(ticketId ? `/requests?ticketId=${ticketId}` : '/requests');
             }
             return;
         }

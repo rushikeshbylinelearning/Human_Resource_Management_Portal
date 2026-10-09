@@ -1,10 +1,24 @@
 // Helpers to split admin notification drawer compartments
 
-export const REQUEST_NOTIFICATION_TYPES = ['resource_request', 'resource_request_status'];
+export const REQUEST_NOTIFICATION_TYPES = [
+    'resource_request',
+    'resource_request_status',
+    'hr_query_new',
+    'hr_query_response',
+    'hr_query_status_changed',
+    'it_ticket_created',
+    'it_ticket_status',
+    'it_ticket_assigned',
+    'it_ticket_priority',
+    'it_ticket_comment',
+    'it_ticket_cancelled',
+];
 
 export const isRequestNotification = (notification) => {
     if (!notification) return false;
-    if (notification.category === 'request') return true;
+    if (notification.category === 'request' || notification.category === 'hr_query' || notification.category === 'it_support') {
+        return true;
+    }
     return REQUEST_NOTIFICATION_TYPES.includes(notification.type);
 };
 

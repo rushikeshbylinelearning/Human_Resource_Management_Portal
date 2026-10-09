@@ -1,9 +1,9 @@
 // Service Worker for caching critical resources
 // Supports 300ms performance budget through intelligent caching
 
-const CACHE_NAME = 'attendance-system-v1.0.1';
-const STATIC_CACHE = 'attendance-system-static-v1.0.1';
-const API_CACHE = 'attendance-system-api-v1.0.1';
+const CACHE_NAME = 'attendance-system-v1.0.2';
+const STATIC_CACHE = 'attendance-system-static-v1.0.2';
+const API_CACHE = 'attendance-system-api-v1.0.2';
 
 // Resources to cache immediately on install
 const STATIC_ASSETS = [
@@ -70,11 +70,30 @@ self.addEventListener('activate', (event) => {
     );
 });
 
+function offlineResponse() {
+    return new Response(JSON.stringify({ error: 'Network unavailable' }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' },
+    });
+}
+
 self.addEventListener('fetch', (event) => {
     const { request } = event;
-    const url = new URL(request.url);
 
-    // Handle API requests
+    // Never intercept writes. respondWith(undefined) throws
+    // "Failed to convert value to 'Response'" and breaks PATCH/POST.
+    if (request.method !== 'GET') return;
+
+    let url;
+    try {
+        url = new URL(request.url);
+    } catch {
+        return;
+    }
+
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+
+    // API calls go to the network. Caching a subset must still return a Response.
     if (url.pathname.startsWith('/api/')) {
         if (API_ENDPOINTS.some(endpoint => url.pathname.includes(endpoint))) {
             event.respondWith(handleApiRequest(request));
@@ -82,17 +101,15 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // Handle static assets
     if (STATIC_ASSETS.some(asset => url.pathname === asset)) {
         event.respondWith(handleStaticRequest(request));
         return;
     }
 
-    // Default: network first for other requests
     event.respondWith(
-        fetch(request).catch(() => {
-            // Fallback to cache if network fails
-            return caches.match(request);
+        fetch(request).then((response) => response).catch(async () => {
+            const cached = await caches.match(request);
+            return cached || offlineResponse();
         })
     );
 });
@@ -111,11 +128,7 @@ async function handleApiRequest(request) {
             console.log('[SW] Serving from cache:', request.url);
             return cachedResponse;
         }
-        // ✅ Return a proper Response instead of throwing
-        return new Response(JSON.stringify({ error: 'Network unavailable' }), {
-            status: 503,
-            headers: { 'Content-Type': 'application/json' }
-        });
+        return offlineResponse();
     }
 }
 
@@ -137,7 +150,8 @@ async function handleStaticRequest(request) {
         return networkResponse;
     } catch (error) {
         console.error('[SW] Failed to fetch static asset:', request.url);
-        throw error;
+        const cached = await cache.match(request);
+        return cached || offlineResponse();
     }
 }
 
