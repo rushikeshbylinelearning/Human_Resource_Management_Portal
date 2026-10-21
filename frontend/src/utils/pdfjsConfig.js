@@ -1,13 +1,27 @@
 /**
  * pdf.js worker must be same-origin so it can read blob: URLs and local PDF bytes.
  * pdfjs-dist version must match react-pdf (see package.json).
+ *
+ * The worker is imported with Vite's `?worker` suffix instead of pointing
+ * `workerSrc` at the emitted `pdf.worker.min-*.mjs` asset: production Apache
+ * has no MIME type registered for `.mjs`, so it served that file with no
+ * Content-Type at all — and with `X-Content-Type-Options: nosniff` the
+ * browser refuses to execute it as a module ("Setting up fake worker failed:
+ * Failed to fetch dynamically imported module"). A `?worker` import is
+ * emitted as a plain `.js` chunk, which every static host serves correctly.
  */
+import PdfWorker from 'pdfjs-dist/build/pdf.worker.min.mjs?worker';
 
 export function applyPdfJsWorker(pdfjs) {
-    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-        'pdfjs-dist/build/pdf.worker.min.mjs',
-        import.meta.url,
-    ).toString();
+    try {
+        pdfjs.GlobalWorkerOptions.workerPort = new PdfWorker();
+    } catch {
+        // Fallback for environments where Worker construction is unavailable.
+        pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+            'pdfjs-dist/build/pdf.worker.min.mjs',
+            import.meta.url,
+        ).toString();
+    }
 }
 
 export function getPdfDocumentOptions(pdfjsVersion) {

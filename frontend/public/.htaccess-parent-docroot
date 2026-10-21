@@ -6,6 +6,12 @@
 # and use the .htaccess inside frontend/ instead.
 
 Options -MultiViews +FollowSymLinks -Indexes
+
+# See .htaccess — Apache has no MIME type for .mjs (pdf.js module worker).
+<IfModule mod_mime.c>
+  AddType text/javascript .mjs
+</IfModule>
+
 RewriteEngine On
 RewriteBase /
 

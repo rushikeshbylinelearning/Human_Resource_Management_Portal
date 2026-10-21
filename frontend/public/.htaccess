@@ -20,6 +20,16 @@
 
 Options -MultiViews +FollowSymLinks -Indexes
 DirectoryIndex index.html
+
+# Apache on this host has no MIME type for .mjs. Without this, pdf.js's
+# ES-module worker (assets/mjs/pdf.worker.min-*.mjs) is served with no
+# Content-Type, and browsers refuse to execute it as a module when
+# X-Content-Type-Options: nosniff is set
+# ("Failed to fetch dynamically imported module").
+<IfModule mod_mime.c>
+  AddType text/javascript .mjs
+</IfModule>
+
 RewriteEngine On
 RewriteBase /
 
