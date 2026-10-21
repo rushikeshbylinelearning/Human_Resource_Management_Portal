@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   passwordHash: { type: String, required: true },
-  role: { type: String, enum: ['Admin', 'HR', 'Employee', 'Intern'], default: 'Employee' },
+  role: { type: String, enum: ['Admin', 'HR', 'Employee', 'Intern', 'Operations'], default: 'Employee' },
   authMethod: { type: String, enum: ['local', 'SSO'], default: 'local' },
   domain: { type: String },
   designation: { type: String },

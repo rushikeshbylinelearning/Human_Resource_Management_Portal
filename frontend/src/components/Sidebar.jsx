@@ -32,12 +32,12 @@ const Sidebar = ({ onNotificationClick, isMobileOpen = false, onClose = () => {}
     const [isPending, startTransition] = useTransition();
 
     const menuItems = [
-        { text: 'Home', icon: <DashboardIcon />, path: '/dashboard', roles: ['Employee', 'Intern', 'HR', 'Admin'] },
+        { text: 'Home', icon: <DashboardIcon />, path: '/dashboard', roles: ['Employee', 'Intern', 'HR', 'Admin', 'Operations'] },
         {
             text: 'Summary',
             icon: <AssessmentIcon />,
             path: (user && ['Admin', 'HR'].includes(user.role)) ? '/admin/attendance-summary' : '/attendance-summary',
-            roles: ['Employee', 'Intern', 'HR', 'Admin'],
+            roles: ['Employee', 'Intern', 'HR', 'Admin', 'Operations'],
             tourId: 'sidebar-attendance',
         },
         { text: 'Employees', icon: <PeopleIcon />, path: '/employees', roles: ['HR', 'Admin'] },
@@ -77,7 +77,7 @@ const Sidebar = ({ onNotificationClick, isMobileOpen = false, onClose = () => {}
             text: 'Operational Dashboard',
             icon: <AssessmentIcon />,
             path: '/operational-dashboard',
-            roles: ['Employee', 'Intern', 'HR', 'Admin', 'Manager'],
+            roles: ['Employee', 'Intern', 'HR', 'Admin', 'Manager', 'Operations'],
             permissionCheck: () => canAccess.operationalDashboard(),
             tooltip: 'HR Queries, IT Tickets, Activity Logs',
         },

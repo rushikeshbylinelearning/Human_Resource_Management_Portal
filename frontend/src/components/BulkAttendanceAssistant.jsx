@@ -13,6 +13,7 @@ import RestaurantOutlinedIcon from '@mui/icons-material/RestaurantOutlined';
 import PauseCircleOutlineIcon from '@mui/icons-material/PauseCircleOutline';
 import TimerOffOutlinedIcon from '@mui/icons-material/TimerOffOutlined';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
+import LoginOutlinedIcon from '@mui/icons-material/LoginOutlined';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import api from '../api/axios';
@@ -49,6 +50,11 @@ const ACTION_META = {
         label: 'Check out all employees',
         shortLabel: 'Check out all',
         icon: LogoutOutlinedIcon,
+    },
+    update_employee_checkin: {
+        label: 'Update employee check-in',
+        shortLabel: 'Update check-in',
+        icon: LoginOutlinedIcon,
     },
 };
 
@@ -110,6 +116,9 @@ const BulkAttendanceAssistant = ({ onActionComplete }) => {
     const [executing, setExecuting] = useState(false);
     const [selectedAction, setSelectedAction] = useState(null);
     const [checkoutTime, setCheckoutTime] = useState('');
+    const [checkInTime, setCheckInTime] = useState('');
+    const [selectedUserIds, setSelectedUserIds] = useState([]);
+    const [employeeSearch, setEmployeeSearch] = useState('');
     const [status, setStatus] = useState(null);
     const [position, setPosition] = useState(() => {
         const saved = loadSavedPosition() || getDefaultPosition();
@@ -218,6 +227,9 @@ const BulkAttendanceAssistant = ({ onActionComplete }) => {
             setStatus(null);
             setSelectedAction(null);
             setCheckoutTime(getCurrentIstHHmm());
+            setCheckInTime(getCurrentIstHHmm());
+            setSelectedUserIds([]);
+            setEmployeeSearch('');
             fetchPreview();
         }
     }, [open, fetchPreview]);
@@ -235,20 +247,41 @@ const BulkAttendanceAssistant = ({ onActionComplete }) => {
         setOpen(false);
         setSelectedAction(null);
         setCheckoutTime('');
+        setCheckInTime('');
+        setSelectedUserIds([]);
+        setEmployeeSearch('');
         setStatus(null);
     };
 
     const handleSelectAction = (actionKey) => {
         setStatus(null);
         setSelectedAction(actionKey);
+        setEmployeeSearch('');
         if (actionKey === 'checkout_all_employees') {
             setCheckoutTime((prev) => prev || getCurrentIstHHmm());
+        }
+        if (actionKey === 'update_employee_checkin') {
+            setCheckInTime((prev) => prev || getCurrentIstHHmm());
+            // Pre-select everyone who already checked in today (the correction case);
+            // employees who have not checked in can be ticked manually to check them in.
+            const candidates = preview?.update_employee_checkin?.employees ?? [];
+            setSelectedUserIds(
+                candidates.filter((emp) => emp.hasCheckIn && !emp.onLeave).map((emp) => emp.userId)
+            );
         }
     };
 
     const handleBack = () => {
         setSelectedAction(null);
+        setSelectedUserIds([]);
+        setEmployeeSearch('');
         setStatus(null);
+    };
+
+    const handleToggleEmployee = (userId) => {
+        setSelectedUserIds((prev) => (
+            prev.includes(userId) ? prev.filter((id) => id !== userId) : [...prev, userId]
+        ));
     };
 
     const handleConfirm = async () => {
@@ -257,6 +290,17 @@ const BulkAttendanceAssistant = ({ onActionComplete }) => {
         if (selectedAction === 'checkout_all_employees' && !checkoutTime) {
             setStatus({ type: 'error', text: 'Select a checkout time first.' });
             return;
+        }
+
+        if (selectedAction === 'update_employee_checkin') {
+            if (!checkInTime) {
+                setStatus({ type: 'error', text: 'Select a check-in time first.' });
+                return;
+            }
+            if (selectedUserIds.length === 0) {
+                setStatus({ type: 'error', text: 'Select at least one employee to update.' });
+                return;
+            }
         }
 
         setExecuting(true);
@@ -270,6 +314,10 @@ const BulkAttendanceAssistant = ({ onActionComplete }) => {
             if (selectedAction === 'checkout_all_employees') {
                 payload.checkoutTime = checkoutTime;
             }
+            if (selectedAction === 'update_employee_checkin') {
+                payload.checkInTime = checkInTime;
+                payload.userIds = selectedUserIds;
+            }
 
             const { data } = await api.post('/admin/bulk-attendance-actions/execute', payload);
 
@@ -277,13 +325,17 @@ const BulkAttendanceAssistant = ({ onActionComplete }) => {
             const failed = data?.failedCount ?? 0;
             const timeLabel = selectedAction === 'checkout_all_employees'
                 ? ` at ${formatSelectedTimeLabel(checkoutTime)}`
-                : '';
+                : selectedAction === 'update_employee_checkin'
+                    ? ` at ${formatSelectedTimeLabel(checkInTime)}`
+                    : '';
             const failedLabel = failed > 0 ? `, ${failed} skipped` : '';
             setStatus({
                 type: 'success',
                 text: `${ACTION_META[selectedAction].label} completed (${count} processed${failedLabel})${timeLabel}.`,
             });
             setSelectedAction(null);
+            setSelectedUserIds([]);
+            setEmployeeSearch('');
             setPreview(null);
             await fetchPreview();
             onActionComplete?.(data);
@@ -351,7 +403,98 @@ const BulkAttendanceAssistant = ({ onActionComplete }) => {
         );
     };
 
+    const renderSelectableEmployees = (employees) => {
+        const all = employees ?? [];
+        const query = employeeSearch.trim().toLowerCase();
+        const visible = query
+            ? all.filter((emp) => (
+                (emp.fullName || '').toLowerCase().includes(query)
+                || (emp.employeeCode || '').toLowerCase().includes(query)
+            ))
+            : all;
+        const selectableVisible = visible.filter((emp) => !emp.onLeave);
+
+        return (
+            <div className="baa-overrun-section baa-select-section">
+                <div className="baa-overrun-header baa-select-header">
+                    <span>Select employees</span>
+                    <span className="baa-select-count">{selectedUserIds.length} selected</span>
+                </div>
+                <div className="baa-select-tools">
+                    <input
+                        type="search"
+                        className="baa-select-search"
+                        placeholder="Search name or ID…"
+                        value={employeeSearch}
+                        onChange={(e) => setEmployeeSearch(e.target.value)}
+                        disabled={executing}
+                        aria-label="Search employees"
+                    />
+                    <button
+                        type="button"
+                        className="baa-select-tool-btn"
+                        disabled={executing || selectableVisible.length === 0}
+                        onClick={() => setSelectedUserIds((prev) => [
+                            ...new Set([...prev, ...selectableVisible.map((emp) => emp.userId)]),
+                        ])}
+                    >
+                        Select all
+                    </button>
+                    <button
+                        type="button"
+                        className="baa-select-tool-btn"
+                        disabled={executing || selectedUserIds.length === 0}
+                        onClick={() => setSelectedUserIds([])}
+                    >
+                        Clear
+                    </button>
+                </div>
+                {visible.length === 0 ? (
+                    <p className="baa-overrun-empty">No employees match your search.</p>
+                ) : (
+                    <ul className="baa-overrun-list baa-select-list">
+                        {visible.map((item) => {
+                            const checked = selectedUserIds.includes(item.userId);
+                            return (
+                                <li key={item.userId} className="baa-overrun-item baa-select-item">
+                                    <label className={`baa-select-label${item.onLeave ? ' baa-select-label--disabled' : ''}`}>
+                                        <input
+                                            type="checkbox"
+                                            checked={checked}
+                                            disabled={executing || item.onLeave}
+                                            onChange={() => handleToggleEmployee(item.userId)}
+                                        />
+                                        <span className="baa-overrun-name">
+                                            {item.fullName}
+                                            {item.employeeCode ? (
+                                                <span className="baa-overrun-code"> · {item.employeeCode}</span>
+                                            ) : null}
+                                        </span>
+                                    </label>
+                                    {item.onLeave ? (
+                                        <span className="baa-overrun-badge">On leave</span>
+                                    ) : item.hasCheckIn ? (
+                                        <span className="baa-overrun-badge baa-overrun-badge--neutral">
+                                            In {item.clockInTime ? formatISTTime(item.clockInTime, { hour: '2-digit', minute: '2-digit', hour12: true }) : '—'}
+                                            {item.clockOutTime ? ` · Out ${formatISTTime(item.clockOutTime, { hour: '2-digit', minute: '2-digit', hour12: true })}` : ''}
+                                        </span>
+                                    ) : (
+                                        <span className="baa-overrun-badge baa-overrun-badge--muted">Not checked in</span>
+                                    )}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
+                <p className="baa-select-hint">
+                    Ticked employees who have not checked in yet will be checked in at the time above.
+                </p>
+            </div>
+        );
+    };
+
     const isCheckoutAction = selectedAction === 'checkout_all_employees';
+    const isCheckInAction = selectedAction === 'update_employee_checkin';
     const isOverrunAction = selectedAction === 'overwrite_tea_break_overruns';
 
     const ui = (
@@ -371,7 +514,7 @@ const BulkAttendanceAssistant = ({ onActionComplete }) => {
                 style={{ left: position.x, top: position.y }}
             >
                 {open && (
-                    <div className={`baa-panel${isCheckoutAction ? ' baa-panel--wide' : ''}`} role="dialog" aria-label="Bulk actions">
+                    <div className={`baa-panel${isCheckoutAction || isCheckInAction ? ' baa-panel--wide' : ''}`} role="dialog" aria-label="Bulk actions">
                     <header
                         className="baa-panel__header"
                         onPointerDown={startDrag}
@@ -429,6 +572,7 @@ const BulkAttendanceAssistant = ({ onActionComplete }) => {
                                     const count = preview[key]?.affectedCount ?? 0;
                                     const isOverrun = key === 'overwrite_tea_break_overruns';
                                     const isCheckout = key === 'checkout_all_employees';
+                                    const isCheckIn = key === 'update_employee_checkin';
                                     return (
                                         <li key={key}>
                                             <button
@@ -436,7 +580,7 @@ const BulkAttendanceAssistant = ({ onActionComplete }) => {
                                                 className="baa-action-item"
                                                 onClick={() => handleSelectAction(key)}
                                             >
-                                                <span className={`baa-action-item__icon${isOverrun ? ' baa-action-item__icon--amber' : ''}${isCheckout ? ' baa-action-item__icon--slate' : ''}`}>
+                                                <span className={`baa-action-item__icon${isOverrun ? ' baa-action-item__icon--amber' : ''}${isCheckout ? ' baa-action-item__icon--slate' : ''}${isCheckIn ? ' baa-action-item__icon--green' : ''}`}>
                                                     <Icon fontSize="small" />
                                                 </span>
                                                 <span className="baa-action-item__label">{meta.shortLabel}</span>
@@ -493,10 +637,34 @@ const BulkAttendanceAssistant = ({ onActionComplete }) => {
                                     </>
                                 )}
 
+                                {isCheckInAction && (
+                                    <>
+                                        <div className="baa-time-field">
+                                            <label htmlFor="baa-checkin-time">New check-in time (IST) — today</label>
+                                            <div className="baa-time-field__row">
+                                                <input
+                                                    id="baa-checkin-time"
+                                                    type="time"
+                                                    value={checkInTime}
+                                                    onChange={(e) => setCheckInTime(e.target.value)}
+                                                    disabled={executing}
+                                                />
+                                                <span className="baa-time-field__preview">
+                                                    {formatSelectedTimeLabel(checkInTime) || 'Select time'}
+                                                </span>
+                                            </div>
+                                            <p className="baa-time-field__hint">
+                                                Applied only to the employees selected below. Future times are not allowed, and late status is recalculated from the new time.
+                                            </p>
+                                        </div>
+                                        {renderSelectableEmployees(selectedPreview.employees)}
+                                    </>
+                                )}
+
                                 <div className="baa-confirm__impact">
-                                    <span className="baa-confirm__impact-label">Affected</span>
+                                    <span className="baa-confirm__impact-label">{isCheckInAction ? 'Selected' : 'Affected'}</span>
                                     <span className={`baa-confirm__impact-value${isOverrunAction ? ' baa-confirm__impact-value--amber' : ''}`}>
-                                        {selectedPreview.affectedCount}
+                                        {isCheckInAction ? selectedUserIds.length : selectedPreview.affectedCount}
                                     </span>
                                 </div>
                                 <div className="baa-confirm__actions">
@@ -504,10 +672,10 @@ const BulkAttendanceAssistant = ({ onActionComplete }) => {
                                         type="button"
                                         className={`baa-btn${isOverrunAction ? ' baa-btn--amber' : ' baa-btn--primary'}`}
                                         onClick={handleConfirm}
-                                        disabled={executing || (isCheckoutAction && !checkoutTime)}
+                                        disabled={executing || (isCheckoutAction && !checkoutTime) || (isCheckInAction && (!checkInTime || selectedUserIds.length === 0))}
                                     >
                                         {executing && <CircularProgress size={16} color="inherit" />}
-                                        {isOverrunAction ? 'Clear overruns' : isCheckoutAction ? 'Check out all' : 'Run action'}
+                                        {isOverrunAction ? 'Clear overruns' : isCheckoutAction ? 'Check out all' : isCheckInAction ? `Update check-in (${selectedUserIds.length})` : 'Run action'}
                                     </button>
                                     <button
                                         type="button"

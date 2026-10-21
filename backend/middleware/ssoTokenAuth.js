@@ -4,7 +4,7 @@ const SSOVerification = require('../utils/ssoVerification');
 const { syncOrgFields } = require('../utils/syncOrgFields');
 
 const DEFAULT_SSO_ROLE = (() => {
-  const allowed = ['Admin', 'HR', 'Employee', 'Intern'];
+  const allowed = ['Admin', 'HR', 'Employee', 'Intern', 'Operations'];
   const envRole = process.env.SSO_DEFAULT_ROLE;
   if (envRole && typeof envRole === 'string') {
     const normalized = envRole.trim();

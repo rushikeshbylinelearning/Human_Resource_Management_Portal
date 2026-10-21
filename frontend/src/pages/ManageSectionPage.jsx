@@ -555,6 +555,15 @@ const privilegeOptions = useMemo(() => {
       ...(featurePermissions?.inactivityThresholdMinutes !== undefined && { inactivityThresholdMinutes: featurePermissions.inactivityThresholdMinutes })
     };
     
+    // Operations accounts are limited to attendance marking, their attendance
+    // summary and the Operational Dashboard. For them, only the toggles that
+    // drive those features stay active in this panel — every other toggle is
+    // disabled. Operational Dashboard access itself is NOT granted by the
+    // role: it comes solely from the HR Query Access / IT Ticket Access
+    // toggles below (featurePermissions.canManageHRQueries / canManageITSupport).
+    const isOperationsUser = normalizeRole(currentUser.role) === 'Operations';
+    const notForOperations = isOperationsUser;
+
     const breakWindowCount = safeFeaturePermissions.breakWindows?.length || 0;
     const enabledCoreFeatures = [
       safeFeaturePermissions.leaves,
@@ -689,6 +698,17 @@ const privilegeOptions = useMemo(() => {
           </Box>
         </Paper>
 
+        {isOperationsUser && (
+          <Alert severity="info" sx={{ mb: 3, borderRadius: '12px' }}>
+            <strong>Operations account:</strong> only the toggles for Attendance Marking
+            (Can Check In / Can Check Out / Can Take Break, Breaks) and the Operational
+            Dashboard (<strong>HR Query Access</strong> / <strong>IT Ticket Access</strong>) are
+            active. All other toggles are disabled for this role. Turn HR Query Access or
+            IT Ticket Access <strong>on</strong> and save to give this user the Operational
+            Dashboard — the role alone does not grant it.
+          </Alert>
+        )}
+
         {/* ROW 2: Core Features (4 cols) + Break Timing Configuration (8 cols) */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: 'minmax(0, 1fr)', lg: 'repeat(12, minmax(0, 1fr))' }, gap: { xs: 2, lg: 3 }, mb: 3 }}>
           {/* Core Features - 4 columns */}
@@ -756,6 +776,7 @@ const privilegeOptions = useMemo(() => {
                   </Typography>
                   <Switch
                     checked={safeFeaturePermissions.leaves}
+                    disabled={notForOperations}
                     onChange={(e) => handlePermissionChange(currentUser._id, 'leaves', e.target.checked)}
                     sx={{
                       '& .MuiSwitch-switchBase.Mui-checked': {
@@ -804,6 +825,7 @@ const privilegeOptions = useMemo(() => {
                   </Typography>
                   <Switch
                     checked={safeFeaturePermissions.extraFeatures}
+                    disabled={notForOperations}
                     onChange={(e) => handlePermissionChange(currentUser._id, 'extraFeatures', e.target.checked)}
                     sx={{
                       '& .MuiSwitch-switchBase.Mui-checked': {
@@ -1212,6 +1234,7 @@ const privilegeOptions = useMemo(() => {
                   </Box>
                   <Switch
                     checked={safeFeaturePermissions.canViewAnalytics}
+                    disabled={notForOperations}
                     onChange={(e) => handlePermissionChange(currentUser._id, 'canViewAnalytics', e.target.checked)}
                     sx={{
                       '& .MuiSwitch-switchBase.Mui-checked': {
@@ -1241,6 +1264,7 @@ const privilegeOptions = useMemo(() => {
                   </Box>
                   <Switch
                     checked={safeFeaturePermissions.canViewLiveAttendance}
+                    disabled={notForOperations}
                     onChange={(e) => handlePermissionChange(currentUser._id, 'canViewLiveAttendance', e.target.checked)}
                     sx={{
                       '& .MuiSwitch-switchBase.Mui-checked': {
@@ -1328,6 +1352,7 @@ const privilegeOptions = useMemo(() => {
                   </Box>
                   <Switch
                     checked={safeFeaturePermissions.canManageBulkAttendanceActions}
+                    disabled={notForOperations}
                     onChange={(e) => handlePermissionChange(currentUser._id, 'canManageBulkAttendanceActions', e.target.checked)}
                     sx={{
                       '& .MuiSwitch-switchBase.Mui-checked': {
@@ -1531,7 +1556,7 @@ const privilegeOptions = useMemo(() => {
                 <Select
                   value={safeFeaturePermissions.privilegeLevel || 'normal'}
                   onChange={(e) => handlePermissionChange(currentUser._id, 'privilegeLevel', e.target.value)}
-                  disabled={saving[currentUser._id]}
+                  disabled={saving[currentUser._id] || notForOperations}
                   label="Select Level"
                   sx={{
                     borderRadius: '12px',
@@ -1608,6 +1633,7 @@ const privilegeOptions = useMemo(() => {
                     <Typography variant="body2" sx={{ color: '#374151', fontWeight: 500 }}>Can View Reports</Typography>
                     <Switch
                       checked={safeFeaturePermissions.restrictedFeatures.canViewReports}
+                      disabled={notForOperations}
                       onChange={(e) => handlePermissionChange(currentUser._id, 'restrictedFeatures.canViewReports', e.target.checked)}
                       sx={{
                         '& .MuiSwitch-switchBase.Mui-checked': {
@@ -1626,6 +1652,7 @@ const privilegeOptions = useMemo(() => {
                     <Typography variant="body2" sx={{ color: '#374151', fontWeight: 500 }}>Can View Other Logs</Typography>
                     <Switch
                       checked={safeFeaturePermissions.restrictedFeatures.canViewOtherLogs}
+                      disabled={notForOperations}
                       onChange={(e) => handlePermissionChange(currentUser._id, 'restrictedFeatures.canViewOtherLogs', e.target.checked)}
                       sx={{
                         '& .MuiSwitch-switchBase.Mui-checked': {
@@ -1644,6 +1671,7 @@ const privilegeOptions = useMemo(() => {
                     <Typography variant="body2" sx={{ color: '#374151', fontWeight: 500 }}>Can Edit Profile</Typography>
                     <Switch
                       checked={safeFeaturePermissions.restrictedFeatures.canEditProfile}
+                      disabled={notForOperations}
                       onChange={(e) => handlePermissionChange(currentUser._id, 'restrictedFeatures.canEditProfile', e.target.checked)}
                       sx={{
                         '& .MuiSwitch-switchBase.Mui-checked': {
@@ -1730,6 +1758,7 @@ const privilegeOptions = useMemo(() => {
                     <Typography variant="body2" sx={{ color: '#374151', fontWeight: 500 }}>Bulk Actions</Typography>
                     <Switch
                       checked={safeFeaturePermissions.advancedFeatures.canBulkActions}
+                      disabled={notForOperations}
                       onChange={(e) => handlePermissionChange(currentUser._id, 'advancedFeatures.canBulkActions', e.target.checked)}
                       sx={{
                         '& .MuiSwitch-switchBase.Mui-checked': {
@@ -1748,6 +1777,7 @@ const privilegeOptions = useMemo(() => {
                     <Typography variant="body2" sx={{ color: '#374151', fontWeight: 500 }}>Export Data</Typography>
                     <Switch
                       checked={safeFeaturePermissions.advancedFeatures.canExportData}
+                      disabled={notForOperations}
                       onChange={(e) => handlePermissionChange(currentUser._id, 'advancedFeatures.canBulkActions', e.target.checked)}
                       sx={{
                         '& .MuiSwitch-switchBase.Mui-checked': {

@@ -19,6 +19,7 @@ const getRoleLabel = (role = '') => {
         Intern: 'Intern',
         HR: 'HR Manager',
         Admin: 'Administrator',
+        Operations: 'Operations',
         Manager: 'Manager',
     };
     return map[role] || role || 'Employee';

@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, Suspense } from 'react';
 import PropTypes from 'prop-types';
 import { PdfDocument, PdfPage } from './lazy/LazyPdfComponents';
+import PdfErrorBoundary from './PdfErrorBoundary';
 import { Box, IconButton, Typography, Stack, CircularProgress } from '@mui/material';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
@@ -22,6 +23,10 @@ const SecurePdfViewer = ({ pdfUrl, policyName, role = 'employee', onClose }) => 
     const pdfBlobUrlRef = useRef(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [pdfRenderKey, setPdfRenderKey] = useState(0);
+    // Stable reference — a new object per render reloads <Document> and
+    // destroys the pdf.js transport mid-render (see pdfjsConfig).
+    const documentOptions = useMemo(() => getReactPdfDocumentOptions(), []);
     const containerRef = useRef(null);
     const pageRefs = useRef({});
 
@@ -292,11 +297,22 @@ const SecurePdfViewer = ({ pdfUrl, policyName, role = 'employee', onClose }) => 
                             <CircularProgress />
                         </Box>
                     }>
+                    <PdfErrorBoundary
+                        key={`${pdfSrc}-${pdfRenderKey}`}
+                        fallback={(renderError, retry) => (
+                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, p: 4 }}>
+                                <Typography color="error">Failed to display this PDF.</Typography>
+                                <button type="button" onClick={() => { setPdfRenderKey((k) => k + 1); retry(); }}>
+                                    Try again
+                                </button>
+                            </Box>
+                        )}
+                    >
                     <PdfDocument
-                        key={pdfSrc}
+                        key={`${pdfSrc}-${pdfRenderKey}`}
                         file={pdfSrc}
                         onLoadSuccess={onDocumentLoadSuccess}
-                        options={getReactPdfDocumentOptions()}
+                        options={documentOptions}
                         loading={
                             <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                                 <CircularProgress />
@@ -325,6 +341,7 @@ const SecurePdfViewer = ({ pdfUrl, policyName, role = 'employee', onClose }) => 
                             </Box>
                         ))}
                     </PdfDocument>
+                    </PdfErrorBoundary>
                     </Suspense>
                 )}
             </Box>

@@ -6,7 +6,7 @@ const User = require('../models/User');
 const { syncOrgFields } = require('../utils/syncOrgFields');
 
 const DEFAULT_SSO_ROLE = (() => {
-    const allowed = ['Admin', 'HR', 'Employee', 'Intern'];
+    const allowed = ['Admin', 'HR', 'Employee', 'Intern', 'Operations'];
     const envRole = process.env.SSO_DEFAULT_ROLE;
     if (envRole && typeof envRole === 'string') {
         const normalized = envRole.trim();
@@ -132,7 +132,9 @@ class SSOService
             'employee': 'Employee',
             'staff': 'Employee',
             'intern': 'Intern',
-            'trainee': 'Intern'
+            'trainee': 'Intern',
+            'operations': 'Operations',
+            'ops': 'Operations'
         };
 
         const normalizedRole = ssoRole.toLowerCase().replace(/[_\s]/g, '_');

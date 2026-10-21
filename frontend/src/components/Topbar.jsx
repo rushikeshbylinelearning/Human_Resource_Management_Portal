@@ -61,7 +61,8 @@ const Topbar = ({ onNotificationClick, onHamburgerClick }) => {
                 <img src="/BL.svg" alt="Company Logo" className="topbar-logo-img" width="40" height="40" />
             </div>
             <div className="topbar-right">
-                <AnnouncementDropdown />
+                {user?.role !== 'Operations' && <AnnouncementDropdown />}
+                {user?.role !== 'Operations' && (
                 <Tooltip title="Help & Support">
                     <IconButton
                         className="topbar-icon-btn"
@@ -72,11 +73,14 @@ const Topbar = ({ onNotificationClick, onHamburgerClick }) => {
                         <HelpOutlineIcon />
                     </IconButton>
                 </Tooltip>
+                )}
+                {user?.role !== 'Operations' && (
                 <IconButton className="topbar-icon-btn" onClick={onNotificationClick} data-tour="notification-bell">
                     <Badge badgeContent={Number(unreadCount) || 0} color="error" max={99}>
                         <NotificationsNoneIcon />
                     </Badge>
                 </IconButton>
+                )}
                 <Tooltip title="Account">
                     <IconButton
                         onClick={handleMenu}
@@ -99,7 +103,7 @@ const Topbar = ({ onNotificationClick, onHamburgerClick }) => {
                     sx={{ mt: '45px' }}
                     PaperProps={{ sx: { borderRadius: '8px', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' } }}
                 >
-                    <MenuItem onClick={handleProfile}>Profile</MenuItem>
+                    {user?.role !== 'Operations' && <MenuItem onClick={handleProfile}>Profile</MenuItem>}
                     <MenuItem onClick={handleLogout}>Logout</MenuItem>
                 </Menu>
             </div>

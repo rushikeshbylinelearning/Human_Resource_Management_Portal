@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect, useRef, Suspense } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { PdfDocument, PdfPage } from './lazy/LazyPdfComponents';
+import PdfErrorBoundary from './PdfErrorBoundary';
 import '../styles/CustomPdfViewer.css';
 import api from '../api/axios';
 import { formatPdfFetchError, getReactPdfDocumentOptions, createPdfBlobUrl, revokePdfBlobUrl } from '../utils/pdfjsConfig';
@@ -33,6 +34,25 @@ const CustomPdfViewer = ({
     const [acknowledged, setAcknowledged] = useState(false);
     const [hasReachedEnd, setHasReachedEnd] = useState(false);
     const [readingSeconds, setReadingSeconds] = useState(0);
+    // TextLayer is the component that crashes when pdf.js transport is torn
+    // down mid-stream; if it ever fails we retry once without it (canvas +
+    // annotations still render, reading/acknowledgement are unaffected).
+    const [renderTextLayer, setRenderTextLayer] = useState(true);
+    const [pdfRenderKey, setPdfRenderKey] = useState(0);
+    // Stable reference — a new object per render reloads <Document> and
+    // destroys the transport under in-flight TextLayers (see pdfjsConfig).
+    const documentOptions = useMemo(() => getReactPdfDocumentOptions(), []);
+
+    const handlePdfRenderError = useCallback(() => {
+        if (renderTextLayer) {
+            setRenderTextLayer(false);
+            setPdfRenderKey((k) => k + 1);
+        }
+    }, [renderTextLayer]);
+
+    const retryPdfRender = useCallback(() => {
+        setPdfRenderKey((k) => k + 1);
+    }, []);
 
     const modalRef = useRef(null);
     const contentRef = useRef(null);
@@ -102,6 +122,7 @@ const CustomPdfViewer = ({
                 setAcknowledged(false);
                 setHasReachedEnd(false);
                 setReadingSeconds(0);
+                setRenderTextLayer(true);
                 readingStartNotifiedRef.current = false;
                 
                 console.log('[CustomPdfViewer] Fetching PDF from:', pdfUrl);
@@ -286,6 +307,33 @@ const CustomPdfViewer = ({
 
     const timerRemaining = Math.max(0, MIN_READ_SECONDS - readingSeconds);
 
+    // Memoized so the 1s reading-timer re-render (and scroll/ack state changes)
+    // does not hand <Document> a new children array / options object, which
+    // would reload the document and kill the transport under its TextLayers.
+    const pdfPages = useMemo(() => Array.from(new Array(numPages || 0), (_, index) => (
+        <div
+            key={`page_${index + 1}`}
+            ref={(el) => { pageRefs.current[index + 1] = el; }}
+            className="pdf-page-wrapper"
+            data-page-number={index + 1}
+        >
+            <PdfPage
+                pageNumber={index + 1}
+                scale={scale}
+                renderTextLayer={renderTextLayer}
+                renderAnnotationLayer={true}
+                loading={
+                    <div className="pdf-page-loading">
+                        <div className="pdf-page-spinner" />
+                    </div>
+                }
+            />
+            <div className="pdf-page-number-badge">
+                Page {index + 1} of {numPages}
+            </div>
+        </div>
+    )), [numPages, scale, renderTextLayer]);
+
     return createPortal(
         <>
             <div
@@ -429,39 +477,34 @@ const CustomPdfViewer = ({
                                     <p>Loading PDF...</p>
                                 </div>
                             }>
+                            <PdfErrorBoundary
+                                key={`${pdfSrc}-${pdfRenderKey}`}
+                                onError={handlePdfRenderError}
+                                fallback={(renderError, retry) => (
+                                    <div className="pdf-error" role="alert">
+                                        <p>Failed to display this PDF. You can retry — your reading progress is kept.</p>
+                                        <button
+                                            type="button"
+                                            className="pdf-ack-accept-btn"
+                                            onClick={() => { retryPdfRender(); retry(); }}
+                                        >
+                                            Retry loading PDF
+                                        </button>
+                                    </div>
+                                )}
+                            >
                             <PdfDocument
-                                key={pdfSrc}
+                                key={`${pdfSrc}-${pdfRenderKey}`}
                                 file={pdfSrc}
                                 onLoadSuccess={onDocumentLoadSuccess}
                                 onLoadError={onDocumentLoadError}
                                 loading=""
                                 error=""
-                                options={getReactPdfDocumentOptions()}
+                                options={documentOptions}
                             >
-                                {Array.from(new Array(numPages), (_, index) => (
-                                    <div
-                                        key={`page_${index + 1}`}
-                                        ref={(el) => { pageRefs.current[index + 1] = el; }}
-                                        className="pdf-page-wrapper"
-                                        data-page-number={index + 1}
-                                    >
-                                        <PdfPage
-                                            pageNumber={index + 1}
-                                            scale={scale}
-                                            renderTextLayer={true}
-                                            renderAnnotationLayer={true}
-                                            loading={
-                                                <div className="pdf-page-loading">
-                                                    <div className="pdf-page-spinner" />
-                                                </div>
-                                            }
-                                        />
-                                        <div className="pdf-page-number-badge">
-                                            Page {index + 1} of {numPages}
-                                        </div>
-                                    </div>
-                                ))}
+                                {pdfPages}
                             </PdfDocument>
+                            </PdfErrorBoundary>
                             </Suspense>
                         )}
                     </div>

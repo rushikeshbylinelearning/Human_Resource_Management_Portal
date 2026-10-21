@@ -61,6 +61,10 @@ export const usePermissions = () => {
   const canAccess = useMemo(() => ({
     // Core features
     leaves: () => {
+      // Operations is limited to attendance marking, summary and Operational Dashboard.
+      if (user?.role === 'Operations') {
+        return false;
+      }
       if (!['Admin', 'HR'].includes(user?.role) && user?.leavesSectionEnabled === false) {
         return false;
       }
@@ -155,6 +159,8 @@ export const usePermissions = () => {
       if (['Admin', 'HR'].includes(user?.role)) {
         return true;
       }
+      // No role-based grant for Operations: access comes only from the
+      // "HR Query Access" toggle in Manage Section (featurePermissions).
       return permissions.canManageHRQueries === true;
     },
 
@@ -162,6 +168,8 @@ export const usePermissions = () => {
       if (user?.role === 'Admin') {
         return true;
       }
+      // No role-based grant for Operations: access comes only from the
+      // "IT Ticket Access" toggle in Manage Section (featurePermissions).
       return permissions.canManageITSupport === true;
     },
 
@@ -169,6 +177,8 @@ export const usePermissions = () => {
       if (user?.role === 'Admin') {
         return true;
       }
+      // Toggle-driven for every non-Admin role (including Operations):
+      // Manage Section -> HR Query Access / IT Ticket Access.
       return permissions.canManageHRQueries === true || permissions.canManageITSupport === true;
     },
   }), [permissions, user?.role, user?.leavesSectionEnabled]);
@@ -273,6 +283,7 @@ export const usePermissions = () => {
     isHR: () => user?.role === 'HR',
     isEmployee: () => user?.role === 'Employee',
     isIntern: () => user?.role === 'Intern',
+    isOperations: () => user?.role === 'Operations',
     
     // Admin-only features
     canManageUsers: () => user?.role === 'Admin',
@@ -285,8 +296,9 @@ export const usePermissions = () => {
     canApproveLeaves: () => ['Admin', 'HR'].includes(user?.role),
     canViewReports: () => ['Admin', 'HR'].includes(user?.role),
     
-    // Employee and Intern features
-    canViewOwnLogs: () => ['Employee', 'Intern'].includes(user?.role),
+    // Employee and Intern features (Operations marks its own attendance too,
+    // but is deliberately excluded from leave requests)
+    canViewOwnLogs: () => ['Employee', 'Intern', 'Operations'].includes(user?.role),
     canRequestLeaves: () => ['Employee', 'Intern'].includes(user?.role)
   }), [user]);
 

@@ -1,6 +1,7 @@
-import { memo, useState, useEffect, useCallback, useRef, Suspense } from 'react';
+import { memo, useState, useEffect, useCallback, useMemo, useRef, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { PdfDocument, PdfPage } from '../lazy/LazyPdfComponents';
+import PdfErrorBoundary from '../PdfErrorBoundary';
 import api from '../../api/axios';
 import { createPdfBlobUrl, getReactPdfDocumentOptions, revokePdfBlobUrl } from '../../utils/pdfjsConfig';
 import '../../styles/CustomPdfViewer.css';
@@ -38,6 +39,17 @@ const DocumentCenterModal = memo(({
     const [pdfError, setPdfError] = useState(null);
     const [numPages, setNumPages] = useState(null);
     const [scale] = useState(1.15);
+    // Same transport-crash guard as CustomPdfViewer: stable options, and a
+    // one-time retry without the text layer if pdf.js rendering crashes.
+    const [renderTextLayer, setRenderTextLayer] = useState(true);
+    const [pdfRenderKey, setPdfRenderKey] = useState(0);
+    const documentOptions = useMemo(() => getReactPdfDocumentOptions(), []);
+    const handlePdfRenderError = useCallback(() => {
+        if (renderTextLayer) {
+            setRenderTextLayer(false);
+            setPdfRenderKey((k) => k + 1);
+        }
+    }, [renderTextLayer]);
 
     const [acknowledged, setAcknowledged] = useState(false);
     const [hasReachedEnd, setHasReachedEnd] = useState(false);
@@ -115,6 +127,7 @@ const DocumentCenterModal = memo(({
         pdfBlobUrlRef.current = null;
         setPdfError(null);
         setNumPages(null);
+        setRenderTextLayer(true);
         setAcknowledged(false);
         setHasReachedEnd(false);
         setReadingSeconds(0);
@@ -406,25 +419,41 @@ const DocumentCenterModal = memo(({
                                                     <p>Loading document…</p>
                                                 </div>
                                             }>
+                                            <PdfErrorBoundary
+                                                key={`${pdfSrc}-${pdfRenderKey}`}
+                                                onError={handlePdfRenderError}
+                                                fallback={(renderError, retry) => (
+                                                    <div className="doc-center-preview-error" role="alert">
+                                                        <p>Failed to display this document.</p>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => { setPdfRenderKey((k) => k + 1); retry(); }}
+                                                        >
+                                                            Try again
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            >
                                             <PdfDocument
-                                                key={pdfSrc}
+                                                key={`${pdfSrc}-${pdfRenderKey}`}
                                                 file={pdfSrc}
                                                 onLoadSuccess={({ numPages: pages }) => setNumPages(pages)}
                                                 onLoadError={() => setPdfError('Failed to render PDF.')}
                                                 loading=""
-                                                options={getReactPdfDocumentOptions()}
+                                                options={documentOptions}
                                             >
                                                 {Array.from(new Array(numPages), (_, i) => (
                                                     <div key={`p_${i + 1}`} className="doc-center-pdf-page">
                                                         <PdfPage
                                                             pageNumber={i + 1}
                                                             scale={scale}
-                                                            renderTextLayer
+                                                            renderTextLayer={renderTextLayer}
                                                             renderAnnotationLayer
                                                         />
                                                     </div>
                                                 ))}
                                             </PdfDocument>
+                                            </PdfErrorBoundary>
                                             </Suspense>
                                         )}
                                     </div>

@@ -2,7 +2,7 @@
 
 import React, { Suspense, useEffect, useRef } from 'react';
 import { lazyWithRetry as lazy } from './utils/lazyWithRetry';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { BreakUIProvider } from './context/BreakUIContext';
 import { TeaBreakProvider } from './context/TeaBreakContext';
@@ -91,6 +91,22 @@ const DashboardRouter = () => {
         return <AdminDashboardPage />;
     }
     return <EmployeeDashboardPage />;
+};
+
+// Operations accounts are restricted to exactly three features:
+// attendance marking (/dashboard), their attendance summary
+// (/attendance-summary) and the Operational Dashboard (/operational-dashboard).
+// Any other protected route bounces them back to attendance marking.
+const OPERATIONS_ALLOWED_PATHS = ['/dashboard', '/attendance-summary', '/operational-dashboard'];
+
+const OperationsAccessGuard = ({ children }) => {
+    const { user } = useAuth();
+    const location = useLocation();
+
+    if (user?.role === 'Operations' && !OPERATIONS_ALLOWED_PATHS.includes(location.pathname)) {
+        return <Navigate to="/dashboard" replace />;
+    }
+    return children;
 };
 
 // Root route component - redirects based on authentication status
@@ -254,7 +270,7 @@ function App() {
                                     <Route path="/" element={<RootRoute />} />
                                     
                                     {/* Protected routes - require authentication */}
-                                    <Route element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+                                    <Route element={<ProtectedRoute><OperationsAccessGuard><MainLayout /></OperationsAccessGuard></ProtectedRoute>}>
                                         <Route path="/dashboard" element={
                                             <Suspense fallback={<DelayedFallback><PageLoader type="dashboard" /></DelayedFallback>}>
                                                 <DashboardRouter />

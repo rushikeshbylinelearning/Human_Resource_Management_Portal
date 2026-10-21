@@ -2065,7 +2065,7 @@ router.get('/bulk-attendance-actions/tea-break-overruns', [authenticateToken, re
 
 router.post('/bulk-attendance-actions/execute', [authenticateToken, requireBulkAttendanceActionsAccess], async (req, res) => {
     try {
-        const { action, confirm, checkoutTime } = req.body;
+        const { action, confirm, checkoutTime, checkInTime, userIds } = req.body;
 
         if (confirm !== true) {
             return res.status(400).json({
@@ -2081,7 +2081,7 @@ router.post('/bulk-attendance-actions/execute', [authenticateToken, requireBulkA
             });
         }
 
-        const result = await executeBulkAction(action, req.user.userId, { checkoutTime });
+        const result = await executeBulkAction(action, req.user.userId, { checkoutTime, checkInTime, userIds });
         res.json(result);
     } catch (error) {
         console.error('[bulk-attendance-actions] execute error:', error);

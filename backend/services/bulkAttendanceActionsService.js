@@ -1,13 +1,17 @@
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const AttendanceLog = require('../models/AttendanceLog');
 const AttendanceSession = require('../models/AttendanceSession');
 const BreakLog = require('../models/BreakLog');
+const LeaveRequest = require('../models/LeaveRequest');
 const AnnouncementMessage = require('../models/AnnouncementMessage');
 const NewNotificationService = require('./NewNotificationService');
 const cacheService = require('./cacheService');
 const cache = require('../utils/cache');
-const { getISTNow, getISTDateString, getShiftDateTimeIST, formatISTTime } = require('../utils/istTime');
+const { getISTNow, getISTDateString, getShiftDateTimeIST, formatISTTime, startOfISTDay } = require('../utils/istTime');
 const { getLiveAttendanceOverview } = require('./liveAttendanceService');
+const { recalculateLateStatus } = require('./dailyStatusService');
+const { isHalfDayLeaveType } = require('../utils/halfDayLeave');
 const { stopAllActiveTeaBreaks } = require('./teaBreakStopService');
 const { getGracePeriodMinutes } = require('../utils/gracePeriod');
 const EarlyCheckoutRequest = require('../models/EarlyCheckoutRequest');
@@ -26,6 +30,7 @@ const VALID_ACTIONS = new Set([
     'end_other_breaks',
     'overwrite_tea_break_overruns',
     'checkout_all_employees',
+    'update_employee_checkin',
 ]);
 
 const HH_MM_RE = /^([01]?\d|2[0-3]):([0-5]\d)$/;
@@ -264,6 +269,308 @@ async function getClockedInEmployeesPreview() {
             clockInTime: log.clockInTime,
         };
     });
+}
+
+/**
+ * Employees eligible for a bulk check-in update today: every active
+ * non-Admin employee, annotated with today's current check-in state so the
+ * admin UI can offer per-employee selection.
+ * - hasCheckIn: already checked in today (check-in time can be corrected)
+ * - clockOutTime set: already checked out (check-in can still be corrected)
+ * - onLeave: approved full-day leave today (selection disabled in UI, rejected here too)
+ */
+async function getCheckInUpdateCandidates() {
+    const today = getISTDateString();
+    const dayStart = startOfISTDay(today);
+    const dayEnd = new Date(dayStart.getTime() + 24 * 60 * 60 * 1000);
+
+    const [users, logs, fullDayLeaves] = await Promise.all([
+        User.find({ role: { $ne: 'Admin' }, isActive: true })
+            .select('fullName employeeCode')
+            .sort({ fullName: 1 })
+            .lean(),
+        AttendanceLog.find({ attendanceDate: today })
+            .select('user clockInTime clockOutTime attendanceStatus')
+            .lean(),
+        LeaveRequest.find({
+            status: 'Approved',
+            leaveDates: { $elemMatch: { $gte: dayStart, $lt: dayEnd } },
+        })
+            .select('employee leaveType')
+            .lean(),
+    ]);
+
+    const logByUserId = new Map(logs.map((log) => [String(log.user), log]));
+    const onLeaveUserIds = new Set(
+        fullDayLeaves
+            .filter((leave) => !isHalfDayLeaveType(leave.leaveType))
+            .map((leave) => String(leave.employee))
+    );
+
+    return users.map((user) => {
+        const log = logByUserId.get(String(user._id));
+        const onLeave = onLeaveUserIds.has(String(user._id))
+            || log?.attendanceStatus === 'Leave';
+        return {
+            userId: String(user._id),
+            fullName: user.fullName || 'Unknown',
+            employeeCode: user.employeeCode || '',
+            clockInTime: log?.clockInTime || null,
+            clockOutTime: log?.clockOutTime || null,
+            hasCheckIn: Boolean(log?.clockInTime),
+            onLeave,
+        };
+    });
+}
+
+function parseCheckInTime(checkInTimeInput) {
+    const today = getISTDateString();
+    const now = getISTNow();
+
+    if (typeof checkInTimeInput !== 'string' || !HH_MM_RE.test(checkInTimeInput.trim())) {
+        const error = new Error('Check-in time must be in HH:mm format (IST).');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const checkInTime = getShiftDateTimeIST(today, checkInTimeInput.trim());
+    if (!(checkInTime instanceof Date) || isNaN(checkInTime.getTime())) {
+        const error = new Error('Invalid check-in time.');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if (checkInTime.getTime() > now.getTime() + FUTURE_CHECKOUT_BUFFER_MS) {
+        const error = new Error('Check-in time cannot be in the future.');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    return checkInTime;
+}
+
+function normalizeSelectedUserIds(userIdsInput) {
+    if (!Array.isArray(userIdsInput) || userIdsInput.length === 0) {
+        const error = new Error('Select at least one employee to update.');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    const userIds = [...new Set(userIdsInput.map((id) => String(id)))];
+    if (userIds.length > 500) {
+        const error = new Error('Too many employees selected (max 500).');
+        error.statusCode = 400;
+        throw error;
+    }
+    if (userIds.some((id) => !mongoose.Types.ObjectId.isValid(id))) {
+        const error = new Error('One or more selected employee IDs are invalid.');
+        error.statusCode = 400;
+        throw error;
+    }
+    return userIds;
+}
+
+async function applyRecalculatedStatus(log, user, checkInTime) {
+    if (!user?.shiftGroup?.startTime || log.overriddenByAdmin) return;
+
+    const elapsedShiftHours = log.clockOutTime
+        ? (new Date(log.clockOutTime).getTime() - checkInTime.getTime()) / (1000 * 60 * 60)
+        : null;
+    const recalculated = await recalculateLateStatus(
+        checkInTime,
+        user.shiftGroup,
+        null,
+        elapsedShiftHours,
+        user.featurePermissions?.lateArrivalMarksHalfDay === true
+    );
+
+    log.isLate = recalculated.isLate;
+    log.isHalfDay = recalculated.isHalfDay;
+    log.lateMinutes = recalculated.lateMinutes;
+    log.attendanceStatus = recalculated.attendanceStatus;
+    if (recalculated.isHalfDay) {
+        log.halfDayReasonCode = recalculated.halfDayReasonCode;
+        log.halfDayReasonText = recalculated.halfDayReasonText;
+        log.halfDaySource = 'AUTO';
+    } else if (log.halfDaySource === 'AUTO') {
+        log.halfDayReasonCode = null;
+        log.halfDayReasonText = '';
+        log.halfDaySource = null;
+    }
+}
+
+async function updateSingleEmployeeCheckIn(user, checkInTime, onLeaveUserIds) {
+    const userId = String(user._id);
+    const today = getISTDateString();
+
+    if (onLeaveUserIds.has(userId)) {
+        return { userId, success: false, error: 'Employee is on approved leave today.' };
+    }
+    if (!user.shiftGroup?.startTime) {
+        return { userId, success: false, error: 'Employee has no shift assigned.' };
+    }
+
+    let log = await AttendanceLog.findOne({ user: user._id, attendanceDate: today });
+    const previousClockInTime = log?.clockInTime || null;
+    let created = false;
+
+    if (log?.attendanceStatus === 'Leave') {
+        return { userId, success: false, error: 'Employee is on approved leave today.' };
+    }
+
+    if (!log) {
+        const shiftDurationMinutes = user.shiftGroup.durationHours != null
+            ? Number(user.shiftGroup.durationHours) * 60
+            : NaN;
+        if (!Number.isFinite(shiftDurationMinutes) || shiftDurationMinutes < 0) {
+            return { userId, success: false, error: 'Employee has an invalid shift configuration.' };
+        }
+        log = await AttendanceLog.create({
+            user: user._id,
+            attendanceDate: today,
+            clockInTime: checkInTime,
+            shiftDurationMinutes,
+            penaltyMinutes: 0,
+            paidBreakMinutesTaken: 0,
+            unpaidBreakMinutesTaken: 0,
+        });
+        created = true;
+    }
+
+    const sessions = await AttendanceSession.find({ attendanceLog: log._id }).sort({ startTime: 1 });
+    const firstSession = sessions[0] || null;
+
+    if (firstSession) {
+        if (firstSession.endTime && checkInTime.getTime() >= new Date(firstSession.endTime).getTime()) {
+            return { userId, success: false, error: 'Check-in time must be before the first session ends.' };
+        }
+        if (log.clockOutTime && checkInTime.getTime() >= new Date(log.clockOutTime).getTime()) {
+            return { userId, success: false, error: 'Check-in time must be before check-out time.' };
+        }
+        const firstBreak = await BreakLog.findOne({ attendanceLog: log._id }).sort({ startTime: 1 }).select('startTime').lean();
+        if (firstBreak && checkInTime.getTime() >= new Date(firstBreak.startTime).getTime()) {
+            return { userId, success: false, error: 'Check-in time must be before the first break starts.' };
+        }
+        firstSession.startTime = checkInTime;
+        await firstSession.save();
+    } else {
+        // No session yet (absent / not checked in): admin check-in opens today's session.
+        await AttendanceSession.create({
+            attendanceLog: log._id,
+            startTime: checkInTime,
+            endTime: log.clockOutTime || null,
+        });
+    }
+
+    log.clockInTime = checkInTime;
+    await applyRecalculatedStatus(log, user, checkInTime);
+
+    if (log.clockOutTime) {
+        const [sessionsList, breaksList] = await Promise.all([
+            AttendanceSession.find({ attendanceLog: log._id }).sort({ startTime: 1 }).lean(),
+            BreakLog.find({ attendanceLog: log._id }).lean(),
+        ]);
+        let totalSessionMinutes = 0;
+        sessionsList.forEach((session) => {
+            if (session.endTime) totalSessionMinutes += (new Date(session.endTime) - new Date(session.startTime)) / (1000 * 60);
+        });
+        let totalBreakMinutes = 0;
+        breaksList.forEach((breakLog) => {
+            if (breakLog.endTime) totalBreakMinutes += (new Date(breakLog.endTime) - new Date(breakLog.startTime)) / (1000 * 60);
+        });
+        log.totalWorkingHours = Math.max(0, totalSessionMinutes - totalBreakMinutes) / 60;
+    }
+
+    await log.save();
+
+    if (!['Admin', 'HR'].includes(user.role)) {
+        const timeLabel = formatISTTime(checkInTime, { hour12: true, hour: '2-digit', minute: '2-digit' });
+        NewNotificationService.createAndEmitNotification({
+            message: created
+                ? `You were checked in by an administrator at ${timeLabel}.`
+                : `Your check-in time for today was updated by an administrator to ${timeLabel}.`,
+            type: 'info',
+            userId: user._id,
+            userName: user.fullName,
+            recipientType: 'user',
+            category: 'attendance',
+        }).catch(() => {});
+    }
+
+    cache.delete(`status:${userId}:${today}`);
+    cache.delete(`employee_dashboard:${userId}:${today}`);
+
+    return {
+        userId,
+        success: true,
+        created,
+        previousClockInTime: previousClockInTime || null,
+        clockInTime: checkInTime.toISOString(),
+        attendanceStatus: log.attendanceStatus,
+    };
+}
+
+async function updateEmployeeCheckIns(checkInTimeInput, userIdsInput) {
+    const checkInTime = parseCheckInTime(checkInTimeInput);
+    const userIds = normalizeSelectedUserIds(userIdsInput);
+    const today = getISTDateString();
+
+    const [users, fullDayLeaves] = await Promise.all([
+        User.find({ _id: { $in: userIds }, role: { $ne: 'Admin' }, isActive: true })
+            .populate('shiftGroup')
+            .lean(),
+        LeaveRequest.find({
+            status: 'Approved',
+            leaveDates: { $elemMatch: { $gte: startOfISTDay(today), $lt: new Date(startOfISTDay(today).getTime() + 24 * 60 * 60 * 1000) } },
+        })
+            .select('employee leaveType')
+            .lean(),
+    ]);
+    const userById = new Map(users.map((user) => [String(user._id), user]));
+    const onLeaveUserIds = new Set(
+        fullDayLeaves
+            .filter((leave) => !isHalfDayLeaveType(leave.leaveType))
+            .map((leave) => String(leave.employee))
+    );
+
+    const details = [];
+    for (const userId of userIds) {
+        const user = userById.get(userId);
+        if (!user) {
+            details.push({ userId, success: false, error: 'Employee not found or inactive.' });
+            continue;
+        }
+        try {
+            details.push(await updateSingleEmployeeCheckIn(user, checkInTime, onLeaveUserIds));
+        } catch (err) {
+            details.push({ userId, success: false, error: err.message });
+        }
+    }
+
+    cacheService.invalidateDashboard(today);
+    cacheService.invalidateAttendance(null, today);
+    cache.deletePattern('dashboard-summary:*');
+    cache.deletePattern('live_attendance_overview:*');
+
+    try {
+        const { getIO } = require('../socketManager');
+        const io = getIO();
+        if (io) {
+            io.emit('attendance_log_updated', {
+                attendanceDate: today,
+                timestamp: getISTNow().toISOString(),
+                message: 'Bulk check-in update completed.',
+            });
+            io.emit('live_attendance_refreshed', { date: today });
+        }
+    } catch (_) { /* optional */ }
+
+    return {
+        processedCount: details.filter((d) => d.success).length,
+        failedCount: details.filter((d) => !d.success).length,
+        details,
+        checkInTime: checkInTime.toISOString(),
+    };
 }
 
 function parseCheckoutTime(checkoutTimeInput) {
@@ -511,13 +818,14 @@ async function checkoutAllEmployees(checkoutTimeInput, performedByUserId) {
 }
 
 async function getBulkActionPreview() {
-    const [overview, teaBreakCount, lunchBreakCount, otherBreakCount, overrunList, clockedInEmployees] = await Promise.all([
+    const [overview, teaBreakCount, lunchBreakCount, otherBreakCount, overrunList, clockedInEmployees, checkInCandidates] = await Promise.all([
         getLiveAttendanceOverview({ leaveRange: 'today' }),
         countActiveTeaBreaks(),
         countActiveBreaksByCategory(['Paid']),
         countActiveBreaksByCategory(['Unpaid', 'Extra']),
         getTeaBreakOverruns(),
         getClockedInEmployeesPreview(),
+        getCheckInUpdateCandidates(),
     ]);
 
     return {
@@ -553,6 +861,12 @@ async function getBulkActionPreview() {
             description: 'Check out every employee still clocked in today at a time you choose. Active breaks are ended automatically. Attendance status still follows elapsed shift hours.',
             affectedCount: clockedInEmployees.length,
             employees: clockedInEmployees,
+        },
+        update_employee_checkin: {
+            label: 'Update employee check-in',
+            description: 'Set a new check-in time for today for the employees you select. Employees who have not checked in yet will be checked in at that time. Late status is recalculated from the new time.',
+            affectedCount: checkInCandidates.filter((emp) => emp.hasCheckIn).length,
+            employees: checkInCandidates,
         },
     };
 }
@@ -743,6 +1057,9 @@ async function executeBulkAction(action, performedByUserId, options = {}) {
         case 'checkout_all_employees':
             result = await checkoutAllEmployees(options.checkoutTime, performedByUserId);
             break;
+        case 'update_employee_checkin':
+            result = await updateEmployeeCheckIns(options.checkInTime, options.userIds);
+            break;
         default:
             result = { processedCount: 0 };
     }
@@ -753,6 +1070,8 @@ async function executeBulkAction(action, performedByUserId, options = {}) {
             action,
             processedCount: result.processedCount ?? 0,
             checkoutTime: result.checkoutTime || options.checkoutTime || null,
+            checkInTime: result.checkInTime || options.checkInTime || null,
+            userIds: Array.isArray(options.userIds) ? options.userIds.map(String) : null,
             details: `Bulk attendance action "${action}" executed.`,
         });
     } catch (_) {

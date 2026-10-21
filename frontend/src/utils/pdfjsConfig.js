@@ -26,8 +26,24 @@ export function setReactPdfJsVersion(version) {
     reactPdfJsVersion = version;
 }
 
+let cachedReactPdfOptions = null;
+let cachedReactPdfOptionsVersion = null;
+
+/**
+ * react-pdf compares the `options` prop by reference: a fresh (but equal)
+ * object on every render makes <Document> destroy and recreate its pdf.js
+ * transport — while <TextLayer> is still streaming from the old one, which
+ * throws `can't access property "sendWithStream", messageHandler is null`
+ * and, without an error boundary, crashes the whole tree (e.g. the blocking
+ * onboarding policy modal). Always hand back the same frozen object.
+ */
 export function getReactPdfDocumentOptions() {
-    return getPdfDocumentOptions(reactPdfJsVersion);
+    const version = reactPdfJsVersion || '4.4.168';
+    if (!cachedReactPdfOptions || cachedReactPdfOptionsVersion !== version) {
+        cachedReactPdfOptions = Object.freeze(getPdfDocumentOptions(version));
+        cachedReactPdfOptionsVersion = version;
+    }
+    return cachedReactPdfOptions;
 }
 
 export function formatPdfFetchError(err) {

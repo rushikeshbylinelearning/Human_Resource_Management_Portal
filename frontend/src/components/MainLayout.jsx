@@ -157,7 +157,7 @@ const MainLayout = () => {
                         onSuccess={handleECRSuccess}
                     />
                 )}
-                {user && <HRQueryChatLauncher />}
+                {user && user.role !== 'Operations' && <HRQueryChatLauncher />}
                 <NotificationPermissionPrompt 
                     onPermissionChange={handleNotificationPermissionChange}
                 />

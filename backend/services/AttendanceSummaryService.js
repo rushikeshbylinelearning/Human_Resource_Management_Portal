@@ -459,7 +459,7 @@ async function getMusterRoll(startDate, endDate) {
     const [employees, holidays, gracePeriodMinutes, logs, leaveRequests] = await Promise.all([
         User.find({
             isActive: { $ne: false },
-            role: { $in: ['Employee', 'HR', 'Intern'] },
+            role: { $in: ['Employee', 'HR', 'Intern', 'Operations'] },
         })
             .select('fullName employeeCode department alternateSaturdayPolicy joiningDate createdAt role featurePermissions')
             .populate('shiftGroup', 'startTime')

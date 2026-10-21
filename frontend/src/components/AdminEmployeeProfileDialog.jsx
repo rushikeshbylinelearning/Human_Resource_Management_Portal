@@ -25,7 +25,7 @@ import {
     cardSx, sectionTitleSx, primaryBtnSx, tabSx,
 } from './adminEmployee/adminEmployeeTheme';
 
-const roles = ['Admin', 'HR', 'Employee', 'Intern'];
+const roles = ['Admin', 'HR', 'Employee', 'Intern', 'Operations'];
 const statusOptions = ['Active', 'Inactive'];
 const employmentStatusOptions = ['Intern', 'Probation', 'Permanent'];
 

@@ -32,7 +32,7 @@ const initialFormState = {
     }
 };
 
-const roles = ['Admin', 'HR', 'Employee', 'Intern'];
+const roles = ['Admin', 'HR', 'Employee', 'Intern', 'Operations'];
 const satPolicies = ['Week 1 & 3 Off', 'Week 2 & 4 Off', 'All Saturdays Working', 'All Saturdays Off'];
 const employmentStatuses = ['Intern', 'Probation', 'Permanent'];
 const allWeekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

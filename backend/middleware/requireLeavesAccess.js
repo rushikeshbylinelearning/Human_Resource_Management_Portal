@@ -17,6 +17,14 @@ async function requireLeavesAccess(req, res, next) {
             return next();
         }
 
+        // Operations is restricted to attendance marking, attendance summary
+        // and the Operational Dashboard — no leave access.
+        if (req.user.role === 'Operations') {
+            return res.status(403).json({
+                error: 'Access denied. Operations accounts do not have access to the leave section.',
+            });
+        }
+
         const enabled = await isLeavesSectionEnabled();
         if (!enabled) {
             return res.status(403).json({
