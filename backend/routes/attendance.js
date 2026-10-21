@@ -23,6 +23,29 @@ const { isHalfDayLeaveType } = require('../utils/halfDayLeave');
 const router = express.Router();
 const requireLiveAttendanceAccess = require('../middleware/requireLiveAttendanceAccess');
 const { getLiveAttendanceOverview } = require('../services/liveAttendanceService');
+const { getMusterRoll } = require('../services/AttendanceSummaryService');
+const isAdminOrHr = require('../middleware/requireAdminOrHr');
+
+// GET /api/attendance/muster — one-pass month grid for every active employee
+router.get('/muster', authenticateToken, isAdminOrHr, async (req, res) => {
+    try {
+        const { startDate, endDate } = req.query;
+        if (!startDate || !endDate) {
+            return res.status(400).json({ error: 'Start date and end date are required (format: YYYY-MM-DD).' });
+        }
+
+        const cacheKey = `muster_roll:${startDate}:${endDate}`;
+        const cached = cache.get(cacheKey);
+        if (cached) return res.json(cached);
+
+        const roll = await getMusterRoll(startDate, endDate);
+        cache.set(cacheKey, roll, 20000);
+        return res.json(roll);
+    } catch (error) {
+        console.error('[MUSTER] Failed to build muster roll:', error);
+        return res.status(500).json({ error: 'Failed to build the muster roll.' });
+    }
+});
 
 // GET /api/attendance/live-overview — view-only real-time attendance board (permission-gated)
 router.get('/live-overview', authenticateToken, requireLiveAttendanceAccess, async (req, res) => {

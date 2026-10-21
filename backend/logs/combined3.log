@@ -203533,3 +203533,6130 @@
   message: 'Request',
   timestamp: '2026-10-09 18:05:08'
 }
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/dashboard/employee?date=2026-10-09',
+  statusCode: 200,
+  duration: '1393ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:08:35'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/',
+  statusCode: 304,
+  duration: '1097ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:15:17'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/status?_t=1791550399213',
+  statusCode: 200,
+  duration: '1077ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:23:20'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/',
+  statusCode: 304,
+  duration: '1085ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:23:20'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/status?_t=1791550399975',
+  statusCode: 200,
+  duration: '1144ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:23:21'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/',
+  statusCode: 304,
+  duration: '1357ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:23:21'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/dashboard/employee?date=2026-10-09',
+  statusCode: 200,
+  duration: '1634ms',
+  ip: undefined,
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:23:21'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/dashboard/employee?date=2026-10-09',
+  statusCode: 200,
+  duration: '1620ms',
+  ip: undefined,
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:23:22'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/dashboard/employee?date=2026-10-09',
+  statusCode: 200,
+  duration: '1738ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:23:22'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:23:26'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:23:26'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/dashboard-summary?includePendingLeaves=true',
+  statusCode: 200,
+  duration: '4009ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:23:36'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/?all=true&_t=1791550427911',
+  statusCode: 200,
+  duration: '1073ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:23:48'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:28:37'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:28:37'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:28:43'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:28:43'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/?all=true&_t=1791551341450',
+  statusCode: 200,
+  duration: '1083ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:39:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/?all=true&_t=1791551962114',
+  statusCode: 200,
+  duration: '1083ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:49:23'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/?all=true&_t=1791551968117',
+  statusCode: 200,
+  duration: '1076ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:49:29'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/?all=true&_t=1791551973998',
+  statusCode: 200,
+  duration: '1094ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:49:35'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:49:43'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:49:43'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/?all=true&_t=1791552197133',
+  statusCode: 200,
+  duration: '1114ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 18:53:18'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/dashboard-summary?includePendingLeaves=true',
+  statusCode: 200,
+  duration: '4733ms',
+  ip: undefined,
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 19:11:24'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/dashboard-summary?includePendingLeaves=true',
+  statusCode: 200,
+  duration: '3327ms',
+  ip: undefined,
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 19:11:27'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/dashboard-summary?includePendingLeaves=true',
+  statusCode: 200,
+  duration: '1220ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 19:11:30'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/dashboard-summary?includePendingLeaves=true',
+  statusCode: 304,
+  duration: '1116ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-09 19:11:31'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/analytics/late-grace-settings',
+  statusCode: 404,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-10 14:43:51'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/analytics/late-grace-settings',
+  statusCode: 404,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-10 14:43:51'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/',
+  statusCode: 304,
+  duration: '1049ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-10 15:13:21'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/active?_t=1791626181517',
+  statusCode: 200,
+  duration: '1709ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-10 15:26:23'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/',
+  statusCode: 304,
+  duration: '1020ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-10 15:52:24'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/',
+  statusCode: 304,
+  duration: '2236ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-10 15:52:25'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/',
+  statusCode: 304,
+  duration: '1050ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-10 16:44:28'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/login',
+  statusCode: 200,
+  duration: '1115ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:05:56'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/dashboard-summary?includePendingLeaves=true',
+  statusCode: 200,
+  duration: '4098ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:01'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/?all=true&_t=1791786975934',
+  statusCode: 200,
+  duration: '1029ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:16'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=68d29f4cce5f5ad421bb6f93&includeHolidays=true',
+  statusCode: 200,
+  duration: '1077ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:18'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e80bdeec803ff379c9bc9&includeHolidays=true',
+  statusCode: 200,
+  duration: '1099ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:18'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411c40ba2a6021f52cc281&includeHolidays=true',
+  statusCode: 200,
+  duration: '1125ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:18'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9faf9058941ebb0781427b&includeHolidays=true',
+  statusCode: 200,
+  duration: '1150ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:18'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d39a2da051f96635ac9ad&includeHolidays=true',
+  statusCode: 200,
+  duration: '1177ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:18'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4df9fe4aaf17dea66392a6&includeHolidays=true',
+  statusCode: 200,
+  duration: '1204ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:18'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6941045980ae214ab2b6b606&includeHolidays=true',
+  statusCode: 200,
+  duration: '1045ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:19'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e8129eec803ff379c9ce8&includeHolidays=true',
+  statusCode: 200,
+  duration: '1069ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:19'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6908a3e9549111e069b67f80&includeHolidays=true',
+  statusCode: 200,
+  duration: '1093ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:19'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6abcb5945da120d1bfbbee2b&includeHolidays=true',
+  statusCode: 200,
+  duration: '1124ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:20'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d5763abf6dd746d6ad8&includeHolidays=true',
+  statusCode: 200,
+  duration: '1153ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:20'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69a7f40c6ec57fc254a25613&includeHolidays=true',
+  statusCode: 200,
+  duration: '1181ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:20'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eb0c37ddf3e56da06d7de8&includeHolidays=true',
+  statusCode: 200,
+  duration: '1077ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:21'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a96605f55962b817f36a7ad&includeHolidays=true',
+  statusCode: 200,
+  duration: '1111ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:21'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4dd83a4aaf17dea66344da&includeHolidays=true',
+  statusCode: 200,
+  duration: '1156ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:21'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687ddeb737735aa0fc5be0b7&includeHolidays=true',
+  statusCode: 200,
+  duration: '1177ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:21'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411e1cba2a6021f52cce7b&includeHolidays=true',
+  statusCode: 200,
+  duration: '1213ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:21'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f2517a9dfd2a01b782b6d&includeHolidays=true',
+  statusCode: 200,
+  duration: '1312ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:21'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a7e47001b3d13be2e24d&includeHolidays=true',
+  statusCode: 200,
+  duration: '1060ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:22'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a8287001b3d13be2e31b&includeHolidays=true',
+  statusCode: 200,
+  duration: '1084ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:22'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eef4c5ceb8690f5e2d3a61&includeHolidays=true',
+  statusCode: 200,
+  duration: '1119ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:22'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f797fcac0a473f5b46e07&includeHolidays=true',
+  statusCode: 200,
+  duration: '1151ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:22'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d3a2fda051f96635ac9c9&includeHolidays=true',
+  statusCode: 200,
+  duration: '1166ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:22'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f50ce45a240c1703999&includeHolidays=true',
+  statusCode: 200,
+  duration: '1118ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:22'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a6095778c3c0134b3db3738&includeHolidays=true',
+  statusCode: 200,
+  duration: '1060ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:23'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69fc6d261e577f51a060849c&includeHolidays=true',
+  statusCode: 200,
+  duration: '1088ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:23'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f84575f0b285bd282e245e&includeHolidays=true',
+  statusCode: 200,
+  duration: '1114ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:23'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=696a16538b528459b1ebf42a&includeHolidays=true',
+  statusCode: 200,
+  duration: '1141ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:23'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c87050c644801a406266&includeHolidays=true',
+  statusCode: 200,
+  duration: '1169ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:23'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d0863abf6dd746d68d8&includeHolidays=true',
+  statusCode: 200,
+  duration: '1181ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:23'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9e650c58941ebb077f8f2f&includeHolidays=true',
+  statusCode: 200,
+  duration: '1056ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:24'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a7c18367001b3d13befedc3&includeHolidays=true',
+  statusCode: 200,
+  duration: '1064ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:24'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aacd2385c52d4211d95b38c&includeHolidays=true',
+  statusCode: 200,
+  duration: '1071ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:24'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa246ce58941ebb0784ecc7&includeHolidays=true',
+  statusCode: 200,
+  duration: '1098ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:24'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=689ddd2e35a11aee6a182009&includeHolidays=true',
+  statusCode: 200,
+  duration: '1124ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:24'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177970f3bc7c194c6c8bc&includeHolidays=true',
+  statusCode: 200,
+  duration: '1152ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:24'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac49b01ce45a240c1731775&includeHolidays=true',
+  statusCode: 200,
+  duration: '1052ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:26'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33c8dce45a240c1702676&includeHolidays=true',
+  statusCode: 200,
+  duration: '1080ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:26'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f35d92922b9c834419f20f&includeHolidays=true',
+  statusCode: 200,
+  duration: '1109ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:26'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691af3d1469c22f64733dcf2&includeHolidays=true',
+  statusCode: 200,
+  duration: '1135ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:26'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa2463d58941ebb0784e97b&includeHolidays=true',
+  statusCode: 200,
+  duration: '1167ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:26'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69410c9971a1865b60b1095f&includeHolidays=true',
+  statusCode: 200,
+  duration: '1195ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:26'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a58ab0d4aaf17dea66e2973&includeHolidays=true',
+  statusCode: 200,
+  duration: '1047ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:27'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411dc3ba2a6021f52ccc6b&includeHolidays=true',
+  statusCode: 200,
+  duration: '1073ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:27'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a3a319e9d71214ced3c382c&includeHolidays=true',
+  statusCode: 200,
+  duration: '1101ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:27'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411d12ba2a6021f52cc87f&includeHolidays=true',
+  statusCode: 200,
+  duration: '1133ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:27'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac364b7ce45a240c170cfce&includeHolidays=true',
+  statusCode: 200,
+  duration: '1164ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:27'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aaa237d27ad958081051d41&includeHolidays=true',
+  statusCode: 200,
+  duration: '1186ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:27'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177e10f3bc7c194c6c990&includeHolidays=true',
+  statusCode: 200,
+  duration: '1054ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:28'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f1dce45a240c17038bd&includeHolidays=true',
+  statusCode: 200,
+  duration: '1094ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:28'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c83250c644801a40624c&includeHolidays=true',
+  statusCode: 200,
+  duration: '1106ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:28'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33c4ece45a240c17023b1&includeHolidays=true',
+  statusCode: 200,
+  duration: '1145ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:28'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c78250c644801a405fda&includeHolidays=true',
+  statusCode: 200,
+  duration: '1175ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:28'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=68d29f4cce5f5ad421bb6f93&includeHolidays=true',
+  statusCode: 304,
+  duration: '1202ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:28'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e80bdeec803ff379c9bc9&includeHolidays=true',
+  statusCode: 304,
+  duration: '1069ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:29'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411c40ba2a6021f52cc281&includeHolidays=true',
+  statusCode: 304,
+  duration: '1095ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:29'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9faf9058941ebb0781427b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1115ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:29'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d39a2da051f96635ac9ad&includeHolidays=true',
+  statusCode: 304,
+  duration: '1127ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:29'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4df9fe4aaf17dea66392a6&includeHolidays=true',
+  statusCode: 304,
+  duration: '1181ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:29'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6941045980ae214ab2b6b606&includeHolidays=true',
+  statusCode: 304,
+  duration: '1203ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:29'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e8129eec803ff379c9ce8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1042ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:30'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6908a3e9549111e069b67f80&includeHolidays=true',
+  statusCode: 304,
+  duration: '1069ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:30'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6abcb5945da120d1bfbbee2b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1099ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:30'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d5763abf6dd746d6ad8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1056ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:31'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69a7f40c6ec57fc254a25613&includeHolidays=true',
+  statusCode: 304,
+  duration: '1095ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:31'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eb0c37ddf3e56da06d7de8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1139ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:31'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a96605f55962b817f36a7ad&includeHolidays=true',
+  statusCode: 304,
+  duration: '1056ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:32'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687ddeb737735aa0fc5be0b7&includeHolidays=true',
+  statusCode: 304,
+  duration: '1037ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:32'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4dd83a4aaf17dea66344da&includeHolidays=true',
+  statusCode: 304,
+  duration: '1077ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:32'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411e1cba2a6021f52cce7b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1135ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:32'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f2517a9dfd2a01b782b6d&includeHolidays=true',
+  statusCode: 304,
+  duration: '1172ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:32'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a7e47001b3d13be2e24d&includeHolidays=true',
+  statusCode: 304,
+  duration: '1192ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:32'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a8287001b3d13be2e31b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1066ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:33'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eef4c5ceb8690f5e2d3a61&includeHolidays=true',
+  statusCode: 304,
+  duration: '1089ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:33'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f797fcac0a473f5b46e07&includeHolidays=true',
+  statusCode: 304,
+  duration: '1113ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:33'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d3a2fda051f96635ac9c9&includeHolidays=true',
+  statusCode: 304,
+  duration: '1137ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:33'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f50ce45a240c1703999&includeHolidays=true',
+  statusCode: 304,
+  duration: '1163ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:33'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a6095778c3c0134b3db3738&includeHolidays=true',
+  statusCode: 304,
+  duration: '1191ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:33'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69fc6d261e577f51a060849c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1042ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:34'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f84575f0b285bd282e245e&includeHolidays=true',
+  statusCode: 304,
+  duration: '1065ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:34'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=696a16538b528459b1ebf42a&includeHolidays=true',
+  statusCode: 304,
+  duration: '1084ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:34'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c87050c644801a406266&includeHolidays=true',
+  statusCode: 304,
+  duration: '1132ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:34'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d0863abf6dd746d68d8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1162ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:34'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9e650c58941ebb077f8f2f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1191ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:34'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a7c18367001b3d13befedc3&includeHolidays=true',
+  statusCode: 304,
+  duration: '1047ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:35'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aacd2385c52d4211d95b38c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1075ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:35'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa246ce58941ebb0784ecc7&includeHolidays=true',
+  statusCode: 304,
+  duration: '1100ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:35'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=689ddd2e35a11aee6a182009&includeHolidays=true',
+  statusCode: 304,
+  duration: '1033ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:35'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177970f3bc7c194c6c8bc&includeHolidays=true',
+  statusCode: 304,
+  duration: '1054ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:35'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac49b01ce45a240c1731775&includeHolidays=true',
+  statusCode: 304,
+  duration: '1082ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:35'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33c8dce45a240c1702676&includeHolidays=true',
+  statusCode: 304,
+  duration: '1054ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:36'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691af3d1469c22f64733dcf2&includeHolidays=true',
+  statusCode: 304,
+  duration: '1079ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:36'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f35d92922b9c834419f20f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1105ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:36'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa2463d58941ebb0784e97b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1132ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:36'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69410c9971a1865b60b1095f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1159ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:37'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a58ab0d4aaf17dea66e2973&includeHolidays=true',
+  statusCode: 304,
+  duration: '1208ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:37'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411dc3ba2a6021f52ccc6b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1069ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:38'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411d12ba2a6021f52cc87f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1078ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:38'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac364b7ce45a240c170cfce&includeHolidays=true',
+  statusCode: 304,
+  duration: '1085ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:38'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a3a319e9d71214ced3c382c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1100ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:38'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aaa237d27ad958081051d41&includeHolidays=true',
+  statusCode: 304,
+  duration: '1239ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:38'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177e10f3bc7c194c6c990&includeHolidays=true',
+  statusCode: 304,
+  duration: '1265ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:06:38'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/?all=true&_t=1791787051456',
+  statusCode: 200,
+  duration: '1024ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:32'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=68d29f4cce5f5ad421bb6f93&includeHolidays=true',
+  statusCode: 304,
+  duration: '1038ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:34'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d39a2da051f96635ac9ad&includeHolidays=true',
+  statusCode: 304,
+  duration: '1063ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:34'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e80bdeec803ff379c9bc9&includeHolidays=true',
+  statusCode: 304,
+  duration: '1089ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:34'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9faf9058941ebb0781427b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1123ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:34'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411c40ba2a6021f52cc281&includeHolidays=true',
+  statusCode: 304,
+  duration: '1149ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:34'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4df9fe4aaf17dea66392a6&includeHolidays=true',
+  statusCode: 304,
+  duration: '1069ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:34'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6941045980ae214ab2b6b606&includeHolidays=true',
+  statusCode: 304,
+  duration: '1051ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:35'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e8129eec803ff379c9ce8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1078ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:35'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6abcb5945da120d1bfbbee2b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1105ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:35'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6908a3e9549111e069b67f80&includeHolidays=true',
+  statusCode: 304,
+  duration: '1140ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:35'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d5763abf6dd746d6ad8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1166ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:35'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69a7f40c6ec57fc254a25613&includeHolidays=true',
+  statusCode: 304,
+  duration: '1249ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:35'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eb0c37ddf3e56da06d7de8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1040ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:36'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a96605f55962b817f36a7ad&includeHolidays=true',
+  statusCode: 304,
+  duration: '1066ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:36'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4dd83a4aaf17dea66344da&includeHolidays=true',
+  statusCode: 304,
+  duration: '1087ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:36'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687ddeb737735aa0fc5be0b7&includeHolidays=true',
+  statusCode: 304,
+  duration: '1118ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:36'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411e1cba2a6021f52cce7b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1142ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:36'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f2517a9dfd2a01b782b6d&includeHolidays=true',
+  statusCode: 304,
+  duration: '1135ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:36'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a7e47001b3d13be2e24d&includeHolidays=true',
+  statusCode: 304,
+  duration: '1053ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:37'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a8287001b3d13be2e31b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1083ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:37'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eef4c5ceb8690f5e2d3a61&includeHolidays=true',
+  statusCode: 304,
+  duration: '1114ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:37'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f797fcac0a473f5b46e07&includeHolidays=true',
+  statusCode: 304,
+  duration: '1148ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:37'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d3a2fda051f96635ac9c9&includeHolidays=true',
+  statusCode: 304,
+  duration: '1174ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:37'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f50ce45a240c1703999&includeHolidays=true',
+  statusCode: 304,
+  duration: '1203ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:37'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a6095778c3c0134b3db3738&includeHolidays=true',
+  statusCode: 304,
+  duration: '1063ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:39'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69fc6d261e577f51a060849c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1086ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:39'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f84575f0b285bd282e245e&includeHolidays=true',
+  statusCode: 304,
+  duration: '1109ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:39'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=696a16538b528459b1ebf42a&includeHolidays=true',
+  statusCode: 304,
+  duration: '1132ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:39'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c87050c644801a406266&includeHolidays=true',
+  statusCode: 304,
+  duration: '1156ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:39'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d0863abf6dd746d68d8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1183ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:39'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aacd2385c52d4211d95b38c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1033ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:40'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a7c18367001b3d13befedc3&includeHolidays=true',
+  statusCode: 304,
+  duration: '1068ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:40'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9e650c58941ebb077f8f2f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1107ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:40'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa246ce58941ebb0784ecc7&includeHolidays=true',
+  statusCode: 304,
+  duration: '1130ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:40'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=689ddd2e35a11aee6a182009&includeHolidays=true',
+  statusCode: 304,
+  duration: '1160ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:40'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177970f3bc7c194c6c8bc&includeHolidays=true',
+  statusCode: 304,
+  duration: '1188ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:40'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac49b01ce45a240c1731775&includeHolidays=true',
+  statusCode: 304,
+  duration: '1039ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:41'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33c8dce45a240c1702676&includeHolidays=true',
+  statusCode: 304,
+  duration: '1066ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:41'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f35d92922b9c834419f20f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1097ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:41'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691af3d1469c22f64733dcf2&includeHolidays=true',
+  statusCode: 304,
+  duration: '1127ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:41'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa2463d58941ebb0784e97b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1155ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:41'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69410c9971a1865b60b1095f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1184ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:41'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a58ab0d4aaf17dea66e2973&includeHolidays=true',
+  statusCode: 304,
+  duration: '1052ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:42'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411dc3ba2a6021f52ccc6b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1080ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:42'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a3a319e9d71214ced3c382c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1108ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:42'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411d12ba2a6021f52cc87f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1138ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:42'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac364b7ce45a240c170cfce&includeHolidays=true',
+  statusCode: 304,
+  duration: '1166ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:42'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aaa237d27ad958081051d41&includeHolidays=true',
+  statusCode: 304,
+  duration: '1196ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:42'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f1dce45a240c17038bd&includeHolidays=true',
+  statusCode: 304,
+  duration: '1041ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:43'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177e10f3bc7c194c6c990&includeHolidays=true',
+  statusCode: 304,
+  duration: '1072ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:43'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c83250c644801a40624c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1102ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:43'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33c4ece45a240c17023b1&includeHolidays=true',
+  statusCode: 304,
+  duration: '1128ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:44'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c78250c644801a405fda&includeHolidays=true',
+  statusCode: 304,
+  duration: '1151ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:44'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=68d29f4cce5f5ad421bb6f93&includeHolidays=true',
+  statusCode: 304,
+  duration: '1177ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:44'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d39a2da051f96635ac9ad&includeHolidays=true',
+  statusCode: 304,
+  duration: '1055ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:45'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e80bdeec803ff379c9bc9&includeHolidays=true',
+  statusCode: 304,
+  duration: '1084ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:45'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411c40ba2a6021f52cc281&includeHolidays=true',
+  statusCode: 304,
+  duration: '1109ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:45'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9faf9058941ebb0781427b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1146ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:45'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4df9fe4aaf17dea66392a6&includeHolidays=true',
+  statusCode: 304,
+  duration: '1174ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:45'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6941045980ae214ab2b6b606&includeHolidays=true',
+  statusCode: 304,
+  duration: '1212ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:45'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e8129eec803ff379c9ce8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1036ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:46'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6908a3e9549111e069b67f80&includeHolidays=true',
+  statusCode: 304,
+  duration: '1012ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:46'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6abcb5945da120d1bfbbee2b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1125ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:46'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d5763abf6dd746d6ad8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1161ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:46'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69a7f40c6ec57fc254a25613&includeHolidays=true',
+  statusCode: 304,
+  duration: '1178ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:46'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eb0c37ddf3e56da06d7de8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1185ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:46'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a96605f55962b817f36a7ad&includeHolidays=true',
+  statusCode: 304,
+  duration: '1036ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:47'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4dd83a4aaf17dea66344da&includeHolidays=true',
+  statusCode: 304,
+  duration: '1024ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:47'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687ddeb737735aa0fc5be0b7&includeHolidays=true',
+  statusCode: 304,
+  duration: '1040ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:47'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411e1cba2a6021f52cce7b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1064ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:47'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f2517a9dfd2a01b782b6d&includeHolidays=true',
+  statusCode: 304,
+  duration: '1093ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:47'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a7e47001b3d13be2e24d&includeHolidays=true',
+  statusCode: 304,
+  duration: '1138ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:47'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a8287001b3d13be2e31b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1053ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:48'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eef4c5ceb8690f5e2d3a61&includeHolidays=true',
+  statusCode: 304,
+  duration: '1077ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:48'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f797fcac0a473f5b46e07&includeHolidays=true',
+  statusCode: 304,
+  duration: '1067ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:48'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d3a2fda051f96635ac9c9&includeHolidays=true',
+  statusCode: 304,
+  duration: '1093ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:48'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f50ce45a240c1703999&includeHolidays=true',
+  statusCode: 304,
+  duration: '1119ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:48'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a6095778c3c0134b3db3738&includeHolidays=true',
+  statusCode: 304,
+  duration: '1148ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:48'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69fc6d261e577f51a060849c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1050ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:49'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f84575f0b285bd282e245e&includeHolidays=true',
+  statusCode: 304,
+  duration: '1073ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:49'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=696a16538b528459b1ebf42a&includeHolidays=true',
+  statusCode: 304,
+  duration: '1073ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:49'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c87050c644801a406266&includeHolidays=true',
+  statusCode: 304,
+  duration: '1098ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:50'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d0863abf6dd746d68d8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1118ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:50'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aacd2385c52d4211d95b38c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1144ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:50'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a7c18367001b3d13befedc3&includeHolidays=true',
+  statusCode: 304,
+  duration: '1033ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:51'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9e650c58941ebb077f8f2f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1059ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:51'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa246ce58941ebb0784ecc7&includeHolidays=true',
+  statusCode: 304,
+  duration: '1086ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:51'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=689ddd2e35a11aee6a182009&includeHolidays=true',
+  statusCode: 304,
+  duration: '1116ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:51'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177970f3bc7c194c6c8bc&includeHolidays=true',
+  statusCode: 304,
+  duration: '1219ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:51'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac49b01ce45a240c1731775&includeHolidays=true',
+  statusCode: 304,
+  duration: '1258ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:51'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33c8dce45a240c1702676&includeHolidays=true',
+  statusCode: 304,
+  duration: '1039ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:52'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691af3d1469c22f64733dcf2&includeHolidays=true',
+  statusCode: 304,
+  duration: '1059ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:52'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f35d92922b9c834419f20f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1103ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:52'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa2463d58941ebb0784e97b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1124ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:52'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69410c9971a1865b60b1095f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1153ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:52'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a58ab0d4aaf17dea66e2973&includeHolidays=true',
+  statusCode: 304,
+  duration: '1187ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:52'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411dc3ba2a6021f52ccc6b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1050ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:53'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a3a319e9d71214ced3c382c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1074ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:53'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411d12ba2a6021f52cc87f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1102ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:53'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac364b7ce45a240c170cfce&includeHolidays=true',
+  statusCode: 304,
+  duration: '1131ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:53'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aaa237d27ad958081051d41&includeHolidays=true',
+  statusCode: 304,
+  duration: '1162ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:53'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f1dce45a240c17038bd&includeHolidays=true',
+  statusCode: 304,
+  duration: '1219ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:53'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177e10f3bc7c194c6c990&includeHolidays=true',
+  statusCode: 304,
+  duration: '1056ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:54'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c83250c644801a40624c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1082ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:54'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c78250c644801a405fda&includeHolidays=true',
+  statusCode: 304,
+  duration: '1105ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:54'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33c4ece45a240c17023b1&includeHolidays=true',
+  statusCode: 304,
+  duration: '1144ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:54'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d39a2da051f96635ac9ad&includeHolidays=true',
+  statusCode: 304,
+  duration: '1104ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:54'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=68d29f4cce5f5ad421bb6f93&includeHolidays=true',
+  statusCode: 304,
+  duration: '1200ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:54'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e80bdeec803ff379c9bc9&includeHolidays=true',
+  statusCode: 304,
+  duration: '1054ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:56'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411c40ba2a6021f52cc281&includeHolidays=true',
+  statusCode: 304,
+  duration: '1081ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:56'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9faf9058941ebb0781427b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1113ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:56'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4df9fe4aaf17dea66392a6&includeHolidays=true',
+  statusCode: 304,
+  duration: '1143ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:56'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6941045980ae214ab2b6b606&includeHolidays=true',
+  statusCode: 304,
+  duration: '1171ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:56'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e8129eec803ff379c9ce8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1202ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:56'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6908a3e9549111e069b67f80&includeHolidays=true',
+  statusCode: 304,
+  duration: '1066ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:57'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6abcb5945da120d1bfbbee2b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1071ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:57'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d5763abf6dd746d6ad8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1083ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:57'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69a7f40c6ec57fc254a25613&includeHolidays=true',
+  statusCode: 304,
+  duration: '1096ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:57'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eb0c37ddf3e56da06d7de8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1106ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:57'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a96605f55962b817f36a7ad&includeHolidays=true',
+  statusCode: 304,
+  duration: '1089ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:57'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4dd83a4aaf17dea66344da&includeHolidays=true',
+  statusCode: 304,
+  duration: '1047ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687ddeb737735aa0fc5be0b7&includeHolidays=true',
+  statusCode: 304,
+  duration: '1072ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411e1cba2a6021f52cce7b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1099ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f2517a9dfd2a01b782b6d&includeHolidays=true',
+  statusCode: 304,
+  duration: '1125ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a8287001b3d13be2e31b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1155ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a7e47001b3d13be2e24d&includeHolidays=true',
+  statusCode: 304,
+  duration: '1197ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eef4c5ceb8690f5e2d3a61&includeHolidays=true',
+  statusCode: 304,
+  duration: '1043ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:59'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f797fcac0a473f5b46e07&includeHolidays=true',
+  statusCode: 304,
+  duration: '1068ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:59'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d3a2fda051f96635ac9c9&includeHolidays=true',
+  statusCode: 304,
+  duration: '1097ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:59'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a6095778c3c0134b3db3738&includeHolidays=true',
+  statusCode: 304,
+  duration: '1117ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:59'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f50ce45a240c1703999&includeHolidays=true',
+  statusCode: 304,
+  duration: '1157ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:59'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69fc6d261e577f51a060849c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1176ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:07:59'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f84575f0b285bd282e245e&includeHolidays=true',
+  statusCode: 304,
+  duration: '1032ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:00'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=696a16538b528459b1ebf42a&includeHolidays=true',
+  statusCode: 304,
+  duration: '1062ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:00'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c87050c644801a406266&includeHolidays=true',
+  statusCode: 304,
+  duration: '1087ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:00'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d0863abf6dd746d68d8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1115ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:00'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aacd2385c52d4211d95b38c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1146ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:01'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a7c18367001b3d13befedc3&includeHolidays=true',
+  statusCode: 304,
+  duration: '1177ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:01'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9e650c58941ebb077f8f2f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1041ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=689ddd2e35a11aee6a182009&includeHolidays=true',
+  statusCode: 304,
+  duration: '1162ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa246ce58941ebb0784ecc7&includeHolidays=true',
+  statusCode: 304,
+  duration: '1205ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177970f3bc7c194c6c8bc&includeHolidays=true',
+  statusCode: 304,
+  duration: '1229ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac49b01ce45a240c1731775&includeHolidays=true',
+  statusCode: 304,
+  duration: '1256ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33c8dce45a240c1702676&includeHolidays=true',
+  statusCode: 304,
+  duration: '1297ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa2463d58941ebb0784e97b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1060ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691af3d1469c22f64733dcf2&includeHolidays=true',
+  statusCode: 304,
+  duration: '1102ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69410c9971a1865b60b1095f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1124ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f35d92922b9c834419f20f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1162ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411dc3ba2a6021f52ccc6b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1178ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a58ab0d4aaf17dea66e2973&includeHolidays=true',
+  statusCode: 304,
+  duration: '1214ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a3a319e9d71214ced3c382c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1039ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411d12ba2a6021f52cc87f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1073ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac364b7ce45a240c170cfce&includeHolidays=true',
+  statusCode: 304,
+  duration: '1099ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aaa237d27ad958081051d41&includeHolidays=true',
+  statusCode: 304,
+  duration: '1124ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f1dce45a240c17038bd&includeHolidays=true',
+  statusCode: 304,
+  duration: '1149ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177e10f3bc7c194c6c990&includeHolidays=true',
+  statusCode: 304,
+  duration: '1175ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c78250c644801a405fda&includeHolidays=true',
+  statusCode: 304,
+  duration: '1036ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:05'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c83250c644801a40624c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1072ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:05'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33c4ece45a240c17023b1&includeHolidays=true',
+  statusCode: 304,
+  duration: '1096ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:05'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d39a2da051f96635ac9ad&includeHolidays=true',
+  statusCode: 304,
+  duration: '1127ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:05'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=68d29f4cce5f5ad421bb6f93&includeHolidays=true',
+  statusCode: 304,
+  duration: '1157ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:05'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e80bdeec803ff379c9bc9&includeHolidays=true',
+  statusCode: 304,
+  duration: '1185ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:06'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9faf9058941ebb0781427b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1057ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:07'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411c40ba2a6021f52cc281&includeHolidays=true',
+  statusCode: 304,
+  duration: '1097ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:07'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4df9fe4aaf17dea66392a6&includeHolidays=true',
+  statusCode: 304,
+  duration: '1125ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:07'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6941045980ae214ab2b6b606&includeHolidays=true',
+  statusCode: 304,
+  duration: '1150ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:07'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e8129eec803ff379c9ce8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1238ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:07'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6908a3e9549111e069b67f80&includeHolidays=true',
+  statusCode: 304,
+  duration: '1294ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:07'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6abcb5945da120d1bfbbee2b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1045ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:08'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69a7f40c6ec57fc254a25613&includeHolidays=true',
+  statusCode: 304,
+  duration: '1068ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:08'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d5763abf6dd746d6ad8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1098ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:08'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eb0c37ddf3e56da06d7de8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1123ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:08'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a96605f55962b817f36a7ad&includeHolidays=true',
+  statusCode: 304,
+  duration: '1151ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:08'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4dd83a4aaf17dea66344da&includeHolidays=true',
+  statusCode: 304,
+  duration: '1181ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:08'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687ddeb737735aa0fc5be0b7&includeHolidays=true',
+  statusCode: 304,
+  duration: '1075ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:09'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411e1cba2a6021f52cce7b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1098ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:09'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f2517a9dfd2a01b782b6d&includeHolidays=true',
+  statusCode: 304,
+  duration: '1129ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:09'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a8287001b3d13be2e31b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1163ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:09'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a7e47001b3d13be2e24d&includeHolidays=true',
+  statusCode: 304,
+  duration: '1196ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:09'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eef4c5ceb8690f5e2d3a61&includeHolidays=true',
+  statusCode: 304,
+  duration: '1228ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:09'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f797fcac0a473f5b46e07&includeHolidays=true',
+  statusCode: 304,
+  duration: '1053ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:10'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d3a2fda051f96635ac9c9&includeHolidays=true',
+  statusCode: 304,
+  duration: '1077ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:10'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a6095778c3c0134b3db3738&includeHolidays=true',
+  statusCode: 304,
+  duration: '1106ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:10'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f50ce45a240c1703999&includeHolidays=true',
+  statusCode: 304,
+  duration: '1137ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:10'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f84575f0b285bd282e245e&includeHolidays=true',
+  statusCode: 304,
+  duration: '1157ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:10'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69fc6d261e577f51a060849c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1197ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:11'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c87050c644801a406266&includeHolidays=true',
+  statusCode: 304,
+  duration: '1036ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:12'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=696a16538b528459b1ebf42a&includeHolidays=true',
+  statusCode: 304,
+  duration: '1072ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:12'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d0863abf6dd746d68d8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1098ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:12'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a7c18367001b3d13befedc3&includeHolidays=true',
+  statusCode: 304,
+  duration: '1127ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:12'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aacd2385c52d4211d95b38c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1161ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:12'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9e650c58941ebb077f8f2f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1181ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:12'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=689ddd2e35a11aee6a182009&includeHolidays=true',
+  statusCode: 304,
+  duration: '1052ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:13'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177970f3bc7c194c6c8bc&includeHolidays=true',
+  statusCode: 304,
+  duration: '1062ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:13'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa246ce58941ebb0784ecc7&includeHolidays=true',
+  statusCode: 304,
+  duration: '1103ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:13'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac49b01ce45a240c1731775&includeHolidays=true',
+  statusCode: 304,
+  duration: '1116ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:13'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33c8dce45a240c1702676&includeHolidays=true',
+  statusCode: 304,
+  duration: '1142ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:13'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa2463d58941ebb0784e97b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1180ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:13'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69410c9971a1865b60b1095f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1046ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:14'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691af3d1469c22f64733dcf2&includeHolidays=true',
+  statusCode: 304,
+  duration: '1081ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:14'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f35d92922b9c834419f20f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1105ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:14'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411dc3ba2a6021f52ccc6b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1133ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:14'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a58ab0d4aaf17dea66e2973&includeHolidays=true',
+  statusCode: 304,
+  duration: '1162ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:14'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a3a319e9d71214ced3c382c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1190ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:14'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411d12ba2a6021f52cc87f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1045ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:15'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac364b7ce45a240c170cfce&includeHolidays=true',
+  statusCode: 304,
+  duration: '1058ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:15'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f1dce45a240c17038bd&includeHolidays=true',
+  statusCode: 304,
+  duration: '1064ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:15'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aaa237d27ad958081051d41&includeHolidays=true',
+  statusCode: 304,
+  duration: '1094ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:15'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177e10f3bc7c194c6c990&includeHolidays=true',
+  statusCode: 304,
+  duration: '1115ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:15'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c78250c644801a405fda&includeHolidays=true',
+  statusCode: 304,
+  duration: '1127ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:15'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33c4ece45a240c17023b1&includeHolidays=true',
+  statusCode: 304,
+  duration: '1266ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:17'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e80bdeec803ff379c9bc9&includeHolidays=true',
+  statusCode: 304,
+  duration: '1049ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:18'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=68d29f4cce5f5ad421bb6f93&includeHolidays=true',
+  statusCode: 304,
+  duration: '1074ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:18'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9faf9058941ebb0781427b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1098ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:18'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d39a2da051f96635ac9ad&includeHolidays=true',
+  statusCode: 304,
+  duration: '1118ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:18'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411c40ba2a6021f52cc281&includeHolidays=true',
+  statusCode: 304,
+  duration: '1142ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:18'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4df9fe4aaf17dea66392a6&includeHolidays=true',
+  statusCode: 304,
+  duration: '1169ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:18'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6941045980ae214ab2b6b606&includeHolidays=true',
+  statusCode: 304,
+  duration: '1050ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:19'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e8129eec803ff379c9ce8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1079ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:19'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6908a3e9549111e069b67f80&includeHolidays=true',
+  statusCode: 304,
+  duration: '1109ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:19'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6abcb5945da120d1bfbbee2b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1139ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:19'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d5763abf6dd746d6ad8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1166ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:19'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69a7f40c6ec57fc254a25613&includeHolidays=true',
+  statusCode: 304,
+  duration: '1190ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:19'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a96605f55962b817f36a7ad&includeHolidays=true',
+  statusCode: 304,
+  duration: '1033ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:20'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eb0c37ddf3e56da06d7de8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1078ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:20'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4dd83a4aaf17dea66344da&includeHolidays=true',
+  statusCode: 304,
+  duration: '1099ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:20'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687ddeb737735aa0fc5be0b7&includeHolidays=true',
+  statusCode: 304,
+  duration: '1126ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:20'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411e1cba2a6021f52cce7b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1159ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:20'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f2517a9dfd2a01b782b6d&includeHolidays=true',
+  statusCode: 304,
+  duration: '1188ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:20'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a7e47001b3d13be2e24d&includeHolidays=true',
+  statusCode: 304,
+  duration: '1054ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:21'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eef4c5ceb8690f5e2d3a61&includeHolidays=true',
+  statusCode: 304,
+  duration: '1077ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:21'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f797fcac0a473f5b46e07&includeHolidays=true',
+  statusCode: 304,
+  duration: '1106ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:21'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a8287001b3d13be2e31b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1145ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:22'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d3a2fda051f96635ac9c9&includeHolidays=true',
+  statusCode: 304,
+  duration: '1161ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:22'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f50ce45a240c1703999&includeHolidays=true',
+  statusCode: 304,
+  duration: '1188ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:22'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a6095778c3c0134b3db3738&includeHolidays=true',
+  statusCode: 304,
+  duration: '1047ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:23'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69fc6d261e577f51a060849c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1073ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:23'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f84575f0b285bd282e245e&includeHolidays=true',
+  statusCode: 304,
+  duration: '1102ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:23'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=696a16538b528459b1ebf42a&includeHolidays=true',
+  statusCode: 304,
+  duration: '1132ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:23'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c87050c644801a406266&includeHolidays=true',
+  statusCode: 304,
+  duration: '1161ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:23'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d0863abf6dd746d68d8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1192ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:23'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9e650c58941ebb077f8f2f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1035ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:24'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a7c18367001b3d13befedc3&includeHolidays=true',
+  statusCode: 304,
+  duration: '1061ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:24'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aacd2385c52d4211d95b38c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1039ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:24'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa246ce58941ebb0784ecc7&includeHolidays=true',
+  statusCode: 304,
+  duration: '1074ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:24'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=689ddd2e35a11aee6a182009&includeHolidays=true',
+  statusCode: 304,
+  duration: '1187ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:24'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177970f3bc7c194c6c8bc&includeHolidays=true',
+  statusCode: 304,
+  duration: '1230ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:24'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac49b01ce45a240c1731775&includeHolidays=true',
+  statusCode: 304,
+  duration: '1044ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:25'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33c8dce45a240c1702676&includeHolidays=true',
+  statusCode: 304,
+  duration: '1069ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:25'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f35d92922b9c834419f20f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1095ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:25'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa2463d58941ebb0784e97b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1250ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:25'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69410c9971a1865b60b1095f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1279ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:25'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691af3d1469c22f64733dcf2&includeHolidays=true',
+  statusCode: 304,
+  duration: '1765ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:26'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411dc3ba2a6021f52ccc6b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1026ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:26'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a3a319e9d71214ced3c382c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1034ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:26'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411d12ba2a6021f52cc87f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1028ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:26'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac364b7ce45a240c170cfce&includeHolidays=true',
+  statusCode: 304,
+  duration: '1026ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:26'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f1dce45a240c17038bd&includeHolidays=true',
+  statusCode: 304,
+  duration: '1037ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:27'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177e10f3bc7c194c6c990&includeHolidays=true',
+  statusCode: 304,
+  duration: '1014ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:27'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c83250c644801a40624c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1040ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:08:27'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/login',
+  statusCode: 200,
+  duration: '1120ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:35'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/dashboard-summary?includePendingLeaves=true',
+  statusCode: 200,
+  duration: '4113ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:40'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/?all=true&_t=1791787666036',
+  statusCode: 200,
+  duration: '1025ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:47'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=68d29f4cce5f5ad421bb6f93&includeHolidays=true',
+  statusCode: 304,
+  duration: '1064ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:48'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e80bdeec803ff379c9bc9&includeHolidays=true',
+  statusCode: 304,
+  duration: '1095ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:48'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9faf9058941ebb0781427b&includeHolidays=true',
+  statusCode: 200,
+  duration: '1123ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:48'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d39a2da051f96635ac9ad&includeHolidays=true',
+  statusCode: 304,
+  duration: '1149ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:48'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4df9fe4aaf17dea66392a6&includeHolidays=true',
+  statusCode: 304,
+  duration: '1171ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:48'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411c40ba2a6021f52cc281&includeHolidays=true',
+  statusCode: 304,
+  duration: '1212ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:48'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6941045980ae214ab2b6b606&includeHolidays=true',
+  statusCode: 304,
+  duration: '1043ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:50'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e8129eec803ff379c9ce8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1070ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:50'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6908a3e9549111e069b67f80&includeHolidays=true',
+  statusCode: 304,
+  duration: '1102ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:50'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6abcb5945da120d1bfbbee2b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1147ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:50'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d5763abf6dd746d6ad8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1183ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:50'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69a7f40c6ec57fc254a25613&includeHolidays=true',
+  statusCode: 304,
+  duration: '1198ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:50'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eb0c37ddf3e56da06d7de8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1044ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:51'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a96605f55962b817f36a7ad&includeHolidays=true',
+  statusCode: 304,
+  duration: '1071ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:51'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4dd83a4aaf17dea66344da&includeHolidays=true',
+  statusCode: 304,
+  duration: '1092ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:51'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687ddeb737735aa0fc5be0b7&includeHolidays=true',
+  statusCode: 304,
+  duration: '1122ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:51'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411e1cba2a6021f52cce7b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1154ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:51'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f2517a9dfd2a01b782b6d&includeHolidays=true',
+  statusCode: 304,
+  duration: '1183ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:51'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a7e47001b3d13be2e24d&includeHolidays=true',
+  statusCode: 304,
+  duration: '1066ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:52'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a8287001b3d13be2e31b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1093ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:52'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eef4c5ceb8690f5e2d3a61&includeHolidays=true',
+  statusCode: 304,
+  duration: '1116ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:52'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f797fcac0a473f5b46e07&includeHolidays=true',
+  statusCode: 304,
+  duration: '1143ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:52'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d3a2fda051f96635ac9c9&includeHolidays=true',
+  statusCode: 304,
+  duration: '1176ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:52'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f50ce45a240c1703999&includeHolidays=true',
+  statusCode: 304,
+  duration: '1210ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:52'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a6095778c3c0134b3db3738&includeHolidays=true',
+  statusCode: 304,
+  duration: '1058ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:53'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69fc6d261e577f51a060849c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1096ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:53'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f84575f0b285bd282e245e&includeHolidays=true',
+  statusCode: 304,
+  duration: '1126ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:53'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=696a16538b528459b1ebf42a&includeHolidays=true',
+  statusCode: 304,
+  duration: '1155ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:53'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c87050c644801a406266&includeHolidays=true',
+  statusCode: 304,
+  duration: '1214ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:53'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d0863abf6dd746d68d8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1253ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:53'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9e650c58941ebb077f8f2f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1068ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:54'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aacd2385c52d4211d95b38c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1031ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:54'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa246ce58941ebb0784ecc7&includeHolidays=true',
+  statusCode: 304,
+  duration: '1072ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:55'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=689ddd2e35a11aee6a182009&includeHolidays=true',
+  statusCode: 304,
+  duration: '1107ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:55'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177970f3bc7c194c6c8bc&includeHolidays=true',
+  statusCode: 304,
+  duration: '1143ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:55'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac49b01ce45a240c1731775&includeHolidays=true',
+  statusCode: 304,
+  duration: '1052ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:56'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f35d92922b9c834419f20f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1019ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:56'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691af3d1469c22f64733dcf2&includeHolidays=true',
+  statusCode: 304,
+  duration: '1023ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:56'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa2463d58941ebb0784e97b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1055ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:56'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69410c9971a1865b60b1095f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1080ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:56'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a58ab0d4aaf17dea66e2973&includeHolidays=true',
+  statusCode: 304,
+  duration: '1035ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:57'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411dc3ba2a6021f52ccc6b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1061ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:57'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a3a319e9d71214ced3c382c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1085ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:57'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac364b7ce45a240c170cfce&includeHolidays=true',
+  statusCode: 304,
+  duration: '1113ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:57'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411d12ba2a6021f52cc87f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1150ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:57'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aaa237d27ad958081051d41&includeHolidays=true',
+  statusCode: 304,
+  duration: '1175ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:57'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f1dce45a240c17038bd&includeHolidays=true',
+  statusCode: 304,
+  duration: '1046ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177e10f3bc7c194c6c990&includeHolidays=true',
+  statusCode: 304,
+  duration: '1070ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c83250c644801a40624c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1092ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33c4ece45a240c17023b1&includeHolidays=true',
+  statusCode: 304,
+  duration: '1124ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c78250c644801a405fda&includeHolidays=true',
+  statusCode: 304,
+  duration: '1154ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=68d29f4cce5f5ad421bb6f93&includeHolidays=true',
+  statusCode: 304,
+  duration: '1184ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e80bdeec803ff379c9bc9&includeHolidays=true',
+  statusCode: 304,
+  duration: '1044ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:59'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d39a2da051f96635ac9ad&includeHolidays=true',
+  statusCode: 304,
+  duration: '1069ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:59'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4df9fe4aaf17dea66392a6&includeHolidays=true',
+  statusCode: 304,
+  duration: '1094ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:59'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9faf9058941ebb0781427b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1121ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:59'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411c40ba2a6021f52cc281&includeHolidays=true',
+  statusCode: 304,
+  duration: '1160ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:59'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6941045980ae214ab2b6b606&includeHolidays=true',
+  statusCode: 304,
+  duration: '1188ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:17:59'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=699e8129eec803ff379c9ce8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1037ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:00'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6908a3e9549111e069b67f80&includeHolidays=true',
+  statusCode: 304,
+  duration: '1071ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:00'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6abcb5945da120d1bfbbee2b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1097ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:00'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d5763abf6dd746d6ad8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1127ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:01'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69a7f40c6ec57fc254a25613&includeHolidays=true',
+  statusCode: 304,
+  duration: '1161ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:01'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eb0c37ddf3e56da06d7de8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1189ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:01'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f2517a9dfd2a01b782b6d&includeHolidays=true',
+  statusCode: 304,
+  duration: '1019ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687ddeb737735aa0fc5be0b7&includeHolidays=true',
+  statusCode: 304,
+  duration: '1066ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a4dd83a4aaf17dea66344da&includeHolidays=true',
+  statusCode: 304,
+  duration: '1116ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411e1cba2a6021f52cce7b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1140ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a96605f55962b817f36a7ad&includeHolidays=true',
+  statusCode: 304,
+  duration: '1207ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a7e47001b3d13be2e24d&includeHolidays=true',
+  statusCode: 304,
+  duration: '1207ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69eef4c5ceb8690f5e2d3a61&includeHolidays=true',
+  statusCode: 304,
+  duration: '1039ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a70a8287001b3d13be2e31b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1079ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a6095778c3c0134b3db3738&includeHolidays=true',
+  statusCode: 304,
+  duration: '1066ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=693d3a2fda051f96635ac9c9&includeHolidays=true',
+  statusCode: 304,
+  duration: '1131ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f50ce45a240c1703999&includeHolidays=true',
+  statusCode: 304,
+  duration: '1160ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=687f797fcac0a473f5b46e07&includeHolidays=true',
+  statusCode: 304,
+  duration: '1209ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69fc6d261e577f51a060849c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1052ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=696a16538b528459b1ebf42a&includeHolidays=true',
+  statusCode: 304,
+  duration: '1092ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f84575f0b285bd282e245e&includeHolidays=true',
+  statusCode: 304,
+  duration: '1127ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab4c87050c644801a406266&includeHolidays=true',
+  statusCode: 304,
+  duration: '1153ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ab21d0863abf6dd746d68d8&includeHolidays=true',
+  statusCode: 304,
+  duration: '1185ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a9e650c58941ebb077f8f2f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1215ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aacd2385c52d4211d95b38c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1058ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:05'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a7c18367001b3d13befedc3&includeHolidays=true',
+  statusCode: 304,
+  duration: '1092ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:05'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa246ce58941ebb0784ecc7&includeHolidays=true',
+  statusCode: 304,
+  duration: '1113ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:05'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=689ddd2e35a11aee6a182009&includeHolidays=true',
+  statusCode: 304,
+  duration: '1148ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:05'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691177970f3bc7c194c6c8bc&includeHolidays=true',
+  statusCode: 304,
+  duration: '1178ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:06'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac49b01ce45a240c1731775&includeHolidays=true',
+  statusCode: 304,
+  duration: '1204ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:06'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33c8dce45a240c1702676&includeHolidays=true',
+  statusCode: 304,
+  duration: '1035ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:07'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69f35d92922b9c834419f20f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1044ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:07'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=691af3d1469c22f64733dcf2&includeHolidays=true',
+  statusCode: 304,
+  duration: '1069ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:07'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aa2463d58941ebb0784e97b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1098ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:07'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69410c9971a1865b60b1095f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1127ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:07'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a58ab0d4aaf17dea66e2973&includeHolidays=true',
+  statusCode: 304,
+  duration: '1155ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:07'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac364b7ce45a240c170cfce&includeHolidays=true',
+  statusCode: 304,
+  duration: '1029ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:08'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6a3a319e9d71214ced3c382c&includeHolidays=true',
+  statusCode: 304,
+  duration: '1066ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:08'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411d12ba2a6021f52cc87f&includeHolidays=true',
+  statusCode: 304,
+  duration: '1095ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:08'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=69411dc3ba2a6021f52ccc6b&includeHolidays=true',
+  statusCode: 304,
+  duration: '1194ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:08'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6aaa237d27ad958081051d41&includeHolidays=true',
+  statusCode: 304,
+  duration: '1266ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:08'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-10-01&endDate=2026-10-31&userId=6ac33f1dce45a240c17038bd&includeHolidays=true',
+  statusCode: 304,
+  duration: '1324ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:08'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=68d29f4cce5f5ad421bb6f93&includeHolidays=true',
+  statusCode: 200,
+  duration: '1054ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:57'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=699e80bdeec803ff379c9bc9&includeHolidays=true',
+  statusCode: 200,
+  duration: '1096ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:57'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6a9faf9058941ebb0781427b&includeHolidays=true',
+  statusCode: 200,
+  duration: '1135ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:57'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6a4df9fe4aaf17dea66392a6&includeHolidays=true',
+  statusCode: 200,
+  duration: '1312ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=69411c40ba2a6021f52cc281&includeHolidays=true',
+  statusCode: 200,
+  duration: '1365ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=693d39a2da051f96635ac9ad&includeHolidays=true',
+  statusCode: 200,
+  duration: '1416ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=699e8129eec803ff379c9ce8&includeHolidays=true',
+  statusCode: 200,
+  duration: '1069ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6908a3e9549111e069b67f80&includeHolidays=true',
+  statusCode: 200,
+  duration: '1117ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:58'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6abcb5945da120d1bfbbee2b&includeHolidays=true',
+  statusCode: 200,
+  duration: '1019ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:59'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6ab21d5763abf6dd746d6ad8&includeHolidays=true',
+  statusCode: 200,
+  duration: '1029ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:59'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=69a7f40c6ec57fc254a25613&includeHolidays=true',
+  statusCode: 200,
+  duration: '1090ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:59'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=69eb0c37ddf3e56da06d7de8&includeHolidays=true',
+  statusCode: 200,
+  duration: '1039ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:18:59'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6a96605f55962b817f36a7ad&includeHolidays=true',
+  statusCode: 200,
+  duration: '1097ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:00'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6a4dd83a4aaf17dea66344da&includeHolidays=true',
+  statusCode: 200,
+  duration: '1134ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:00'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=687ddeb737735aa0fc5be0b7&includeHolidays=true',
+  statusCode: 200,
+  duration: '1057ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:00'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=69411e1cba2a6021f52cce7b&includeHolidays=true',
+  statusCode: 200,
+  duration: '1174ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:00'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=687f2517a9dfd2a01b782b6d&includeHolidays=true',
+  statusCode: 200,
+  duration: '1162ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:00'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6a70a7e47001b3d13be2e24d&includeHolidays=true',
+  statusCode: 200,
+  duration: '1035ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:00'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=693d3a2fda051f96635ac9c9&includeHolidays=true',
+  statusCode: 200,
+  duration: '1092ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:01'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6ac33f50ce45a240c1703999&includeHolidays=true',
+  statusCode: 200,
+  duration: '1103ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:01'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6a6095778c3c0134b3db3738&includeHolidays=true',
+  statusCode: 200,
+  duration: '1005ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:01'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=69fc6d261e577f51a060849c&includeHolidays=true',
+  statusCode: 200,
+  duration: '1065ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:01'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=696a16538b528459b1ebf42a&includeHolidays=true',
+  statusCode: 200,
+  duration: '1084ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6ab4c87050c644801a406266&includeHolidays=true',
+  statusCode: 200,
+  duration: '1084ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6ab21d0863abf6dd746d68d8&includeHolidays=true',
+  statusCode: 200,
+  duration: '1111ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6aacd2385c52d4211d95b38c&includeHolidays=true',
+  statusCode: 200,
+  duration: '1010ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6aa246ce58941ebb0784ecc7&includeHolidays=true',
+  statusCode: 200,
+  duration: '1042ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=689ddd2e35a11aee6a182009&includeHolidays=true',
+  statusCode: 200,
+  duration: '1057ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=691177970f3bc7c194c6c8bc&includeHolidays=true',
+  statusCode: 200,
+  duration: '1085ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6ac49b01ce45a240c1731775&includeHolidays=true',
+  statusCode: 200,
+  duration: '1101ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6ac33c8dce45a240c1702676&includeHolidays=true',
+  statusCode: 200,
+  duration: '1075ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:03'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=69f35d92922b9c834419f20f&includeHolidays=true',
+  statusCode: 200,
+  duration: '1108ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=69410c9971a1865b60b1095f&includeHolidays=true',
+  statusCode: 200,
+  duration: '1045ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6a58ab0d4aaf17dea66e2973&includeHolidays=true',
+  statusCode: 200,
+  duration: '1054ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=69411dc3ba2a6021f52ccc6b&includeHolidays=true',
+  statusCode: 200,
+  duration: '1045ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:04'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=69411d12ba2a6021f52cc87f&includeHolidays=true',
+  statusCode: 200,
+  duration: '1047ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:05'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6ac364b7ce45a240c170cfce&includeHolidays=true',
+  statusCode: 200,
+  duration: '1126ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:05'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6ac33f1dce45a240c17038bd&includeHolidays=true',
+  statusCode: 200,
+  duration: '1017ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:06'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/summary?startDate=2026-09-01&endDate=2026-09-30&userId=6ab4c83250c644801a40624c&includeHolidays=true',
+  statusCode: 200,
+  duration: '1038ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:19:06'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/attendance/muster?startDate=2026-10-01&endDate=2026-10-31&_t=1791788136146',
+  statusCode: 404,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:25:36'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/attendance/muster?startDate=2026-10-01&endDate=2026-10-31&_t=1791788136146',
+  statusCode: 404,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:25:36'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/muster?startDate=2026-09-01&endDate=2026-09-30',
+  statusCode: 401,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 12:28:50'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/muster?startDate=2026-10-01&endDate=2026-10-31&_t=1791796733984',
+  statusCode: 200,
+  duration: '1319ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 14:48:55'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/muster?startDate=2026-09-01&endDate=2026-09-30',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 14:49:12'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/analytics/late-grace-settings',
+  statusCode: 404,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 14:50:49'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/analytics/late-grace-settings',
+  statusCode: 404,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 14:50:49'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/analytics/monthly-context-settings',
+  statusCode: 404,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 14:51:07'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/analytics/monthly-context-settings',
+  statusCode: 404,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 14:51:07'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/analytics/monthly-context-settings',
+  statusCode: 404,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 14:51:07'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/analytics/monthly-context-settings',
+  statusCode: 404,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 14:51:07'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/attendance?startDate=2026-10-01&endDate=2026-10-12&page=1&limit=50',
+  statusCode: 200,
+  duration: '1697ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-12 14:51:17'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/muster?startDate=2026-10-01&endDate=2026-10-31&_t=1791954759694',
+  statusCode: 200,
+  duration: '1256ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-14 10:42:40'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/muster?startDate=2026-10-01&endDate=2026-10-31&_t=1791955269295',
+  statusCode: 200,
+  duration: '1260ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-14 10:51:10'
+}

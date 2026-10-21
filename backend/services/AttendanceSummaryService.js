@@ -19,11 +19,16 @@
 const mongoose = require('mongoose');
 const User = require('../models/User');
 const AttendanceLog = require('../models/AttendanceLog');
+const AttendanceSession = require('../models/AttendanceSession');
 const Holiday = require('../models/Holiday');
 const LeaveRequest = require('../models/LeaveRequest');
 const { resolveAttendanceStatus, generateDateRange } = require('../utils/attendanceStatusResolver');
 const { getGracePeriodMinutes } = require('../utils/gracePeriod');
-const { getISTDateString, parseISTDate } = require('../utils/istTime');
+const { getISTDateString, parseISTDate, getShiftDateTimeIST } = require('../utils/istTime');
+const {
+    MINIMUM_ELAPSED_SHIFT_HOURS_FOR_FULL_DAY,
+    MINIMUM_ELAPSED_SHIFT_HOURS_FOR_HALF_DAY,
+} = require('../config/shiftPolicy');
 
 /**
  * Get employee attendance summary with full status resolution
@@ -340,7 +345,268 @@ async function fetchHolidaysForDateRange(startDate, endDate) {
     return holidays;
 }
 
+const HALF_DAY_LEAVE_TYPES = ['Half Day - First Half', 'Half Day - Second Half'];
+
+const musterCodeFromResolved = (entry, dateKey, employee, todayKey) => {
+    if (dateKey > todayKey) return 'N/A';
+
+    const startSource = employee?.joiningDate || employee?.createdAt;
+    if (startSource) {
+        const startKey = getISTDateString(new Date(startSource));
+        if (dateKey < startKey) return 'N/A';
+    }
+
+    if (!entry) return dateKey < todayKey ? 'A' : 'N/A';
+
+    const leaveType = entry.leaveInfo?.leaveType || '';
+    const requestType = entry.leaveInfo?.requestType || '';
+    const halfDayLeave = entry.hasHalfDayLeave
+        || HALF_DAY_LEAVE_TYPES.includes(leaveType)
+        || String(leaveType).startsWith('Half Day');
+
+    if (entry.isHoliday || entry.attendanceStatus === 'Holiday') return 'HL';
+    if (entry.isWeeklyOff || entry.attendanceStatus === 'Weekly Off') return 'W';
+    if (halfDayLeave) return 'HF';
+    if (entry.isLeave || entry.attendanceStatus === 'Leave') {
+        if (String(requestType).toLowerCase().includes('loss of pay')) return 'LOP';
+        if (leaveType === 'Full Day') return 'FF';
+        return 'L';
+    }
+    if (entry.isHalfDay || entry.attendanceStatus === 'Half-day' || entry.attendanceStatus === 'Half Day') return 'HD';
+    if (entry.attendanceStatus === 'On-time' || entry.attendanceStatus === 'Late' || entry.attendanceStatus === 'Present') return 'P';
+    if (entry.isAbsent || entry.attendanceStatus === 'Absent') return 'A';
+    return 'N/A';
+};
+
+/**
+ * Same post-resolution rules the summary route applies after resolveAttendanceStatus:
+ * elapsed shift hours decide Present / Half-day / Absent, and an open shift today stays Present.
+ */
+const applySummaryHoursOverride = (resolved, log, employee, gracePeriodMinutes, attendanceDate, todayKey) => {
+    if (!log?.sessions?.length || !log.sessions[0]?.startTime) return resolved;
+
+    const next = { ...resolved };
+    const hasCheckout = !!(log.clockInTime && log.clockOutTime);
+    if (attendanceDate === todayKey && !hasCheckout && (next.isHalfDay || next.attendanceStatus === 'Half-day')) {
+        next.attendanceStatus = 'On-time';
+        next.isHalfDay = false;
+        next.isAbsent = false;
+    }
+
+    if (log.overriddenByAdmin) return next;
+
+    const shiftStart = employee?.shiftGroup?.startTime;
+    if (!shiftStart || gracePeriodMinutes == null) return next;
+
+    const firstCheckInTime = new Date(log.sessions[0].startTime);
+    const shiftStartTime = getShiftDateTimeIST(firstCheckInTime, shiftStart);
+    const lateMinutes = Math.max(0, Math.floor((firstCheckInTime - shiftStartTime) / (1000 * 60)));
+    const elapsedShiftHours = hasCheckout
+        ? (new Date(log.clockOutTime) - new Date(log.clockInTime)) / (1000 * 60 * 60)
+        : null;
+
+    const belowHalfDay = hasCheckout && elapsedShiftHours < MINIMUM_ELAPSED_SHIFT_HOURS_FOR_HALF_DAY;
+    const halfDayHours = hasCheckout
+        && elapsedShiftHours >= MINIMUM_ELAPSED_SHIFT_HOURS_FOR_HALF_DAY
+        && elapsedShiftHours < MINIMUM_ELAPSED_SHIFT_HOURS_FOR_FULL_DAY;
+    const fullDayHours = elapsedShiftHours != null && elapsedShiftHours >= MINIMUM_ELAPSED_SHIFT_HOURS_FOR_FULL_DAY;
+    const withinGrace = lateMinutes <= gracePeriodMinutes;
+
+    if (belowHalfDay) {
+        next.isHalfDay = false;
+        next.isAbsent = true;
+        next.attendanceStatus = 'Absent';
+    } else if (withinGrace && fullDayHours) {
+        next.isHalfDay = false;
+        next.isAbsent = false;
+        next.attendanceStatus = 'On-time';
+    } else if (halfDayHours) {
+        next.isHalfDay = true;
+        next.isAbsent = false;
+        next.attendanceStatus = 'Half-day';
+    } else if (fullDayHours) {
+        const lateArrivalMarksHalfDay = !!employee?.featurePermissions?.lateArrivalMarksHalfDay;
+        next.isAbsent = false;
+        if (lateArrivalMarksHalfDay) {
+            next.isHalfDay = true;
+            next.attendanceStatus = 'Half-day';
+        } else {
+            next.isHalfDay = false;
+            next.attendanceStatus = 'On-time';
+        }
+    }
+
+    return next;
+};
+
+/**
+ * One-pass muster roll for every active employee in a month.
+ * Status resolution stays on the backend (same resolver as the summary page).
+ * Sessions are not loaded; only whether a session exists, which is all the resolver needs.
+ */
+async function getMusterRoll(startDate, endDate) {
+    const startDateStr = typeof startDate === 'string' ? startDate : getISTDateString(startDate);
+    const endDateStr = typeof endDate === 'string' ? endDate : getISTDateString(endDate);
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDateStr) || !dateRegex.test(endDateStr)) {
+        throw new Error('Invalid date format. Use YYYY-MM-DD.');
+    }
+
+    const dateRange = generateDateRange(startDateStr, endDateStr);
+    const rangeStart = parseISTDate(startDateStr);
+    const rangeEnd = parseISTDate(`${endDateStr}T23:59:59+05:30`);
+
+    const [employees, holidays, gracePeriodMinutes, logs, leaveRequests] = await Promise.all([
+        User.find({
+            isActive: { $ne: false },
+            role: { $in: ['Employee', 'HR', 'Intern'] },
+        })
+            .select('fullName employeeCode department alternateSaturdayPolicy joiningDate createdAt role featurePermissions')
+            .populate('shiftGroup', 'startTime')
+            .sort({ fullName: 1 })
+            .lean(),
+        Holiday.find({
+            date: { $gte: rangeStart, $lte: rangeEnd },
+            isTentative: { $ne: true },
+        }).select('date name isTentative').lean(),
+        getGracePeriodMinutes(),
+        AttendanceLog.find({
+            attendanceDate: { $gte: startDateStr, $lte: endDateStr },
+        })
+            .select('user attendanceDate clockInTime clockOutTime notes isHalfDay attendanceStatus lateMinutes logoutType autoLogoutReason overrideReason halfDayReasonCode halfDayReasonText halfDaySource overriddenByAdmin leaveRequest')
+            .lean(),
+        LeaveRequest.find({
+            status: 'Approved',
+            leaveDates: { $elemMatch: { $gte: rangeStart, $lte: rangeEnd } },
+        })
+            .select('employee leaveDates leaveType requestType status reason autoConvertedToLOP originalLeaveType originalRequestType')
+            .lean(),
+    ]);
+
+    const employeeIds = new Set(employees.map((employee) => employee._id.toString()));
+    const relevantLogs = logs.filter((log) => employeeIds.has(String(log.user)));
+    const logIds = relevantLogs.map((log) => log._id);
+    const sessionStats = logIds.length
+        ? await AttendanceSession.aggregate([
+            { $match: { attendanceLog: { $in: logIds } } },
+            {
+                $group: {
+                    _id: '$attendanceLog',
+                    firstStart: { $min: '$startTime' },
+                },
+            },
+        ])
+        : [];
+    const firstSessionByLog = new Map(sessionStats.map((row) => [String(row._id), row.firstStart]));
+
+    const logsByEmployeeDate = new Map();
+    relevantLogs.forEach((log) => {
+        const firstStart = firstSessionByLog.get(String(log._id));
+        log.sessions = firstStart ? [{ startTime: firstStart }] : [];
+        logsByEmployeeDate.set(`${log.user}|${log.attendanceDate}`, log);
+    });
+
+    const validLeaveIds = new Set(leaveRequests.map((leave) => String(leave._id)));
+    const leavesByEmployeeDate = new Map();
+    leaveRequests.forEach((leave) => {
+        const employeeId = String(leave.employee);
+        if (!employeeIds.has(employeeId) || !Array.isArray(leave.leaveDates)) return;
+        leave.leaveDates.forEach((leaveDate) => {
+            const leaveKey = getISTDateString(leaveDate);
+            if (leaveKey < startDateStr || leaveKey > endDateStr) return;
+            const mapKey = `${employeeId}|${leaveKey}`;
+            if (!leavesByEmployeeDate.has(mapKey)) leavesByEmployeeDate.set(mapKey, leave);
+        });
+    });
+
+    const todayKey = getISTDateString(new Date());
+    const codes = {};
+
+    employees.forEach((employee) => {
+        const employeeId = String(employee._id);
+        const policy = employee.alternateSaturdayPolicy || 'All Saturdays Working';
+        const dayCodes = {};
+
+        dateRange.forEach((attendanceDate) => {
+            const log = logsByEmployeeDate.get(`${employeeId}|${attendanceDate}`) || null;
+            let leaveRequest = leavesByEmployeeDate.get(`${employeeId}|${attendanceDate}`) || null;
+
+            if (log?.leaveRequest && !validLeaveIds.has(String(log.leaveRequest))) {
+                log.leaveRequest = null;
+                if (!log.clockInTime && !log.clockOutTime && log.attendanceStatus === 'Leave') {
+                    log.attendanceStatus = 'Absent';
+                    log.isHalfDay = false;
+                }
+            }
+            if (log?.leaveRequest && !leaveRequest) leaveRequest = null;
+
+            const statusInfo = resolveAttendanceStatus({
+                attendanceDate,
+                attendanceLog: log,
+                holidays,
+                leaveRequest,
+                saturdayPolicy: policy,
+                gracePeriodMinutes,
+            });
+
+            let effectiveLeaveInfo = statusInfo.leaveInfo;
+            const isHalfDayLeaveDoc = leaveRequest && HALF_DAY_LEAVE_TYPES.includes(leaveRequest.leaveType);
+            const wasVoidedByLeaveApproval = log?.notes && String(log.notes).includes('AUTO-VOID');
+            const hasActualCheckIn = log && log.clockInTime != null && !wasVoidedByLeaveApproval;
+            const hasNoCheckIn = !log || (log.clockInTime == null && !wasVoidedByLeaveApproval);
+
+            if (effectiveLeaveInfo && isHalfDayLeaveDoc && hasNoCheckIn) {
+                effectiveLeaveInfo = { ...effectiveLeaveInfo, leaveType: 'Full Day', requestType: 'Loss of Pay' };
+            } else if (effectiveLeaveInfo && isHalfDayLeaveDoc && hasActualCheckIn && leaveRequest.autoConvertedToLOP) {
+                effectiveLeaveInfo = {
+                    ...effectiveLeaveInfo,
+                    leaveType: leaveRequest.originalLeaveType || leaveRequest.leaveType,
+                    requestType: leaveRequest.originalRequestType || 'Planned',
+                };
+            }
+
+            let resolved = {
+                attendanceStatus: statusInfo.status,
+                isHoliday: statusInfo.isHoliday,
+                isWeeklyOff: statusInfo.isWeeklyOff,
+                isLeave: statusInfo.isLeave,
+                isAbsent: statusInfo.isAbsent,
+                isHalfDay: statusInfo.isLeave
+                    ? !!(effectiveLeaveInfo && HALF_DAY_LEAVE_TYPES.includes(effectiveLeaveInfo.leaveType))
+                    : statusInfo.isHalfDay,
+                hasHalfDayLeave: !!(effectiveLeaveInfo && HALF_DAY_LEAVE_TYPES.includes(effectiveLeaveInfo.leaveType)),
+                leaveInfo: effectiveLeaveInfo,
+                holidayInfo: statusInfo.holidayInfo,
+            };
+
+            if (!resolved.isHoliday && !resolved.isWeeklyOff && !resolved.isLeave) {
+                resolved = applySummaryHoursOverride(resolved, log, employee, gracePeriodMinutes, attendanceDate, todayKey);
+            }
+
+            dayCodes[attendanceDate] = musterCodeFromResolved(resolved, attendanceDate, employee, todayKey);
+        });
+
+        codes[employeeId] = dayCodes;
+    });
+
+    return {
+        startDate: startDateStr,
+        endDate: endDateStr,
+        employees: employees.map((employee) => ({
+            _id: employee._id,
+            fullName: employee.fullName,
+            employeeCode: employee.employeeCode,
+            department: employee.department,
+            role: employee.role,
+            joiningDate: employee.joiningDate,
+            createdAt: employee.createdAt,
+        })),
+        codes,
+    };
+}
+
 module.exports = {
     getEmployeeAttendanceSummary,
-    fetchHolidaysForDateRange
+    fetchHolidaysForDateRange,
+    getMusterRoll,
 };

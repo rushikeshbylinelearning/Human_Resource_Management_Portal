@@ -24,45 +24,51 @@ const {
   emitTeaBreakStarted,
 } = require("../utils/announcementHelpers");
 
-let _announcementsCache = null;
-let _announcementsCacheAt = 0;
-const ANNOUNCEMENTS_CACHE_TTL_MS = 60 * 1000;
-
-function invalidateAnnouncementsCache() {
-  _announcementsCache = null;
-  _announcementsCacheAt = 0;
-}
-
 async function populateAndTransform(doc) {
   const populated = await doc.populate("sender", "fullName role profileImageUrl");
   return transformSender(populated.toObject());
 }
 
-// Get last 50 messages
+// Get messages with pagination (infinite scroll)
+// Query params: ?limit=50&before=<messageId> (for loading older messages)
 router.get("/", authenticateToken, async (req, res) => {
   try {
-    const now = Date.now();
+    const limit = parseInt(req.query.limit) || 50;
+    const beforeId = req.query.before; // Message ID to load messages before (older than this)
 
-    if (_announcementsCache && now - _announcementsCacheAt < ANNOUNCEMENTS_CACHE_TTL_MS) {
-      const enriched = await enrichMessagesForUser(_announcementsCache, req.user.userId);
-      res.set("Cache-Control", "private, max-age=30");
-      return res.json(enriched);
+    // Build query
+    const query = {};
+    if (beforeId) {
+      // Find messages created before the specified message
+      const beforeMsg = await AnnouncementMessage.findById(beforeId).select('createdAt').lean();
+      if (beforeMsg) {
+        query.createdAt = { $lt: beforeMsg.createdAt };
+      }
     }
 
-    const messages = await AnnouncementMessage.find()
+    // Fetch messages in descending order (newest first), then reverse for display
+    const messages = await AnnouncementMessage.find(query)
       .populate("sender", "fullName role profileImageUrl")
-      .sort({ createdAt: 1 })
-      .limit(50)
+      .sort({ createdAt: -1 }) // Newest first for pagination
+      .limit(Math.min(limit, 100)) // Max 100 per request
       .lean();
 
-    const transformed = transformMessages(messages);
+    // Reverse to chronological order for display
+    const chronologicalMessages = messages.reverse();
+
+    const transformed = transformMessages(chronologicalMessages);
     const enriched = await enrichMessagesForUser(transformed, req.user.userId);
 
-    _announcementsCache = transformed;
-    _announcementsCacheAt = now;
+    // Check if there are more messages to load
+    const hasMore = messages.length === Math.min(limit, 100);
+    const oldestId = chronologicalMessages.length > 0 ? chronologicalMessages[0]._id : null;
 
-    res.set("Cache-Control", "private, max-age=30");
-    res.json(enriched);
+    res.set("Cache-Control", "private, max-age=15"); // Shorter cache for pagination
+    res.json({
+      messages: enriched,
+      hasMore,
+      oldestId, // Use this as 'before' param to load more
+    });
   } catch (err) {
     console.error("[Announcements] Error fetching messages:", err);
     res.status(500).json({ message: "Server error" });
@@ -130,7 +136,6 @@ router.post("/", authenticateToken, async (req, res) => {
     const newMessage = await AnnouncementMessage.create(createPayload);
     const msgObj = await populateAndTransform(newMessage);
 
-    invalidateAnnouncementsCache();
     emitAnnouncementEvent("receiveAnnouncement", msgObj, req.user.userId);
 
     if (msgObj.isTEABreak && msgObj.teaBreakStartedAt) {
@@ -345,8 +350,6 @@ router.post("/:id/vote", authenticateToken, async (req, res) => {
       { upsert: true }
     );
 
-    invalidateAnnouncementsCache();
-
     const populated = await populateAndTransform(announcement);
     const enriched = (await enrichMessagesForUser([populated], req.user.userId))[0];
 
@@ -385,8 +388,6 @@ router.patch("/:id/poll/close", authenticateToken, async (req, res) => {
     announcement.poll.isClosed = true;
     announcement.markModified("poll");
     await announcement.save();
-
-    invalidateAnnouncementsCache();
 
     const msgObj = await populateAndTransform(announcement);
     emitAnnouncementEvent("poll_updated", msgObj);
@@ -427,7 +428,6 @@ router.put("/:id", authenticateToken, async (req, res) => {
     await announcement.save();
 
     const msgObj = await populateAndTransform(announcement);
-    invalidateAnnouncementsCache();
     res.json(msgObj);
   } catch (err) {
     console.error("[Announcements] Error updating message:", err);
@@ -454,7 +454,6 @@ router.delete("/:id", authenticateToken, async (req, res) => {
       AnnouncementMessage.findByIdAndDelete(announcement._id),
     ]);
 
-    invalidateAnnouncementsCache();
     res.json({ message: "Announcement deleted successfully", id: req.params.id });
   } catch (err) {
     console.error("[Announcements] Error deleting message:", err);
@@ -483,7 +482,6 @@ router.patch("/:id/pin", authenticateToken, async (req, res) => {
     await announcement.save();
 
     const msgObj = await populateAndTransform(announcement);
-    invalidateAnnouncementsCache();
     emitAnnouncementEvent("announcementPinned", msgObj);
     res.json(msgObj);
   } catch (err) {

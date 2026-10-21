@@ -282,12 +282,12 @@ The `salary-service` backend lives at `salary-service/` and the frontend at
   - Accept `payRunType`, `employeeIds` from request body
   - Validate `employeeIds` is non-empty for `offCycle` and `resettlement` types
 
-- [~] 40. Write background migration script `salary-service/scripts/migratePayRunType.js`
+- [ ] 40. Write background migration script `salary-service/scripts/migratePayRunType.js`
   - Sets `payRunType: 'regular'` on all existing `PayrollRun` documents where `payRunType` is undefined/null
   - Idempotent (safe to re-run)
   - Logs count of documents updated
 
-- [~] 41. Update `salary-service-frontend/src/pages/PayrollRunsPage.jsx`
+- [ ] 41. Update `salary-service-frontend/src/pages/PayrollRunsPage.jsx`
   - Replace the single "New Run" `Button` with a split-button or `Button` + `Menu` pattern offering three options: Regular Payroll, Off-Cycle Payroll, Resettlement Payroll
   - Regular dialog: existing month/year/notes form unchanged
   - Off-Cycle dialog: adds multi-select employee picker (`Autocomplete` MUI, multiple, fetches from `GET /api/financial-profiles?isActive=true`)
@@ -300,10 +300,10 @@ The `salary-service` backend lives at `salary-service/` and the frontend at
 
 Before considering the feature complete, confirm:
 
-- [~] Phase 1: Service boots cleanly; existing PayrollRun/SalarySlip documents load without error
-- [~] Phase 2: Raw before/after of slip document for each of the 7 overflow actions confirming field changes
-- [~] Phase 4: Deliberate malformed CSV import (unknown employeeId) returns error list; zero slips modified
-- [~] Phase 5: `routeAudit.js` boot log shows all new endpoints have auth middleware
-- [~] Phase 6: Individual slip mark-paid sets `paymentStatus: 'paid'`; parent run stays `finalized` until all eligible slips are paid
-- [~] Phase 9: Reversal to next run shows `sourceRunId` back-reference in the adjustment entry
-- [~] All phases: No `--brand-red` or design token regressions in the UI; tabular-nums applied to all currency columns
+- [ ] Phase 1: Service boots cleanly; existing PayrollRun/SalarySlip documents load without error
+- [ ] Phase 2: Raw before/after of slip document for each of the 7 overflow actions confirming field changes
+- [ ] Phase 4: Deliberate malformed CSV import (unknown employeeId) returns error list; zero slips modified
+- [ ] Phase 5: `routeAudit.js` boot log shows all new endpoints have auth middleware
+- [ ] Phase 6: Individual slip mark-paid sets `paymentStatus: 'paid'`; parent run stays `finalized` until all eligible slips are paid
+- [ ] Phase 9: Reversal to next run shows `sourceRunId` back-reference in the adjustment entry
+- [ ] All phases: No `--brand-red` or design token regressions in the UI; tabular-nums applied to all currency columns

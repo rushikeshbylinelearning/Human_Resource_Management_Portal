@@ -35,6 +35,8 @@ const AnnouncementChannel = ({ onClose, embedded = false, onMessagesChange, onAd
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [sending, setSending] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -45,9 +47,11 @@ const AnnouncementChannel = ({ onClose, embedded = false, onMessagesChange, onAd
   const [activeTeaBreak, setActiveTeaBreak] = useState(null);
   const [stoppingTeaBreak, setStoppingTeaBreak] = useState(false);
   const messagesEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
   const messageRefs = useRef({});
   const inputRef = useRef(null);
   const { user, token } = useAuth();
+  const isInitialLoad = useRef(true);
 
   const isAdminOrHr = ['Admin', 'HR'].includes(user?.role);
 
@@ -100,6 +104,66 @@ const AnnouncementChannel = ({ onClose, embedded = false, onMessagesChange, onAd
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const loadMoreMessages = async () => {
+    if (loadingMore || !hasMore || messages.length === 0) return;
+
+    try {
+      setLoadingMore(true);
+      const oldestMessage = messages[0];
+      const { data } = await api.get(`/announcements?limit=50&before=${oldestMessage._id}`);
+      
+      if (data.messages && data.messages.length > 0) {
+        // Preserve scroll position
+        const container = messagesContainerRef.current;
+        const oldScrollHeight = container?.scrollHeight || 0;
+        
+        setMessages((prev) => {
+          const combined = [...data.messages, ...prev];
+          // Remove duplicates based on _id
+          const unique = combined.filter((msg, index, self) => 
+            index === self.findIndex((m) => m._id === msg._id)
+          );
+          return sortMessagesChronologically(unique);
+        });
+        setHasMore(data.hasMore);
+
+        // Restore scroll position after new messages are added
+        setTimeout(() => {
+          if (container) {
+            const newScrollHeight = container.scrollHeight;
+            container.scrollTop = newScrollHeight - oldScrollHeight;
+          }
+        }, 0);
+      } else {
+        setHasMore(false);
+      }
+    } catch (error) {
+      console.error("Error loading more messages:", error);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  // Infinite scroll handler
+  const handleScroll = useCallback(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    // Check if scrolled to top (within 100px)
+    if (container.scrollTop < 100 && hasMore && !loadingMore) {
+      loadMoreMessages();
+    }
+  }, [hasMore, loadingMore, messages.length]);
+
+  // Attach scroll listener
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
 
   useEffect(() => {
     // Fetch messages on mount
@@ -181,14 +245,18 @@ const AnnouncementChannel = ({ onClose, embedded = false, onMessagesChange, onAd
   }, [messages, onMessagesChange]);
 
   useEffect(() => {
-    scrollToBottom();
+    if (isInitialLoad.current) {
+      scrollToBottom();
+      isInitialLoad.current = false;
+    }
   }, [messages]);
 
   const fetchMessages = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get("/announcements");
-      setMessages(sortMessagesChronologically(data));
+      const { data } = await api.get("/announcements?limit=50");
+      setMessages(sortMessagesChronologically(data.messages || data)); // Support both new and old format
+      setHasMore(data.hasMore !== undefined ? data.hasMore : false);
     } catch (error) {
       console.error("Error fetching announcements:", error);
     } finally {
@@ -421,7 +489,7 @@ const AnnouncementChannel = ({ onClose, embedded = false, onMessagesChange, onAd
       </div>
       )}
 
-      <div className="announcement-messages">
+      <div className="announcement-messages" ref={messagesContainerRef}>
         {pinnedMessages.length > 0 && (
           <div className="announcement-pinned-bar" role="region" aria-label="Pinned announcements">
             {pinnedMessages.map((msg) => {
@@ -452,7 +520,19 @@ const AnnouncementChannel = ({ onClose, embedded = false, onMessagesChange, onAd
             <span>Be the first to post!</span>
           </div>
         ) : (
-          messages.map((msg, index) => {
+          <>
+            {loadingMore && (
+              <div className="announcement-loading-more">
+                <div className="announcement-spinner"></div>
+                Loading older messages...
+              </div>
+            )}
+            {!loadingMore && !hasMore && messages.length > 0 && (
+              <div className="announcement-no-more">
+                ─── Beginning of messages ───
+              </div>
+            )}
+            {messages.map((msg, index) => {
             // Safety check for sender object
             if (!msg.sender) {
               console.warn('Message missing sender:', msg);
@@ -592,7 +672,8 @@ const AnnouncementChannel = ({ onClose, embedded = false, onMessagesChange, onAd
               </div>
               </Fragment>
             );
-          })
+          })}
+          </>
         )}
         <div ref={messagesEndRef} />
       </div>
