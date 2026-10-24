@@ -10,13 +10,16 @@ import {
     CalendarMonth as CalendarMonthIcon,
     MoreVert as MoreVertIcon,
     People as PeopleIcon,
-    Edit as EditIcon
+    Edit as EditIcon,
+    CheckCircleOutline as MarkPresentIcon,
+    Timelapse as HalfDayIcon,
 } from '@mui/icons-material';
 import api from '../api/axios';
 import AttendanceTimeline from '../components/AttendanceTimeline';
 import AttendanceCalendar from '../components/AttendanceCalendar';
 import LogDetailModal from '../components/LogDetailModal';
 import UniversalOverrideModal from '../components/UniversalOverrideModal';
+import QuickDayOverrideDialog from '../components/QuickDayOverrideDialog';
 import { 
     getISTNow, 
     getISTDateString, 
@@ -63,6 +66,9 @@ const AdminAttendanceSummaryPage = () => {
     // Track data freshness for debugging (internal only - not displayed to users)
     const [lastUpdatedAt, setLastUpdatedAt] = useState(null);
     const [overrideModalOpen, setOverrideModalOpen] = useState(false);
+    // Calendar right-click: context menu + quick single-day override (scoped; does not affect bulk modal)
+    const [dayContextMenu, setDayContextMenu] = useState(null); // { mouseX, mouseY, dayData }
+    const [quickOverride, setQuickOverride] = useState(null); // { type: 'fullday'|'halfday', dayData }
 
     // Socket refresh debounce timer
     const socketRefreshTimerRef = React.useRef(null);
@@ -279,6 +285,7 @@ const AdminAttendanceSummaryPage = () => {
     };
 
     const handleDayClick = (dayData) => {
+        setDayContextMenu(null);
         setSelectedLog(dayData.log || null);
         setSelectedDate(dayData.date);
         setSelectedHoliday(dayData.holiday || null);
@@ -312,6 +319,49 @@ const AdminAttendanceSummaryPage = () => {
     const handleOverrideAttendanceClick = () => {
         handleMoreMenuClose();
         setOverrideModalOpen(true);
+    };
+
+    const handleDayContextMenu = useCallback((event, dayData) => {
+        // Always block the browser menu first — even if we bail out below.
+        event.preventDefault();
+        event.stopPropagation();
+        if (!selectedEmployeeId) {
+            setSnackbar({ open: true, message: 'Select an employee before overriding attendance.' });
+            setDayContextMenu(null);
+            return;
+        }
+        const next = {
+            mouseX: event.clientX + 2,
+            mouseY: event.clientY - 6,
+            dayData,
+        };
+        // Remount/reposition: close then open on next tick so a second right-click
+        // on another cell always shows the menu at the new cursor position.
+        setDayContextMenu(null);
+        window.setTimeout(() => setDayContextMenu(next), 0);
+    }, [selectedEmployeeId]);
+
+    const handleDayContextMenuClose = () => {
+        setDayContextMenu(null);
+    };
+
+    // With a non-blocking backdrop, close the menu on left-click outside the paper.
+    useEffect(() => {
+        if (!dayContextMenu) return undefined;
+        const onMouseDown = (e) => {
+            if (e.button !== 0) return;
+            const paper = e.target?.closest?.('[data-day-override-menu="true"]');
+            if (!paper) setDayContextMenu(null);
+        };
+        document.addEventListener('mousedown', onMouseDown, true);
+        return () => document.removeEventListener('mousedown', onMouseDown, true);
+    }, [dayContextMenu]);
+
+    const openQuickOverride = (type) => {
+        const dayData = dayContextMenu?.dayData;
+        handleDayContextMenuClose();
+        if (!dayData || !selectedEmployeeId) return;
+        setQuickOverride({ type, dayData });
     };
 
     const handleSaveLog = async (logId, updatedData) => {
@@ -473,6 +523,7 @@ const AdminAttendanceSummaryPage = () => {
                     logs={logs}
                     currentDate={currentDate}
                     onDayClick={handleDayClick}
+                    onDayContextMenu={handleDayContextMenu}
                 />
             );
         }
@@ -689,6 +740,71 @@ const AdminAttendanceSummaryPage = () => {
                 open={overrideModalOpen}
                 onClose={() => setOverrideModalOpen(false)}
                 employees={employees}
+                onSuccess={async (data) => {
+                    setSnackbar({ open: true, message: data?.message || 'Override applied successfully.' });
+                    if (selectedEmployeeId) fetchLogsForWeek(currentDate, selectedEmployeeId);
+                }}
+            />
+
+            <Menu
+                key={dayContextMenu
+                    ? `day-ctx-${dayContextMenu.mouseX}-${dayContextMenu.mouseY}-${getISTDateString(dayContextMenu.dayData?.date)}`
+                    : 'day-ctx-closed'}
+                open={dayContextMenu !== null}
+                onClose={handleDayContextMenuClose}
+                anchorReference="anchorPosition"
+                anchorPosition={
+                    dayContextMenu !== null
+                        ? { top: dayContextMenu.mouseY, left: dayContextMenu.mouseX }
+                        : undefined
+                }
+                disableAutoFocusItem
+                slotProps={{
+                    root: {
+                        onContextMenu: (e) => {
+                            e.preventDefault();
+                        },
+                    },
+                    // Let right-clicks pass through to calendar cells so the menu can move.
+                    backdrop: {
+                        invisible: true,
+                        sx: { pointerEvents: 'none' },
+                    },
+                    paper: {
+                        'data-day-override-menu': 'true',
+                        onContextMenu: (e) => e.preventDefault(),
+                        sx: {
+                            pointerEvents: 'auto',
+                            borderRadius: '12px',
+                            minWidth: 200,
+                            boxShadow: '0 8px 28px rgba(0,0,0,0.12)',
+                        },
+                    },
+                }}
+            >
+                <MenuItem onClick={() => openQuickOverride('fullday')}>
+                    <ListItemIcon>
+                        <MarkPresentIcon fontSize="small" sx={{ color: '#34C759' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Mark as Present" secondary="Full day override" />
+                </MenuItem>
+                <MenuItem onClick={() => openQuickOverride('halfday')}>
+                    <ListItemIcon>
+                        <HalfDayIcon fontSize="small" sx={{ color: '#FF9500' }} />
+                    </ListItemIcon>
+                    <ListItemText primary="Mark as Half Day" secondary="First / second half" />
+                </MenuItem>
+            </Menu>
+
+            <QuickDayOverrideDialog
+                open={!!quickOverride}
+                onClose={() => setQuickOverride(null)}
+                overrideType={quickOverride?.type || 'fullday'}
+                employeeId={selectedEmployeeId}
+                employeeName={selectedEmployeeObject?.fullName}
+                date={quickOverride?.dayData?.date}
+                shiftStartTime={selectedEmployeeObject?.shiftGroup?.startTime}
+                shiftEndTime={selectedEmployeeObject?.shiftGroup?.endTime}
                 onSuccess={async (data) => {
                     setSnackbar({ open: true, message: data?.message || 'Override applied successfully.' });
                     if (selectedEmployeeId) fetchLogsForWeek(currentDate, selectedEmployeeId);

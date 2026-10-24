@@ -88,8 +88,23 @@
   pointer-events: none;
 }
 
+/* Allow right-click override on absent/etc. cells that block left-click (no log detail). */
+.calendar-day.non-clickable.context-override-eligible {
+  pointer-events: auto;
+  cursor: context-menu;
+  opacity: 1;
+}
+
 .calendar-day.non-clickable:hover {
   background-color: transparent;
+}
+
+.calendar-day.non-clickable.context-override-eligible:hover {
+  background-color: #f8f9fa;
+}
+
+.calendar-day.context-override-eligible:not(.non-clickable) {
+  cursor: pointer;
 }
 
 .day-number {

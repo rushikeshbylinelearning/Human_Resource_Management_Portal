@@ -18,7 +18,9 @@ import '../styles/AttendanceCalendar.css';
 
 // Memoized calendar day cell component to prevent unnecessary re-renders
 // Only re-renders when day-specific props change (status, log, etc.)
-const DayCell = memo(({ day, onDayClick, holiday, leave }) => {
+const OVERRIDE_ELIGIBLE_STATUSES = new Set(['absent', 'present', 'half-day']);
+
+const DayCell = memo(({ day, onDayClick, onDayContextMenu, holiday, leave }) => {
     const isFutureDate = day.date > getISTNow() && !day.log && day.status !== 'holiday' && day.status !== 'leave' && day.status !== 'weekend' && day.status !== 'week-off';
     const hasNoAttendanceData = !day.log || !day.log.sessions || day.log.sessions.length === 0;
     const isNotHolidayOrLeave = !day.status || (!day.status.startsWith('holiday') && !day.status.startsWith('leave') && day.status !== 'comp-off' && day.status !== 'swap-leave');
@@ -26,6 +28,12 @@ const DayCell = memo(({ day, onDayClick, holiday, leave }) => {
     const isAbsentWeekOffOrWeekend = day.status === 'absent' || day.status === 'week-off' || day.status === 'weekend';
     const shouldPreventClick = isAbsentWeekOffOrWeekend && hasNoAttendanceData && !day.leave && !day.holiday;
     const isClickable = !(isFutureDate && hasNoAttendanceData && isNotHolidayOrLeave) && !shouldPreventClick;
+    // Right-click override: allow on absent/present/half-day even when left-click is blocked (no log).
+    const isPastOrToday = !(day.date > getISTNow());
+    const canContextOverride = typeof onDayContextMenu === 'function'
+        && day.isCurrentMonth
+        && isPastOrToday
+        && OVERRIDE_ELIGIBLE_STATUSES.has(day.status);
 
     // ROBUST: Only show "Half Day" when there is an attendance log with a clock-in for that day.
     // If half-day leave but no log or no clock-in → show Full Day (LOP). Backend may send effective leaveInfo; frontend is defensive.
@@ -68,10 +76,18 @@ const DayCell = memo(({ day, onDayClick, holiday, leave }) => {
         hoursWorked: day.hoursWorked
     };
 
+    const handleContextMenu = (e) => {
+        if (!canContextOverride) return;
+        e.preventDefault();
+        e.stopPropagation();
+        onDayContextMenu(e, dayData);
+    };
+
     return (
         <div 
-            className={`calendar-day ${day.status} ${day.isToday ? 'today' : ''} ${!day.isCurrentMonth ? 'other-month' : ''} ${!isClickable ? 'non-clickable' : ''}`}
+            className={`calendar-day ${day.status} ${day.isToday ? 'today' : ''} ${!day.isCurrentMonth ? 'other-month' : ''} ${!isClickable ? 'non-clickable' : ''}${canContextOverride ? ' context-override-eligible' : ''}`}
             onClick={isClickable ? () => onDayClick(dayData) : undefined}
+            onContextMenu={canContextOverride ? handleContextMenu : undefined}
         >
             <div className="day-number-wrapper">
                 <div className="day-number">{day.dayNumber}</div>
@@ -204,7 +220,7 @@ DayCell.displayName = 'DayCell';
 
 // Status resolution is backend-driven; calendar only renders resolved data.
 // All status logic (holidays, weekly offs, leaves, attendance) is determined by backend API.
-const AttendanceCalendar = ({ logs, currentDate, onDayClick }) => {
+const AttendanceCalendar = ({ logs, currentDate, onDayClick, onDayContextMenu }) => {
     
     // Generate calendar data for the current month in IST
     const calendarData = useMemo(() => {
@@ -413,6 +429,7 @@ const AttendanceCalendar = ({ logs, currentDate, onDayClick }) => {
                             key={day.log?.attendanceDate || `day-${index}`}
                             day={day}
                             onDayClick={onDayClick}
+                            onDayContextMenu={onDayContextMenu}
                             holiday={day.holiday}
                             leave={day.leave}
                         />

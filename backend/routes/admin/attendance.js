@@ -18,7 +18,7 @@ const LeaveRequest = require('../../models/LeaveRequest');
 const BreakLog = require('../../models/BreakLog');
 const { recalculateLateStatus } = require('../../services/dailyStatusService');
 const { getGracePeriodMinutes } = require('../../utils/gracePeriod');
-const { getTodayISTKey, getISTDateString, parseISTDate, startOfISTDay } = require('../../utils/istTime');
+const { getTodayISTKey, getISTDateString, parseISTDate, startOfISTDay, getShiftDateTimeIST } = require('../../utils/istTime');
 const {
     getBulkActionPreview,
     executeBulkAction,
@@ -1384,7 +1384,7 @@ const { generateDateRange } = require('../../utils/attendanceStatusResolver');
 // POST /api/admin/attendance/bulk-override - Global form-based override: apply to all or selected employees, date/range
 router.post('/attendance/bulk-override', [authenticateToken, isAdminOrHr, invalidateAnalyticsCache], async (req, res) => {
     try {
-        const { employeeScope, startDate, endDate, overrideType, overrideNote } = req.body;
+        const { employeeScope, startDate, endDate, overrideType, overrideNote, clockIn, clockOut } = req.body;
 
         if (!overrideType || !['fullday', 'halfday', 'holiday', 'leave'].includes(overrideType)) {
             return res.status(400).json({ success: false, error: 'overrideType is required and must be one of: fullday, halfday, holiday, leave.' });
@@ -1394,6 +1394,30 @@ router.post('/attendance/bulk-override', [authenticateToken, isAdminOrHr, invali
         }
         if (!startDate || typeof startDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(startDate.trim())) {
             return res.status(400).json({ success: false, error: 'startDate is required in YYYY-MM-DD format.' });
+        }
+
+        // Optional HH:mm timer selection (quick day override). Ignored unless both provided.
+        // Only valid for present/half-day overrides so leave/holiday bulk flows stay unchanged.
+        const HH_MM_RE = /^([01]\d|2[0-3]):([0-5]\d)$/;
+        const hasClockIn = clockIn != null && String(clockIn).trim() !== '';
+        const hasClockOut = clockOut != null && String(clockOut).trim() !== '';
+        let clockInStr = null;
+        let clockOutStr = null;
+        if (hasClockIn || hasClockOut) {
+            if (!hasClockIn || !hasClockOut) {
+                return res.status(400).json({ success: false, error: 'Both clockIn and clockOut (HH:mm) are required when setting times.' });
+            }
+            if (!['fullday', 'halfday'].includes(overrideType)) {
+                return res.status(400).json({ success: false, error: 'clockIn/clockOut are only allowed for fullday or halfday overrides.' });
+            }
+            clockInStr = String(clockIn).trim();
+            clockOutStr = String(clockOut).trim();
+            if (!HH_MM_RE.test(clockInStr) || !HH_MM_RE.test(clockOutStr)) {
+                return res.status(400).json({ success: false, error: 'clockIn and clockOut must be valid HH:mm times.' });
+            }
+            if (clockInStr >= clockOutStr) {
+                return res.status(400).json({ success: false, error: 'clockOut must be after clockIn.' });
+            }
         }
 
         const start = startDate.trim();
@@ -1553,6 +1577,8 @@ router.post('/attendance/bulk-override', [authenticateToken, isAdminOrHr, invali
         // Build bulkWrite operations for attendance log upserts
         const overrideTimestamp = new Date();
         const attendanceBulkOps = [];
+        // Track (userId, dateStr) pairs that need a session synced after bulkWrite when times are set
+        const sessionSyncTargets = [];
 
         for (const eid of employeeIds) {
             const shiftMinutes = shiftMinutesMap.get(eid.toString()) ?? defaultShiftMinutes;
@@ -1579,6 +1605,18 @@ router.post('/attendance/bulk-override', [authenticateToken, isAdminOrHr, invali
                     ...(existingLog?.leaveRequest && overrideType !== 'leave' ? { leaveRequest: null } : {})
                 };
 
+                // Optional timer selection: set clock times without recalculating status away from override
+                if (clockInStr && clockOutStr) {
+                    const clockInDate = getShiftDateTimeIST(dateStr, clockInStr);
+                    const clockOutDate = getShiftDateTimeIST(dateStr, clockOutStr);
+                    const workingHours = Math.max(0, (clockOutDate.getTime() - clockInDate.getTime()) / (1000 * 60 * 60));
+                    updateFields.clockInTime = clockInDate;
+                    updateFields.clockOutTime = clockOutDate;
+                    updateFields.totalWorkingHours = workingHours;
+                    updateFields.logoutType = 'SYSTEM';
+                    sessionSyncTargets.push({ userId: eid, dateStr, clockInDate, clockOutDate });
+                }
+
                 if (!existingLog) {
                     // No existing log: insert a new one
                     attendanceBulkOps.push({
@@ -1590,7 +1628,9 @@ router.post('/attendance/bulk-override', [authenticateToken, isAdminOrHr, invali
                                 penaltyMinutes: 0,
                                 paidBreakMinutesTaken: 0,
                                 unpaidBreakMinutesTaken: 0,
-                                totalWorkingHours: isHalfDay ? 0 : (shiftMinutes / 60),
+                                totalWorkingHours: updateFields.totalWorkingHours != null
+                                    ? updateFields.totalWorkingHours
+                                    : (isHalfDay ? 0 : (shiftMinutes / 60)),
                                 ...updateFields
                             }
                         }
@@ -1617,6 +1657,8 @@ router.post('/attendance/bulk-override', [authenticateToken, isAdminOrHr, invali
                             overrideReason: note,
                             overriddenByAdmin: true,
                             overrideType,
+                            clockInTime: updateFields.clockInTime || undefined,
+                            clockOutTime: updateFields.clockOutTime || undefined,
                             updatedBy: adminUserId,
                             timestamp: overrideTimestamp.toISOString(),
                             message: 'Bulk override applied.',
@@ -1631,6 +1673,36 @@ router.post('/attendance/bulk-override', [authenticateToken, isAdminOrHr, invali
             await AttendanceLog.bulkWrite(attendanceBulkOps, { ordered: false });
         }
 
+        // Sync a single work session for timer-based overrides (preserve override status; do not recalc).
+        if (sessionSyncTargets.length > 0) {
+            for (const target of sessionSyncTargets) {
+                try {
+                    const log = await AttendanceLog.findOne({
+                        user: target.userId,
+                        attendanceDate: target.dateStr,
+                    }).select('_id');
+                    if (!log) continue;
+
+                    const firstSession = await AttendanceSession.findOne({ attendanceLog: log._id }).sort({ startTime: 1 });
+                    if (firstSession) {
+                        firstSession.startTime = target.clockInDate;
+                        firstSession.endTime = target.clockOutDate;
+                        firstSession.logoutType = 'SYSTEM';
+                        await firstSession.save();
+                    } else {
+                        await AttendanceSession.create({
+                            attendanceLog: log._id,
+                            startTime: target.clockInDate,
+                            endTime: target.clockOutDate,
+                            logoutType: 'SYSTEM',
+                        });
+                    }
+                } catch (sessionErr) {
+                    console.error('Error syncing session after bulk-override with times:', sessionErr.message);
+                }
+            }
+        }
+
         try {
             await logAction(adminUserId, 'BULK_OVERRIDE', {
                 employeeScope: employeeScope === 'all' ? 'all' : employeeIds.length,
@@ -1639,7 +1711,9 @@ router.post('/attendance/bulk-override', [authenticateToken, isAdminOrHr, invali
                 overrideType,
                 overrideNote: note,
                 appliedCount,
-                details: `Bulk override: ${overrideType} for ${appliedCount} record(s) from ${start} to ${end}.`,
+                clockIn: clockInStr || undefined,
+                clockOut: clockOutStr || undefined,
+                details: `Bulk override: ${overrideType} for ${appliedCount} record(s) from ${start} to ${end}${clockInStr ? ` (${clockInStr}-${clockOutStr})` : ''}.`,
             });
         } catch (e) { /* ignore */ }
 
