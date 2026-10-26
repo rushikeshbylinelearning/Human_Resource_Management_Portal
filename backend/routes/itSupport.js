@@ -2,13 +2,17 @@
 const express = require('express');
 const router = express.Router();
 const authenticateToken = require('../middleware/authenticateToken');
-const requireITSupportAccess = require('../middleware/requireITSupportAccess');
+const {
+    requireITSupportAccess,
+    requireITSupportWriteAccess
+} = require('../middleware/requireITSupportAccess');
 const uploadITSupportImageGridFS = require('../middleware/uploadITSupportImageGridFS');
 const {
     createTicket,
     getMyTickets,
     getAllTickets,
     getTicketById,
+    getAssignableStaff,
     updateTicketStatus,
     assignTicket,
     updateTicketPriority,
@@ -30,11 +34,13 @@ router.patch('/tickets/:id/cancel', authenticateToken, cancelTicket);
 router.get('/tickets/:ticketId/images/:imageId', authenticateToken, getTicketImage);
 router.delete('/tickets/:ticketId/images/:imageId', authenticateToken, deleteTicketImage);
 
-// Admin/IT Staff routes - require IT support access permission
+// IT staff routes — view (read-only or write) vs write-only mutations
+// Note: static paths must be registered before /tickets/:id
 router.get('/tickets/export/excel', [authenticateToken, requireITSupportAccess], exportITTicketsToExcel);
+router.get('/assignees', [authenticateToken, requireITSupportAccess], getAssignableStaff);
 router.get('/tickets', [authenticateToken, requireITSupportAccess], getAllTickets);
-router.patch('/tickets/:id/status', [authenticateToken, requireITSupportAccess], updateTicketStatus);
-router.patch('/tickets/:id/assign', [authenticateToken, requireITSupportAccess], assignTicket);
-router.patch('/tickets/:id/priority', [authenticateToken, requireITSupportAccess], updateTicketPriority);
+router.patch('/tickets/:id/status', [authenticateToken, requireITSupportWriteAccess], updateTicketStatus);
+router.patch('/tickets/:id/assign', [authenticateToken, requireITSupportWriteAccess], assignTicket);
+router.patch('/tickets/:id/priority', [authenticateToken, requireITSupportWriteAccess], updateTicketPriority);
 
 module.exports = router;

@@ -1,14 +1,60 @@
 // backend/controllers/itSupportController.js
+const mongoose = require('mongoose');
 const ITSupportTicket = require('../models/ITSupportTicket');
 const { ISSUE_CATEGORIES, PRIORITIES, STATUSES } = require('../models/ITSupportTicket');
 const User = require('../models/User');
 const NewNotificationService = require('../services/NewNotificationService');
 const { getIO } = require('../socketManager');
 
+const { hasITViewAccess, hasITWriteAccess } = require('../middleware/requireITSupportAccess');
+
 const userCanManageITSupport = async (userId, role) => {
     if (role === 'Admin') return true;
-    const user = await User.findById(userId).select('featurePermissions').lean();
-    return user?.featurePermissions?.canManageITSupport === true;
+    const user = await User.findById(userId).select('featurePermissions isActive role').lean();
+    return hasITWriteAccess(user);
+};
+
+const userCanViewITSupport = async (userId, role) => {
+    if (role === 'Admin') return true;
+    const user = await User.findById(userId).select('featurePermissions isActive role').lean();
+    return hasITViewAccess(user);
+};
+
+/** Only write-capable IT staff can be assigned tickets (not read-only viewers). */
+const ASSIGNABLE_IT_STAFF_QUERY = {
+    isActive: { $ne: false },
+    $or: [
+        { role: 'Admin' },
+        { 'featurePermissions.canManageITSupport': true }
+    ]
+};
+
+const isAssignableITStaffUser = (user) => hasITWriteAccess(user);
+
+/**
+ * List active users who can be assigned IT tickets (Admins + IT support staff).
+ */
+const getAssignableStaff = async (req, res) => {
+    try {
+        const staff = await User.find(ASSIGNABLE_IT_STAFF_QUERY)
+            .select('fullName employeeCode role featurePermissions.canManageITSupport featurePermissions.canViewITSupport')
+            .sort({ fullName: 1 })
+            .lean();
+
+        res.json({
+            staff: staff.map((user) => ({
+                _id: user._id,
+                fullName: user.fullName,
+                employeeCode: user.employeeCode || null,
+                role: user.role,
+                canManageITSupport: hasITWriteAccess(user),
+                canViewITSupport: hasITViewAccess(user)
+            }))
+        });
+    } catch (error) {
+        console.error('Error fetching assignable IT staff:', error);
+        res.status(500).json({ error: 'Failed to fetch assignable IT staff.' });
+    }
 };
 
 /**
@@ -431,7 +477,8 @@ const getTicketById = async (req, res) => {
         const isOwner = ticket.createdBy.toString() === req.user.userId;
         const isAdmin = req.user.role === 'Admin';
         const isAssigned = ticket.assignedTo && ticket.assignedTo.toString() === req.user.userId;
-        const isITStaff = await userCanManageITSupport(req.user.userId, req.user.role);
+        const isITStaff = await userCanViewITSupport(req.user.userId, req.user.role);
+        const canWriteIT = await userCanManageITSupport(req.user.userId, req.user.role);
 
         if (!isOwner && !isAdmin && !isAssigned && !isITStaff) {
             return res.status(403).json({ error: 'Access denied.' });
@@ -442,7 +489,13 @@ const getTicketById = async (req, res) => {
             ticket.comments = (ticket.comments || []).filter((c) => !c.isInternal);
         }
 
-        res.json({ ticket });
+        res.json({
+            ticket,
+            access: {
+                canView: Boolean(isOwner || isAdmin || isAssigned || isITStaff),
+                canWrite: Boolean(isAdmin || canWriteIT)
+            }
+        });
     } catch (error) {
         console.error('Error fetching ticket:', error);
         res.status(500).json({ error: 'Failed to fetch ticket.' });
@@ -469,27 +522,28 @@ const updateTicketStatus = async (req, res) => {
             return res.status(404).json({ error: 'Ticket not found.' });
         }
 
-        const admin = await User.findById(req.user.userId).select('fullName').lean();
+        const actor = await User.findById(req.user.userId).select('fullName').lean();
+        const actorName = actor?.fullName || 'IT Staff';
         const oldStatus = ticket.status;
 
         // Update status
         ticket.status = status;
         ticket.lastUpdatedBy = req.user.userId;
-        ticket.lastUpdatedByName = admin?.fullName || 'Admin';
+        ticket.lastUpdatedByName = actorName;
 
         // Add to status history
         ticket.addStatusHistory(
             status,
             req.user.userId,
-            admin?.fullName || 'Admin',
-            notes || `Status changed from ${oldStatus} to ${status}`
+            actorName,
+            notes || `Status changed from ${oldStatus} to ${status} by ${actorName}`
         );
 
         // Handle status-specific actions
         if (status === 'RESOLVED') {
             ticket.resolvedAt = new Date();
             ticket.resolvedBy = req.user.userId;
-            ticket.resolvedByName = admin?.fullName || 'Admin';
+            ticket.resolvedByName = actorName;
             if (notes) {
                 ticket.resolutionNotes = String(notes).trim().slice(0, 1000);
             }
@@ -511,7 +565,9 @@ const updateTicketStatus = async (req, res) => {
                 ticket: ticket.toObject(),
                 updateType: 'status_change',
                 oldStatus,
-                newStatus: status
+                newStatus: status,
+                updatedBy: req.user.userId,
+                updatedByName: actorName
             });
         } catch (socketError) {
             console.error('Error emitting socket event:', socketError);
@@ -520,11 +576,11 @@ const updateTicketStatus = async (req, res) => {
 
         // Notify ticket creator
         const statusMessages = {
-            ACKNOWLEDGED: `Your IT Support ticket ${ticket.ticketId} has been acknowledged.`,
-            IN_PROGRESS: `Your IT Support ticket ${ticket.ticketId} is now being worked on.`,
+            ACKNOWLEDGED: `Your IT Support ticket ${ticket.ticketId} has been acknowledged by ${actorName}.`,
+            IN_PROGRESS: `Your IT Support ticket ${ticket.ticketId} is now being worked on by ${actorName}.`,
             WAITING_FOR_USER: `Your IT Support ticket ${ticket.ticketId} requires your response.`,
-            RESOLVED: `Your IT Support ticket ${ticket.ticketId} has been resolved.`,
-            CLOSED: `Your IT Support ticket ${ticket.ticketId} has been closed.`
+            RESOLVED: `Your IT Support ticket ${ticket.ticketId} has been resolved by ${actorName}.`,
+            CLOSED: `Your IT Support ticket ${ticket.ticketId} has been closed by ${actorName}.`
         };
 
         if (statusMessages[status]) {
@@ -543,7 +599,11 @@ const updateTicketStatus = async (req, res) => {
                 metadata: {
                     ticketId: ticket.ticketId,
                     ticketMongoId: ticket._id.toString(),
-                    status
+                    status,
+                    oldStatus,
+                    updatedBy: req.user.userId,
+                    updatedByName: actorName,
+                    assignedToName: ticket.assignedToName || null
                 }
             });
         }
@@ -559,14 +619,16 @@ const updateTicketStatus = async (req, res) => {
 };
 
 /**
- * Assign ticket to IT staff
+ * Assign ticket to IT staff (or unassign when assignedTo is null/empty).
+ * Only active Admins / users with canManageITSupport may be assignees.
  */
 const assignTicket = async (req, res) => {
     try {
         const { assignedTo } = req.body;
+        const wantsUnassign = assignedTo === null || assignedTo === '' || assignedTo === 'unassigned';
 
-        if (!assignedTo) {
-            return res.status(400).json({ error: 'assignedTo user ID is required.' });
+        if (!wantsUnassign && !assignedTo) {
+            return res.status(400).json({ error: 'assignedTo user ID is required (or null to unassign).' });
         }
 
         const ticket = await ITSupportTicket.findById(req.params.id);
@@ -575,54 +637,116 @@ const assignTicket = async (req, res) => {
             return res.status(404).json({ error: 'Ticket not found.' });
         }
 
-        // Verify assigned user exists
-        const assignedUser = await User.findById(assignedTo).select('fullName').lean();
+        const actor = await User.findById(req.user.userId).select('fullName').lean();
+        const actorName = actor?.fullName || 'IT Staff';
+        const previousAssigneeName = ticket.assignedToName || null;
+        const previousAssigneeId = ticket.assignedTo ? ticket.assignedTo.toString() : null;
 
-        if (!assignedUser) {
-            return res.status(404).json({ error: 'Assigned user not found.' });
+        let assignedUser = null;
+
+        if (wantsUnassign) {
+            if (!ticket.assignedTo) {
+                return res.json({
+                    message: 'Ticket is already unassigned.',
+                    ticket
+                });
+            }
+
+            ticket.assignedTo = null;
+            ticket.assignedToName = null;
+            ticket.assignedAt = null;
+        } else {
+            if (!mongoose.Types.ObjectId.isValid(assignedTo)) {
+                return res.status(400).json({ error: 'Invalid assignedTo user ID.' });
+            }
+
+            assignedUser = await User.findById(assignedTo)
+                .select('fullName employeeCode role isActive featurePermissions.canManageITSupport')
+                .lean();
+
+            if (!assignedUser) {
+                return res.status(404).json({ error: 'Assigned user not found.' });
+            }
+
+            if (!isAssignableITStaffUser(assignedUser)) {
+                return res.status(400).json({
+                    error: 'Selected employee cannot be assigned IT tickets. Grant IT Ticket Access in Manage Section first.'
+                });
+            }
+
+            if (previousAssigneeId === assignedTo.toString()) {
+                return res.json({
+                    message: 'Ticket is already assigned to this employee.',
+                    ticket
+                });
+            }
+
+            ticket.assignedTo = assignedTo;
+            ticket.assignedToName = assignedUser.fullName;
+            ticket.assignedAt = new Date();
         }
 
-        const admin = await User.findById(req.user.userId).select('fullName').lean();
-
-        // Update assignment
-        ticket.assignedTo = assignedTo;
-        ticket.assignedToName = assignedUser.fullName;
-        ticket.assignedAt = new Date();
         ticket.lastUpdatedBy = req.user.userId;
-        ticket.lastUpdatedByName = admin?.fullName || 'Admin';
+        ticket.lastUpdatedByName = actorName;
 
-        // Add to status history
+        const historyNote = wantsUnassign
+            ? (previousAssigneeName
+                ? `Ticket unassigned from ${previousAssigneeName}`
+                : 'Ticket unassigned')
+            : (previousAssigneeName
+                ? `Ticket reassigned from ${previousAssigneeName} to ${assignedUser.fullName}`
+                : `Ticket assigned to ${assignedUser.fullName}`);
+
         ticket.addStatusHistory(
             ticket.status,
             req.user.userId,
-            admin?.fullName || 'Admin',
-            `Ticket assigned to ${assignedUser.fullName}`
+            actorName,
+            historyNote
         );
 
         await ticket.save();
 
-        // Notify assigned user
-        await NewNotificationService.createAndEmitNotification({
-            userId: assignedTo,
-            userName: assignedUser.fullName,
-            message: `IT Support ticket ${ticket.ticketId} has been assigned to you: ${ticket.title}`,
-            type: 'it_ticket_assigned',
-            category: 'it_support',
-            priority: ticket.priority === 'Critical' || ticket.priority === 'High' ? 'high' : 'medium',
-            recipientType: 'user',
-            navigationData: {
-                page: '/it-support/manage',
-                params: { ticketId: ticket._id.toString() }
-            },
-            metadata: {
-                ticketId: ticket.ticketId,
-                ticketMongoId: ticket._id.toString(),
-                priority: ticket.priority
-            }
-        });
+        try {
+            const io = getIO();
+            io.emit('it_ticket_updated', {
+                ticketId: ticket._id.toString(),
+                ticket: ticket.toObject(),
+                updateType: 'assignment',
+                assignedTo: ticket.assignedTo ? ticket.assignedTo.toString() : null,
+                assignedToName: ticket.assignedToName
+            });
+        } catch (socketError) {
+            console.error('Error emitting IT ticket assign event:', socketError);
+        }
+
+        if (!wantsUnassign && assignedUser) {
+            await NewNotificationService.createAndEmitNotification({
+                userId: assignedTo,
+                userName: assignedUser.fullName,
+                message: `IT Support ticket ${ticket.ticketId} has been assigned to you by ${actorName}: ${ticket.title}`,
+                type: 'it_ticket_assigned',
+                category: 'it_support',
+                priority: ticket.priority === 'Critical' || ticket.priority === 'High' ? 'high' : 'medium',
+                recipientType: 'user',
+                navigationData: {
+                    page: '/operational-dashboard',
+                    params: { tab: 'it', ticketId: ticket._id.toString() }
+                },
+                metadata: {
+                    ticketId: ticket.ticketId,
+                    ticketMongoId: ticket._id.toString(),
+                    priority: ticket.priority,
+                    updatedBy: req.user.userId,
+                    updatedByName: actorName,
+                    assignedTo: assignedTo.toString(),
+                    assignedToName: assignedUser.fullName,
+                    previousAssigneeName
+                }
+            });
+        }
 
         res.json({
-            message: 'Ticket assigned successfully.',
+            message: wantsUnassign ? 'Ticket unassigned successfully.' : 'Ticket assigned successfully.',
             ticket
         });
     } catch (error) {
@@ -650,19 +774,20 @@ const updateTicketPriority = async (req, res) => {
             return res.status(404).json({ error: 'Ticket not found.' });
         }
 
-        const admin = await User.findById(req.user.userId).select('fullName').lean();
+        const actor = await User.findById(req.user.userId).select('fullName').lean();
+        const actorName = actor?.fullName || 'IT Staff';
         const oldPriority = ticket.priority;
 
         ticket.priority = priority;
         ticket.lastUpdatedBy = req.user.userId;
-        ticket.lastUpdatedByName = admin?.fullName || 'Admin';
+        ticket.lastUpdatedByName = actorName;
 
         // Add to status history
         ticket.addStatusHistory(
             ticket.status,
             req.user.userId,
-            admin?.fullName || 'Admin',
-            `Priority changed from ${oldPriority} to ${priority}`
+            actorName,
+            `Priority changed from ${oldPriority} to ${priority} by ${actorName}`
         );
 
         await ticket.save();
@@ -672,7 +797,7 @@ const updateTicketPriority = async (req, res) => {
             await NewNotificationService.createAndEmitNotification({
                 userId: ticket.createdBy,
                 userName: ticket.createdByName,
-                message: `Priority of your IT Support ticket ${ticket.ticketId} has been changed to ${priority}.`,
+                message: `Priority of your IT Support ticket ${ticket.ticketId} has been changed to ${priority} by ${actorName}.`,
                 type: 'it_ticket_priority',
                 category: 'it_support',
                 priority: 'high',
@@ -684,7 +809,11 @@ const updateTicketPriority = async (req, res) => {
                 metadata: {
                     ticketId: ticket.ticketId,
                     ticketMongoId: ticket._id.toString(),
-                    priority
+                    priority,
+                    oldPriority,
+                    updatedBy: req.user.userId,
+                    updatedByName: actorName,
+                    assignedToName: ticket.assignedToName || null
                 }
             });
         }
@@ -720,27 +849,59 @@ const addComment = async (req, res) => {
         const isOwner = ticket.createdBy.toString() === req.user.userId;
         const isAdmin = req.user.role === 'Admin';
         const isAssigned = ticket.assignedTo && ticket.assignedTo.toString() === req.user.userId;
-        const isITStaff = await userCanManageITSupport(req.user.userId, req.user.role);
+        const isITViewer = await userCanViewITSupport(req.user.userId, req.user.role);
+        const canWriteIT = await userCanManageITSupport(req.user.userId, req.user.role);
 
-        if (!isOwner && !isAdmin && !isAssigned && !isITStaff) {
+        if (!isOwner && !isAdmin && !isAssigned && !isITViewer) {
             return res.status(403).json({ error: 'Access denied.' });
         }
 
-        const internalComment = (isAdmin || isAssigned || isITStaff) && isInternal === true;
+        // Read-only IT viewers can view tickets but cannot post staff comments
+        if (!isOwner && !isAdmin && !isAssigned && isITViewer && !canWriteIT) {
+            return res.status(403).json({
+                error: 'Access denied. You have read-only IT ticket access and cannot comment as IT staff.'
+            });
+        }
+
+        const internalComment = (isAdmin || isAssigned || canWriteIT) && isInternal === true;
 
         const user = await User.findById(req.user.userId).select('fullName').lean();
 
+        const actorName = user?.fullName || 'User';
+
         ticket.addComment(
             req.user.userId,
-            user?.fullName || 'User',
+            actorName,
             String(comment).trim(),
             internalComment
         );
 
         ticket.lastUpdatedBy = req.user.userId;
-        ticket.lastUpdatedByName = user?.fullName || 'User';
+        ticket.lastUpdatedByName = actorName;
+
+        // Keep a compact audit entry for IT/admin updates (non-internal comments already appear in thread)
+        if ((isAdmin || isAssigned || canWriteIT) && !isOwner) {
+            ticket.addStatusHistory(
+                ticket.status,
+                req.user.userId,
+                actorName,
+                internalComment
+                    ? `Added internal note`
+                    : `Added comment`
+            );
+        }
 
         await ticket.save();
+
+        const commentMeta = {
+            ticketId: ticket.ticketId,
+            ticketMongoId: ticket._id.toString(),
+            type: 'IT_TICKET_COMMENT',
+            updatedBy: req.user.userId,
+            updatedByName: actorName,
+            assignedToName: ticket.assignedToName || null,
+            isInternal: Boolean(internalComment)
+        };
 
         // Notify relevant parties
         if (!internalComment) {
@@ -749,7 +910,7 @@ const addComment = async (req, res) => {
                 await NewNotificationService.createAndEmitNotification({
                     userId: ticket.createdBy,
                     userName: ticket.createdByName,
-                    message: `${user?.fullName || 'IT Staff'} added a comment on your IT Support ticket ${ticket.ticketId}`,
+                    message: `${actorName} added a comment on your IT Support ticket ${ticket.ticketId}`,
                     type: 'it_ticket_comment',
                     category: 'it_support',
                     priority: 'medium',
@@ -758,11 +919,7 @@ const addComment = async (req, res) => {
                         page: '/requests',
                         params: { ticketId: ticket._id.toString() }
                     },
-                    metadata: {
-                        ticketId: ticket.ticketId,
-                        ticketMongoId: ticket._id.toString(),
-                        type: 'IT_TICKET_COMMENT'
-                    }
+                    metadata: commentMeta
                 });
             }
 
@@ -771,7 +928,7 @@ const addComment = async (req, res) => {
                 await NewNotificationService.createAndEmitNotification({
                     userId: ticket.assignedTo,
                     userName: ticket.assignedToName,
-                    message: `${user?.fullName || 'User'} added a comment on IT Support ticket ${ticket.ticketId}`,
+                    message: `${actorName} added a comment on IT Support ticket ${ticket.ticketId}`,
                     type: 'it_ticket_comment',
                     category: 'it_support',
                     priority: 'medium',
@@ -780,18 +937,14 @@ const addComment = async (req, res) => {
                         page: '/operational-dashboard',
                         params: { tab: 'it', ticketId: ticket._id.toString() }
                     },
-                    metadata: {
-                        ticketId: ticket.ticketId,
-                        ticketMongoId: ticket._id.toString(),
-                        type: 'IT_TICKET_COMMENT'
-                    }
+                    metadata: commentMeta
                 });
             }
 
             // If ticket is not assigned and comment is from user, notify all IT support managers
             if (isOwner && !ticket.assignedTo) {
                 await NewNotificationService.broadcastToITSupportManagers({
-                    message: `${user?.fullName || 'User'} added a comment on unassigned IT Support ticket ${ticket.ticketId}`,
+                    message: `${actorName} added a comment on unassigned IT Support ticket ${ticket.ticketId}`,
                     type: 'it_ticket_comment',
                     category: 'it_support',
                     priority: 'medium',
@@ -800,9 +953,7 @@ const addComment = async (req, res) => {
                         params: { tab: 'it', ticketId: ticket._id.toString() }
                     },
                     metadata: {
-                        ticketId: ticket.ticketId,
-                        ticketMongoId: ticket._id.toString(),
-                        type: 'IT_TICKET_COMMENT',
+                        ...commentMeta,
                         unassigned: true
                     }
                 }, req.user.userId);
@@ -907,7 +1058,7 @@ const getTicketImage = async (req, res) => {
         const isOwner = ticket.createdBy.toString() === req.user.userId;
         const isAdmin = req.user.role === 'Admin';
         const isAssigned = ticket.assignedTo && ticket.assignedTo.toString() === req.user.userId;
-        const isITStaff = await userCanManageITSupport(req.user.userId, req.user.role);
+        const isITStaff = await userCanViewITSupport(req.user.userId, req.user.role);
 
         if (!isOwner && !isAdmin && !isAssigned && !isITStaff) {
             return res.status(403).json({ error: 'Access denied.' });
@@ -1031,6 +1182,7 @@ module.exports = {
     getMyTickets,
     getAllTickets,
     getTicketById,
+    getAssignableStaff,
     updateTicketStatus,
     assignTicket,
     updateTicketPriority,

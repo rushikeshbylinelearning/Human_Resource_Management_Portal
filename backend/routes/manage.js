@@ -74,6 +74,7 @@ const DEFAULT_FEATURE_PERMISSIONS = {
     canViewLiveAttendance: false,
     canManageResourceRequests: false,
     canManageHRQueries: false,
+    canViewITSupport: false,
     canManageITSupport: false,
     canManageBulkAttendanceActions: false,
     privilegeLevel: 'normal',
@@ -258,7 +259,7 @@ router.put('/bulk', [authenticateToken, isAdmin], async (req, res) => {
         // Validate the feature permissions structure (same as single user update)
         const validPermissionKeys = [
             'leaves', 'breaks', 'extraFeatures', 'maxBreaks', 'breakAfterHours',
-            'canCheckIn', 'canCheckOut', 'canTakeBreak', 'canViewAnalytics', 'canViewLiveAttendance', 'canManageResourceRequests', 'canManageHRQueries', 'canManageITSupport', 'canManageBulkAttendanceActions', 'privilegeLevel',
+            'canCheckIn', 'canCheckOut', 'canTakeBreak', 'canViewAnalytics', 'canViewLiveAttendance', 'canManageResourceRequests', 'canManageHRQueries', 'canViewITSupport', 'canManageITSupport', 'canManageBulkAttendanceActions', 'privilegeLevel',
             'restrictedFeatures', 'advancedFeatures', 'breakWindows',
             'autoBreakOnInactivity', 'inactivityThresholdMinutes', 'lateArrivalMarksHalfDay'
         ];
@@ -268,6 +269,11 @@ router.put('/bulk', [authenticateToken, isAdmin], async (req, res) => {
             return res.status(400).json({ 
                 error: `Invalid permission keys: ${invalidKeys.join(', ')}` 
             });
+        }
+
+        // Write IT access implies view access
+        if (featurePermissions.canManageITSupport === true) {
+            featurePermissions.canViewITSupport = true;
         }
 
         // Validate privilege level
@@ -396,7 +402,7 @@ router.put('/:userId', [authenticateToken, isAdmin], async (req, res) => {
         // Validate the feature permissions structure
         const validPermissionKeys = [
             'leaves', 'breaks', 'extraFeatures', 'maxBreaks', 'breakAfterHours',
-            'canCheckIn', 'canCheckOut', 'canTakeBreak', 'canViewAnalytics', 'canViewLiveAttendance', 'canManageResourceRequests', 'canManageHRQueries', 'canManageITSupport', 'canManageBulkAttendanceActions', 'privilegeLevel',
+            'canCheckIn', 'canCheckOut', 'canTakeBreak', 'canViewAnalytics', 'canViewLiveAttendance', 'canManageResourceRequests', 'canManageHRQueries', 'canViewITSupport', 'canManageITSupport', 'canManageBulkAttendanceActions', 'privilegeLevel',
             'restrictedFeatures', 'advancedFeatures', 'breakWindows',
             'autoBreakOnInactivity', 'inactivityThresholdMinutes', 'lateArrivalMarksHalfDay'
         ];
@@ -406,6 +412,11 @@ router.put('/:userId', [authenticateToken, isAdmin], async (req, res) => {
             return res.status(400).json({ 
                 error: `Invalid permission keys: ${invalidKeys.join(', ')}` 
             });
+        }
+
+        // Write IT access implies view access
+        if (featurePermissions.canManageITSupport === true) {
+            featurePermissions.canViewITSupport = true;
         }
 
         // Validate privilege level

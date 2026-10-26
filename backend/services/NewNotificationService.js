@@ -162,6 +162,7 @@ class NewNotificationService {
                 $or: [
                     { role: 'Admin' },
                     { 'featurePermissions.canManageITSupport': true },
+                    { 'featurePermissions.canViewITSupport': true },
                 ],
             }).select('_id fullName').lean();
 

@@ -25,6 +25,7 @@ async function requireOperationalLogAccess(req, res, next) {
         if (
             fp.canManageHRQueries === true
             || fp.canManageITSupport === true
+            || fp.canViewITSupport === true
             || ['HR'].includes(dbUser.role)
         ) {
             return next();

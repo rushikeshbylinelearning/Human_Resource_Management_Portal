@@ -6,19 +6,30 @@ const formatLogTypeLabel = (type) =>
 
 const enrichActivityLog = (log) => {
     if (!log) return log;
-    if (log.message && String(log.message).trim()) {
-        return log;
+    const actorName = log.metadata?.updatedByName || log.metadata?.assignedToName || null;
+    let message = log.message && String(log.message).trim() ? String(log.message).trim() : '';
+
+    if (!message) {
+        const typeLabel = formatLogTypeLabel(log.type);
+        if (actorName) {
+            message = `${actorName} — ${typeLabel}`;
+        } else if (log.userName && log.userName !== 'System') {
+            message = `${log.userName} — ${typeLabel}`;
+        } else if (log.metadata?.employeeName) {
+            message = `${log.metadata.employeeName} — ${typeLabel}`;
+        } else if (log.metadata?.type) {
+            message = String(log.metadata.type).replace(/_/g, ' ');
+        } else {
+            message = typeLabel;
+        }
     }
-    const typeLabel = formatLogTypeLabel(log.type);
-    let message = typeLabel;
-    if (log.userName && log.userName !== 'System') {
-        message = `${log.userName} — ${typeLabel}`;
-    } else if (log.metadata?.employeeName) {
-        message = `${log.metadata.employeeName} — ${typeLabel}`;
-    } else if (log.metadata?.type) {
-        message = String(log.metadata.type).replace(/_/g, ' ');
-    }
-    return { ...log, message };
+
+    return {
+        ...log,
+        message,
+        // Prefer the actor who performed the IT update when present
+        displayUserName: actorName || log.userName || 'System'
+    };
 };
 
 /**
@@ -168,7 +179,7 @@ const getITLogs = async (req, res) => {
             ];
         }
 
-        const [logs, totalCount] = await Promise.all([
+        const [rawLogs, totalCount] = await Promise.all([
             NewNotification.find(query)
                 .sort({ createdAt: -1 })
                 .skip(skip)
@@ -176,6 +187,8 @@ const getITLogs = async (req, res) => {
                 .lean(),
             NewNotification.countDocuments(query)
         ]);
+
+        const logs = rawLogs.map(enrichActivityLog);
 
         // Get summary statistics
         const statistics = await NewNotification.aggregate([

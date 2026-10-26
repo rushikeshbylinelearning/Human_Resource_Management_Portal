@@ -450,7 +450,7 @@ const NewNotificationDrawer = ({ open, onClose, onOpenECRModal }) => {
 
         if (notificationType?.startsWith('it_ticket')) {
             const ticketId = metadata?.ticketMongoId || navigationData?.params?.ticketId;
-            if (user?.role === 'Admin' || canAccess.manageITSupport()) {
+            if (user?.role === 'Admin' || canAccess.viewITSupport()) {
                 navigate(ticketId ? `/operational-dashboard?tab=it&ticketId=${ticketId}` : '/operational-dashboard?tab=it');
             } else {
                 navigate(ticketId ? `/requests?ticketId=${ticketId}` : '/requests');

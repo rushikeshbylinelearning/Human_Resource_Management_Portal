@@ -193,9 +193,12 @@ const LOGsPage = () => {
                                             <Typography variant="body1" sx={{ mb: 0.5 }}>
                                                 {log.message}
                                             </Typography>
-                                            {log.userName && (
+                                            {(log.displayUserName || log.userName) && (
                                                 <Typography variant="body2" color="text.secondary">
-                                                    by {log.userName}
+                                                    by {log.displayUserName || log.userName}
+                                                    {log.metadata?.updatedByName && log.metadata?.ticketId
+                                                        ? ` · ${log.metadata.ticketId}`
+                                                        : ''}
                                                 </Typography>
                                             )}
                                         </Box>

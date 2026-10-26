@@ -90,7 +90,8 @@ const OperationalDashboardPage = () => {
     const [searchParams, setSearchParams] = useSearchParams();
 
     const hasHR = canAccess.manageHRQueries();
-    const hasIT = canAccess.manageITSupport();
+    const hasIT = canAccess.viewITSupport();
+    const canWriteIT = canAccess.manageITSupport();
     const canView = canAccess.operationalDashboard();
 
     const tabs = useMemo(() => {
@@ -120,7 +121,9 @@ const OperationalDashboardPage = () => {
     const [itStatus, setItStatus] = useState('');
     const [itPriority, setItPriority] = useState('');
     const [itCategory, setItCategory] = useState('');
+    const [itAssignee, setItAssignee] = useState('');
     const [itCategories, setItCategories] = useState([]);
+    const [itStaff, setItStaff] = useState([]);
     const [selectedTicket, setSelectedTicket] = useState(null);
     const [ticketModalOpen, setTicketModalOpen] = useState(false);
     const [exportingExcel, setExportingExcel] = useState(false);
@@ -168,6 +171,7 @@ const OperationalDashboardPage = () => {
                 if (itStatus) params.status = itStatus;
                 if (itPriority) params.priority = itPriority;
                 if (itCategory) params.category = itCategory;
+                if (itAssignee) params.assignedTo = itAssignee;
                 const { data } = await api.get('/it-support/tickets', { params });
                 setItTickets(data.tickets || []);
                 setItTotal(data.totalCount || 0);
@@ -189,12 +193,25 @@ const OperationalDashboardPage = () => {
         }
     }, [
         currentKey, hasHR, hasIT, hrSearch, hrStatus, itPage, itRows, itSearch, itStatus,
-        itPriority, itCategory, logsPage, logsRows, logsSearch, tabs.length,
+        itPriority, itCategory, itAssignee, logsPage, logsRows, logsSearch, tabs.length,
     ]);
 
     useEffect(() => {
         loadData();
     }, [loadData]);
+
+    useEffect(() => {
+        if (!hasIT) return undefined;
+        let cancelled = false;
+        api.get('/it-support/assignees')
+            .then(({ data }) => {
+                if (!cancelled) setItStaff(data.staff || []);
+            })
+            .catch(() => {
+                if (!cancelled) setItStaff([]);
+            });
+        return () => { cancelled = true; };
+    }, [hasIT]);
 
     const handleExportITTickets = async () => {
         setExportingExcel(true);
@@ -430,6 +447,23 @@ const OperationalDashboardPage = () => {
                             </Select>
                         </FormControl>
                     )}
+                    <FormControl size="small" className="operational-filter-field operational-filter-field--wide">
+                        <InputLabel>Assigned to</InputLabel>
+                        <Select
+                            label="Assigned to"
+                            value={itAssignee}
+                            onChange={(e) => { setItAssignee(e.target.value); setItPage(0); }}
+                        >
+                            <MenuItem value="">All</MenuItem>
+                            <MenuItem value="unassigned">Unassigned</MenuItem>
+                            {itStaff.map((staff) => (
+                                <MenuItem key={staff._id} value={staff._id}>
+                                    {staff.fullName}
+                                    {staff.role === 'Intern' ? ' (Intern)' : ''}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                     <Button
                         variant="outlined"
                         size="small"
@@ -456,6 +490,7 @@ const OperationalDashboardPage = () => {
                                 <TableCell>Priority</TableCell>
                                 <TableCell>Status</TableCell>
                                 <TableCell>Assigned To</TableCell>
+                                <TableCell>Updated By</TableCell>
                                 <TableCell>Last Updated</TableCell>
                             </TableRow>
                         </TableHead>
@@ -474,13 +509,14 @@ const OperationalDashboardPage = () => {
                                     <TableCell className="operational-cell-subject">{t.title}</TableCell>
                                     <TableCell><Chip size="small" label={t.priority} color={priorityColor(t.priority)} /></TableCell>
                                     <TableCell><Chip size="small" label={t.status} color={statusColor(t.status)} /></TableCell>
-                                    <TableCell>{t.assignedToName || '—'}</TableCell>
+                                    <TableCell>{t.assignedToName || 'Unassigned'}</TableCell>
+                                    <TableCell>{t.lastUpdatedByName || '—'}</TableCell>
                                     <TableCell>{formatISTDate(t.updatedAt || t.createdAt)}</TableCell>
                                 </TableRow>
                             ))}
                             {!itTickets.length && !loading && (
                                 <TableRow>
-                                    <TableCell colSpan={9} align="center" className="operational-table-empty">
+                                    <TableCell colSpan={10} align="center" className="operational-table-empty">
                                         No IT tickets found
                                     </TableCell>
                                 </TableRow>
@@ -503,8 +539,17 @@ const OperationalDashboardPage = () => {
                 open={ticketModalOpen}
                 onClose={() => setTicketModalOpen(false)}
                 ticket={selectedTicket}
-                onUpdate={() => loadData()}
+                onUpdate={(updatedTicket) => {
+                    if (updatedTicket?._id) {
+                        setSelectedTicket(updatedTicket);
+                        setItTickets((prev) =>
+                            prev.map((row) => (row._id === updatedTicket._id ? { ...row, ...updatedTicket } : row))
+                        );
+                    }
+                    loadData();
+                }}
                 isAdmin
+                canWrite={canWriteIT}
             />
         </>
     );

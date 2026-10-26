@@ -27,7 +27,8 @@ import {
     Send as SendIcon,
     Download as DownloadIcon,
     Visibility as VisibilityIcon,
-    AssignmentInd as AssignedIcon
+    AssignmentInd as AssignedIcon,
+    History as HistoryIcon
 } from '@mui/icons-material';
 import { formatISTDate, formatISTTime } from '../../utils/istTime';
 import api from '../../api/axios';
@@ -100,16 +101,23 @@ const MetaItem = ({ icon, label, value }) => {
     );
 };
 
-const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false }) => {
+const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false, canWrite = false }) => {
+    // Staff viewers (isAdmin) can open tickets; only write access can assign/update
+    const canManageTicket = Boolean(isAdmin && canWrite);
     const [comment, setComment] = useState('');
     const [submittingComment, setSubmittingComment] = useState(false);
     const [cancelling, setCancelling] = useState(false);
     const [updatingStatus, setUpdatingStatus] = useState(false);
+    const [assigning, setAssigning] = useState(false);
     const [error, setError] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
     const [imageViewerOpen, setImageViewerOpen] = useState(false);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [fullTicket, setFullTicket] = useState(null);
     const [loadingTicket, setLoadingTicket] = useState(false);
+    const [itStaff, setItStaff] = useState([]);
+    const [loadingStaff, setLoadingStaff] = useState(false);
+    const [selectedAssignee, setSelectedAssignee] = useState('');
     const [statusForm, setStatusForm] = useState({
         status: '',
         adminNotes: ''
@@ -119,6 +127,8 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
         const fetchTicketDetails = async () => {
             if (open && ticket && ticket._id) {
                 setLoadingTicket(true);
+                setError('');
+                setSuccessMessage('');
                 try {
                     const response = await api.get(`/it-support/tickets/${ticket._id}`);
                     setFullTicket(response.data.ticket);
@@ -134,6 +144,24 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
         fetchTicketDetails();
     }, [open, ticket]);
 
+    React.useEffect(() => {
+        const fetchAssignableStaff = async () => {
+            if (!open || !canManageTicket) return;
+            setLoadingStaff(true);
+            try {
+                const response = await api.get('/it-support/assignees');
+                setItStaff(response.data.staff || []);
+            } catch (err) {
+                console.error('Error fetching IT assignees:', err);
+                setItStaff([]);
+            } finally {
+                setLoadingStaff(false);
+            }
+        };
+
+        fetchAssignableStaff();
+    }, [open, canManageTicket]);
+
     const canCancel = fullTicket &&
         ['OPEN', 'ACKNOWLEDGED'].includes(fullTicket.status) &&
         !isAdmin;
@@ -144,6 +172,11 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
                 status: fullTicket.status || '',
                 adminNotes: ''
             });
+            setSelectedAssignee(
+                fullTicket.assignedTo
+                    ? (fullTicket.assignedTo._id || fullTicket.assignedTo).toString()
+                    : ''
+            );
         }
     }, [fullTicket]);
 
@@ -155,6 +188,7 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
 
         setUpdatingStatus(true);
         setError('');
+        setSuccessMessage('');
 
         try {
             const response = await api.patch(`/it-support/tickets/${fullTicket._id}/status`, {
@@ -168,12 +202,45 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
 
             setFullTicket(response.data.ticket);
             setStatusForm({ status: response.data.ticket.status, adminNotes: '' });
-            setError('');
+            setSuccessMessage('Status updated.');
         } catch (err) {
             console.error('Error updating status:', err);
             setError(err.response?.data?.error || 'Failed to update status.');
         } finally {
             setUpdatingStatus(false);
+        }
+    };
+
+    const handleAssignTicket = async () => {
+        const currentAssigneeId = fullTicket.assignedTo
+            ? (fullTicket.assignedTo._id || fullTicket.assignedTo).toString()
+            : '';
+
+        if (selectedAssignee === currentAssigneeId) {
+            setError('Select a different IT employee to change assignment.');
+            return;
+        }
+
+        setAssigning(true);
+        setError('');
+        setSuccessMessage('');
+
+        try {
+            const response = await api.patch(`/it-support/tickets/${fullTicket._id}/assign`, {
+                assignedTo: selectedAssignee || null
+            });
+
+            if (onUpdate) {
+                onUpdate(response.data.ticket);
+            }
+
+            setFullTicket(response.data.ticket);
+            setSuccessMessage(response.data.message || 'Assignment updated.');
+        } catch (err) {
+            console.error('Error assigning ticket:', err);
+            setError(err.response?.data?.error || 'Failed to assign ticket.');
+        } finally {
+            setAssigning(false);
         }
     };
 
@@ -326,6 +393,11 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
                         {error}
                     </Alert>
                 )}
+                {successMessage && (
+                    <Alert severity="success" sx={{ mb: 2 }} onClose={() => setSuccessMessage('')}>
+                        {successMessage}
+                    </Alert>
+                )}
 
                 <Box
                     sx={{
@@ -353,8 +425,15 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
                     <MetaItem
                         icon={<AssignedIcon fontSize="small" />}
                         label="Assigned to"
-                        value={fullTicket.assignedToName}
+                        value={fullTicket.assignedToName || (isAdmin ? 'Unassigned' : null)}
                     />
+                    {isAdmin && (
+                        <MetaItem
+                            icon={<PersonIcon fontSize="small" />}
+                            label="Last updated by"
+                            value={fullTicket.lastUpdatedByName}
+                        />
+                    )}
                     <MetaItem
                         icon={<TimeIcon fontSize="small" />}
                         label="Resolved"
@@ -482,7 +561,13 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
                     </Box>
                 )}
 
-                {isAdmin && (
+                {isAdmin && !canManageTicket && (
+                    <Alert severity="info" sx={{ mb: 2.5 }}>
+                        You have read-only IT ticket access. Ask an admin to grant IT Ticket Manage to assign or update tickets.
+                    </Alert>
+                )}
+
+                {canManageTicket && (
                     <Box
                         sx={{
                             mb: 2.5,
@@ -492,6 +577,46 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
                             borderColor: 'divider'
                         }}
                     >
+                        <SectionLabel>Assign to IT employee</SectionLabel>
+                        <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
+                            <InputLabel>IT employee</InputLabel>
+                            <Select
+                                value={selectedAssignee}
+                                onChange={(e) => setSelectedAssignee(e.target.value)}
+                                label="IT employee"
+                                disabled={assigning || loadingStaff}
+                            >
+                                <MenuItem value="">
+                                    <em>Unassigned</em>
+                                </MenuItem>
+                                {itStaff.map((staff) => (
+                                    <MenuItem key={staff._id} value={staff._id}>
+                                        {staff.fullName}
+                                        {staff.employeeCode ? ` (${staff.employeeCode})` : ''}
+                                        {staff.role === 'Intern' ? ' · Intern' : ''}
+                                        {staff.role === 'Admin' ? ' · Admin' : ''}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <Button
+                            variant="outlined"
+                            onClick={handleAssignTicket}
+                            disabled={
+                                assigning
+                                || loadingStaff
+                                || selectedAssignee === (
+                                    fullTicket.assignedTo
+                                        ? (fullTicket.assignedTo._id || fullTicket.assignedTo).toString()
+                                        : ''
+                                )
+                            }
+                            startIcon={assigning ? <CircularProgress size={16} color="inherit" /> : <AssignedIcon />}
+                            sx={{ textTransform: 'none', fontWeight: 600, mb: 2.5 }}
+                        >
+                            {assigning ? 'Saving…' : 'Save assignment'}
+                        </Button>
+
                         <SectionLabel>Update status</SectionLabel>
                         <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
                             <InputLabel>Status</InputLabel>
@@ -530,6 +655,59 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
                         >
                             {updatingStatus ? 'Updating…' : 'Save status'}
                         </Button>
+                    </Box>
+                )}
+
+                {isAdmin && Array.isArray(fullTicket.statusHistory) && fullTicket.statusHistory.length > 0 && (
+                    <Box sx={{ mb: 2.5 }}>
+                        <SectionLabel>
+                            <Box component="span" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}>
+                                <HistoryIcon sx={{ fontSize: 14 }} />
+                                Update history · {fullTicket.statusHistory.length}
+                            </Box>
+                        </SectionLabel>
+                        <Stack
+                            spacing={1}
+                            sx={{
+                                maxHeight: 220,
+                                overflowY: 'auto',
+                                pr: 0.5
+                            }}
+                        >
+                            {[...fullTicket.statusHistory].reverse().map((entry, index) => (
+                                <Box
+                                    key={`${entry.timestamp || index}-${entry.changedByName || 'system'}`}
+                                    sx={{
+                                        p: 1.25,
+                                        borderRadius: 2,
+                                        border: '1px solid',
+                                        borderColor: 'divider',
+                                        bgcolor: 'grey.50'
+                                    }}
+                                >
+                                    <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1, mb: 0.25 }}>
+                                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                            {entry.changedByName || 'System'}
+                                        </Typography>
+                                        <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                                            {entry.timestamp
+                                                ? `${formatISTDate(entry.timestamp)} · ${formatISTTime(entry.timestamp)}`
+                                                : ''}
+                                        </Typography>
+                                    </Box>
+                                    {entry.status && (
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                                            Status: {formatStatus(entry.status)}
+                                        </Typography>
+                                    )}
+                                    {entry.notes && (
+                                        <Typography variant="body2" sx={{ mt: 0.25, whiteSpace: 'pre-wrap' }}>
+                                            {entry.notes}
+                                        </Typography>
+                                    )}
+                                </Box>
+                            ))}
+                        </Stack>
                     </Box>
                 )}
 
@@ -578,7 +756,7 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
                         </Typography>
                     )}
 
-                    {!['CLOSED', 'CANCELLED'].includes(fullTicket.status) && (
+                    {!['CLOSED', 'CANCELLED'].includes(fullTicket.status) && (!isAdmin || canManageTicket) && (
                         <Box
                             sx={{
                                 display: 'flex',

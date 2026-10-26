@@ -103,6 +103,7 @@ const ManageSectionPage = () => {
       canViewLiveAttendance: false,
       canManageResourceRequests: false,
       canManageHRQueries: false,
+      canViewITSupport: false,
       canManageITSupport: false,
       canManageBulkAttendanceActions: false,
       privilegeLevel: 'normal',
@@ -327,7 +328,14 @@ const privilegeOptions = useMemo(() => {
     [users]
   );
 
-  const itTicketEnabledCount = useMemo(
+  const itTicketViewEnabledCount = useMemo(
+    () => users.filter((user) =>
+      user.featurePermissions?.canViewITSupport || user.featurePermissions?.canManageITSupport
+    ).length,
+    [users]
+  );
+
+  const itTicketWriteEnabledCount = useMemo(
     () => users.filter((user) => user.featurePermissions?.canManageITSupport).length,
     [users]
   );
@@ -478,6 +486,16 @@ const privilegeOptions = useMemo(() => {
         newPermissions[path] = value;
       }
 
+      // IT ticket access pairing:
+      // - Write implies View
+      // - Turning View off also turns Write off
+      if (path === 'canManageITSupport' && value === true) {
+        newPermissions.canViewITSupport = true;
+      }
+      if (path === 'canViewITSupport' && value === false) {
+        newPermissions.canManageITSupport = false;
+      }
+
       // Update local state only (no auto-save)
       return prev.map(u => 
         u._id === userId 
@@ -531,6 +549,7 @@ const privilegeOptions = useMemo(() => {
       canViewLiveAttendance: false,
       canManageResourceRequests: false,
       canManageHRQueries: false,
+      canViewITSupport: false,
       canManageITSupport: false,
       canManageBulkAttendanceActions: false,
       privilegeLevel: 'normal',
@@ -559,10 +578,12 @@ const privilegeOptions = useMemo(() => {
     // summary and the Operational Dashboard. For them, only the toggles that
     // drive those features stay active in this panel — every other toggle is
     // disabled. Operational Dashboard access itself is NOT granted by the
-    // role: it comes solely from the HR Query Access / IT Ticket Access
-    // toggles below (featurePermissions.canManageHRQueries / canManageITSupport).
+    // role: it comes solely from HR Query Access / IT Ticket View|Manage toggles.
     const isOperationsUser = normalizeRole(currentUser.role) === 'Operations';
     const notForOperations = isOperationsUser;
+    const hasITView =
+      safeFeaturePermissions.canViewITSupport === true
+      || safeFeaturePermissions.canManageITSupport === true;
 
     const breakWindowCount = safeFeaturePermissions.breakWindows?.length || 0;
     const enabledCoreFeatures = [
@@ -702,9 +723,9 @@ const privilegeOptions = useMemo(() => {
           <Alert severity="info" sx={{ mb: 3, borderRadius: '12px' }}>
             <strong>Operations account:</strong> only the toggles for Attendance Marking
             (Can Check In / Can Check Out / Can Take Break, Breaks) and the Operational
-            Dashboard (<strong>HR Query Access</strong> / <strong>IT Ticket Access</strong>) are
+            Dashboard (<strong>HR Query Access</strong> / <strong>IT Ticket View or Manage</strong>) are
             active. All other toggles are disabled for this role. Turn HR Query Access or
-            IT Ticket Access <strong>on</strong> and save to give this user the Operational
+            IT Ticket View/Manage <strong>on</strong> and save to give this user the Operational
             Dashboard — the role alone does not grant it.
           </Alert>
         )}
@@ -1315,10 +1336,39 @@ const privilegeOptions = useMemo(() => {
                 }}>
                   <Box>
                     <Typography variant="body2" sx={{ fontWeight: 500, color: '#111827', fontSize: '13px' }}>
-                      IT Ticket Access
+                      IT Ticket View (Read-only)
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '11px' }}>
-                      Operational Dashboard (IT) and IT Ticket FAB for receiving and managing IT Tickets
+                      Can open Operational Dashboard (IT) and view tickets — cannot assign or update
+                    </Typography>
+                  </Box>
+                  <Switch
+                    checked={hasITView}
+                    onChange={(e) => handlePermissionChange(currentUser._id, 'canViewITSupport', e.target.checked)}
+                    sx={{
+                      '& .MuiSwitch-switchBase.Mui-checked': {
+                        color: '#4F46E5',
+                      },
+                      '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
+                        backgroundColor: '#4F46E5',
+                      },
+                    }}
+                  />
+                </Box>
+
+                <Box sx={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  py: 1.5,
+                  borderTop: '1px solid #F3F4F6'
+                }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 500, color: '#111827', fontSize: '13px' }}>
+                      IT Ticket Manage (Read & Write)
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '11px' }}>
+                      Can assign tickets to IT staff and update status/priority (includes view access)
                     </Typography>
                   </Box>
                   <Switch
@@ -2184,9 +2234,15 @@ const privilegeOptions = useMemo(() => {
             icon: <SupportAgentIcon />,
           },
           {
-            label: 'IT Tickets',
-            value: itTicketEnabledCount,
-            helper: 'Delegated IT ticket managers',
+            label: 'IT View',
+            value: itTicketViewEnabledCount,
+            helper: 'Read-only or write IT access',
+            icon: <SupportAgentIcon />,
+          },
+          {
+            label: 'IT Manage',
+            value: itTicketWriteEnabledCount,
+            helper: 'Can assign & update tickets',
             icon: <SupportAgentIcon />,
           },
           {
@@ -3432,17 +3488,77 @@ const privilegeOptions = useMemo(() => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
                   <Box>
                     <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a1a2e', fontSize: '0.875rem' }}>
-                      IT Ticket Access
+                      IT Ticket View (Read-only)
                     </Typography>
                     <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '0.75rem', mt: 0.3, display: 'block' }}>
-                      Operational Dashboard (IT) and IT Ticket FAB
+                      View Operational Dashboard (IT) only
+                    </Typography>
+                  </Box>
+                  <Switch
+                    checked={
+                      bulkSettings.featurePermissions.canViewITSupport
+                      || bulkSettings.featurePermissions.canManageITSupport
+                    }
+                    onChange={(e) => setBulkSettings(prev => ({
+                      ...prev,
+                      featurePermissions: {
+                        ...prev.featurePermissions,
+                        canViewITSupport: e.target.checked,
+                        ...(e.target.checked ? {} : { canManageITSupport: false }),
+                      }
+                    }))}
+                    sx={{
+                      width: 52,
+                      height: 28,
+                      padding: 0,
+                      '& .MuiSwitch-switchBase': {
+                        padding: 0,
+                        margin: '2px',
+                        transitionDuration: '300ms',
+                        '&.Mui-checked': {
+                          transform: 'translateX(24px)',
+                          color: '#fff',
+                          '& + .MuiSwitch-track': {
+                            backgroundColor: '#e53935',
+                            opacity: 1,
+                            border: 0,
+                          },
+                        },
+                      },
+                      '& .MuiSwitch-thumb': {
+                        boxSizing: 'border-box',
+                        width: 24,
+                        height: 24,
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.15)',
+                      },
+                      '& .MuiSwitch-track': {
+                        borderRadius: 14,
+                        backgroundColor: '#D1D5DB',
+                        opacity: 1,
+                        transition: 'background-color 300ms ease',
+                      },
+                    }}
+                  />
+                </Box>
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
+                  <Box>
+                    <Typography variant="body2" sx={{ fontWeight: 600, color: '#1a1a2e', fontSize: '0.875rem' }}>
+                      IT Ticket Manage (Read & Write)
+                    </Typography>
+                    <Typography variant="caption" sx={{ color: '#6B7280', fontSize: '0.75rem', mt: 0.3, display: 'block' }}>
+                      Assign and update IT tickets
                     </Typography>
                   </Box>
                   <Switch
                     checked={bulkSettings.featurePermissions.canManageITSupport}
                     onChange={(e) => setBulkSettings(prev => ({
                       ...prev,
-                      featurePermissions: { ...prev.featurePermissions, canManageITSupport: e.target.checked }
+                      featurePermissions: {
+                        ...prev.featurePermissions,
+                        canManageITSupport: e.target.checked,
+                        ...(e.target.checked ? { canViewITSupport: true } : {}),
+                      }
                     }))}
                     sx={{
                       width: 52,

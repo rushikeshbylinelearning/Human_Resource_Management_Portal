@@ -96,7 +96,8 @@ const scrollSx = {
 
 const ITTicketFloatingChat = ({ defaultOpen = false, onClose }) => {
     const { canAccess } = usePermissions();
-    const isAdmin = canAccess.manageITSupport();
+    const isAdmin = canAccess.viewITSupport();
+    const canWrite = canAccess.manageITSupport();
     
     const [isOpen, setIsOpen] = useState(defaultOpen);
     const [tickets, setTickets] = useState([]);
@@ -576,8 +577,8 @@ const ITTicketFloatingChat = ({ defaultOpen = false, onClose }) => {
                                 </Box>
                             </Box>
 
-                            {/* Admin Status Update Section */}
-                            {isAdmin && (
+                            {/* Write-access status update section */}
+                            {canWrite && (
                                 <Box sx={{
                                     px: 2,
                                     py: 2,

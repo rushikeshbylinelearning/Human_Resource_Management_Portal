@@ -26,7 +26,8 @@ const ITTicketChat = lazyWithRetry(() => import('./ITSupport/ITTicketChat'));
 const HRQueryChatLauncher = () => {
     const { canAccess } = usePermissions();
     const isHrOperator = canAccess.manageHRQueries();
-    const isItOperator = canAccess.manageITSupport();
+    // View or write IT access opens the IT operator chat (write controls gated inside)
+    const isItOperator = canAccess.viewITSupport();
 
     const [menuOpen, setMenuOpen] = useState(false);
     const [hrOpen, setHrOpen] = useState(false);

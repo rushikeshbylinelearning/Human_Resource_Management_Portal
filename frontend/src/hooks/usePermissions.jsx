@@ -25,6 +25,7 @@ export const usePermissions = () => {
       canManageResourceRequests: false,
       canManageHRQueries: false,
       canManageBulkAttendanceActions: false,
+      canViewITSupport: false,
       canManageITSupport: false,
       privilegeLevel: 'normal',
       restrictedFeatures: {
@@ -164,12 +165,19 @@ export const usePermissions = () => {
       return permissions.canManageHRQueries === true;
     },
 
+    // Read-only IT ticket dashboard access
+    viewITSupport: () => {
+      if (user?.role === 'Admin') {
+        return true;
+      }
+      return permissions.canViewITSupport === true || permissions.canManageITSupport === true;
+    },
+
+    // Read & write IT tickets (assign / status / priority)
     manageITSupport: () => {
       if (user?.role === 'Admin') {
         return true;
       }
-      // No role-based grant for Operations: access comes only from the
-      // "IT Ticket Access" toggle in Manage Section (featurePermissions).
       return permissions.canManageITSupport === true;
     },
 
@@ -177,9 +185,12 @@ export const usePermissions = () => {
       if (user?.role === 'Admin') {
         return true;
       }
-      // Toggle-driven for every non-Admin role (including Operations):
-      // Manage Section -> HR Query Access / IT Ticket Access.
-      return permissions.canManageHRQueries === true || permissions.canManageITSupport === true;
+      // Toggle-driven: HR Query Access and/or IT Ticket View/Manage.
+      return (
+        permissions.canManageHRQueries === true
+        || permissions.canViewITSupport === true
+        || permissions.canManageITSupport === true
+      );
     },
   }), [permissions, user?.role, user?.leavesSectionEnabled]);
 

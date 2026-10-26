@@ -15,13 +15,7 @@ import {
     Alert,
     CircularProgress,
     Grid,
-    Paper,
-    Button,
     Snackbar,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
     IconButton,
     Tooltip
 } from '@mui/material';
@@ -51,7 +45,6 @@ const AdminITSupportPage = () => {
     
     // Modals
     const [detailsModal, setDetailsModal] = useState({ open: false, ticket: null });
-    const [assignModal, setAssignModal] = useState({ open: false, ticket: null });
     
     // Snackbar
     const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -292,6 +285,7 @@ const AdminITSupportPage = () => {
                     ticket={detailsModal.ticket}
                     onUpdate={handleTicketUpdate}
                     isAdmin={true}
+                    canWrite={true}
                 />
 
                 {/* Success Snackbar */}
