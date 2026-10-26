@@ -163,6 +163,7 @@ class NewNotificationService {
                     { role: 'Admin' },
                     { 'featurePermissions.canManageITSupport': true },
                     { 'featurePermissions.canViewITSupport': true },
+                    { 'featurePermissions.canAssignITSupport': true },
                 ],
             }).select('_id fullName').lean();
 

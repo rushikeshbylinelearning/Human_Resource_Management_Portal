@@ -27,6 +27,7 @@ export const usePermissions = () => {
       canManageBulkAttendanceActions: false,
       canViewITSupport: false,
       canManageITSupport: false,
+      canAssignITSupport: false,
       privilegeLevel: 'normal',
       restrictedFeatures: {
         canViewReports: false,
@@ -165,31 +166,46 @@ export const usePermissions = () => {
       return permissions.canManageHRQueries === true;
     },
 
-    // Read-only IT ticket dashboard access
+    // Tier 1 — view IT tickets / Operational Dashboard (IT)
     viewITSupport: () => {
       if (user?.role === 'Admin') {
         return true;
       }
-      return permissions.canViewITSupport === true || permissions.canManageITSupport === true;
+      return (
+        permissions.canViewITSupport === true
+        || permissions.canManageITSupport === true
+        || permissions.canAssignITSupport === true
+      );
     },
 
-    // Read & write IT tickets (assign / status / priority)
+    // Tier 2 — update status / priority / comments
     manageITSupport: () => {
       if (user?.role === 'Admin') {
         return true;
       }
-      return permissions.canManageITSupport === true;
+      return (
+        permissions.canManageITSupport === true
+        || permissions.canAssignITSupport === true
+      );
+    },
+
+    // Tier 3 — assign tickets to IT staff
+    assignITSupport: () => {
+      if (user?.role === 'Admin') {
+        return true;
+      }
+      return permissions.canAssignITSupport === true;
     },
 
     operationalDashboard: () => {
       if (user?.role === 'Admin') {
         return true;
       }
-      // Toggle-driven: HR Query Access and/or IT Ticket View/Manage.
       return (
         permissions.canManageHRQueries === true
         || permissions.canViewITSupport === true
         || permissions.canManageITSupport === true
+        || permissions.canAssignITSupport === true
       );
     },
   }), [permissions, user?.role, user?.leavesSectionEnabled]);

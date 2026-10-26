@@ -4,7 +4,8 @@ const router = express.Router();
 const authenticateToken = require('../middleware/authenticateToken');
 const {
     requireITSupportAccess,
-    requireITSupportWriteAccess
+    requireITSupportWriteAccess,
+    requireITSupportAssignAccess
 } = require('../middleware/requireITSupportAccess');
 const uploadITSupportImageGridFS = require('../middleware/uploadITSupportImageGridFS');
 const {
@@ -40,7 +41,7 @@ router.get('/tickets/export/excel', [authenticateToken, requireITSupportAccess],
 router.get('/assignees', [authenticateToken, requireITSupportAccess], getAssignableStaff);
 router.get('/tickets', [authenticateToken, requireITSupportAccess], getAllTickets);
 router.patch('/tickets/:id/status', [authenticateToken, requireITSupportWriteAccess], updateTicketStatus);
-router.patch('/tickets/:id/assign', [authenticateToken, requireITSupportWriteAccess], assignTicket);
+router.patch('/tickets/:id/assign', [authenticateToken, requireITSupportAssignAccess], assignTicket);
 router.patch('/tickets/:id/priority', [authenticateToken, requireITSupportWriteAccess], updateTicketPriority);
 
 module.exports = router;

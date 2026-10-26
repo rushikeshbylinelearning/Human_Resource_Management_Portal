@@ -286,6 +286,7 @@ const AdminITSupportPage = () => {
                     onUpdate={handleTicketUpdate}
                     isAdmin={true}
                     canWrite={true}
+                    canAssign={true}
                 />
 
                 {/* Success Snackbar */}

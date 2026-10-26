@@ -92,6 +92,7 @@ const OperationalDashboardPage = () => {
     const hasHR = canAccess.manageHRQueries();
     const hasIT = canAccess.viewITSupport();
     const canWriteIT = canAccess.manageITSupport();
+    const canAssignIT = canAccess.assignITSupport();
     const canView = canAccess.operationalDashboard();
 
     const tabs = useMemo(() => {
@@ -550,6 +551,7 @@ const OperationalDashboardPage = () => {
                 }}
                 isAdmin
                 canWrite={canWriteIT}
+                canAssign={canAssignIT}
             />
         </>
     );

@@ -6,7 +6,11 @@ const User = require('../models/User');
 const NewNotificationService = require('../services/NewNotificationService');
 const { getIO } = require('../socketManager');
 
-const { hasITViewAccess, hasITWriteAccess } = require('../middleware/requireITSupportAccess');
+const {
+    hasITViewAccess,
+    hasITWriteAccess,
+    hasITAssignAccess
+} = require('../middleware/requireITSupportAccess');
 
 const userCanManageITSupport = async (userId, role) => {
     if (role === 'Admin') return true;
@@ -20,24 +24,35 @@ const userCanViewITSupport = async (userId, role) => {
     return hasITViewAccess(user);
 };
 
-/** Only write-capable IT staff can be assigned tickets (not read-only viewers). */
+const userCanAssignITSupport = async (userId, role) => {
+    if (role === 'Admin') return true;
+    const user = await User.findById(userId).select('featurePermissions isActive role').lean();
+    return hasITAssignAccess(user);
+};
+
+/**
+ * Assignees = people who can work tickets (Write or Assign tier).
+ * View-only users are intentionally excluded.
+ * Includes Employee / Intern / Operations / Admin — any role with write/assign flag.
+ */
 const ASSIGNABLE_IT_STAFF_QUERY = {
     isActive: { $ne: false },
     $or: [
         { role: 'Admin' },
-        { 'featurePermissions.canManageITSupport': true }
+        { 'featurePermissions.canManageITSupport': true },
+        { 'featurePermissions.canAssignITSupport': true }
     ]
 };
 
 const isAssignableITStaffUser = (user) => hasITWriteAccess(user);
 
 /**
- * List active users who can be assigned IT tickets (Admins + IT support staff).
+ * List active users who can be assigned IT tickets.
  */
 const getAssignableStaff = async (req, res) => {
     try {
         const staff = await User.find(ASSIGNABLE_IT_STAFF_QUERY)
-            .select('fullName employeeCode role featurePermissions.canManageITSupport featurePermissions.canViewITSupport')
+            .select('fullName employeeCode role featurePermissions.canManageITSupport featurePermissions.canViewITSupport featurePermissions.canAssignITSupport')
             .sort({ fullName: 1 })
             .lean();
 
@@ -47,8 +62,9 @@ const getAssignableStaff = async (req, res) => {
                 fullName: user.fullName,
                 employeeCode: user.employeeCode || null,
                 role: user.role,
+                canViewITSupport: hasITViewAccess(user),
                 canManageITSupport: hasITWriteAccess(user),
-                canViewITSupport: hasITViewAccess(user)
+                canAssignITSupport: hasITAssignAccess(user)
             }))
         });
     } catch (error) {
@@ -479,6 +495,7 @@ const getTicketById = async (req, res) => {
         const isAssigned = ticket.assignedTo && ticket.assignedTo.toString() === req.user.userId;
         const isITStaff = await userCanViewITSupport(req.user.userId, req.user.role);
         const canWriteIT = await userCanManageITSupport(req.user.userId, req.user.role);
+        const canAssignIT = await userCanAssignITSupport(req.user.userId, req.user.role);
 
         if (!isOwner && !isAdmin && !isAssigned && !isITStaff) {
             return res.status(403).json({ error: 'Access denied.' });
@@ -493,7 +510,8 @@ const getTicketById = async (req, res) => {
             ticket,
             access: {
                 canView: Boolean(isOwner || isAdmin || isAssigned || isITStaff),
-                canWrite: Boolean(isAdmin || canWriteIT)
+                canWrite: Boolean(isAdmin || canWriteIT),
+                canAssign: Boolean(isAdmin || canAssignIT)
             }
         });
     } catch (error) {

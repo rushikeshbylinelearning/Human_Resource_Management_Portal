@@ -49,7 +49,11 @@ const buildUserNotificationQuery = async (userId, role) => {
         });
     }
 
-    if (perms.canManageITSupport === true || perms.canViewITSupport === true) {
+    if (
+        perms.canManageITSupport === true
+        || perms.canViewITSupport === true
+        || perms.canAssignITSupport === true
+    ) {
         or.push({
             category: 'it_support',
             recipientType: 'admin',
@@ -98,7 +102,11 @@ const userCanAccessNotification = async (notification, reqUser) => {
         }
         if (
             notification.category === 'it_support'
-            && (perms.canManageITSupport === true || perms.canViewITSupport === true)
+            && (
+                perms.canManageITSupport === true
+                || perms.canViewITSupport === true
+                || perms.canAssignITSupport === true
+            )
         ) {
             return true;
         }

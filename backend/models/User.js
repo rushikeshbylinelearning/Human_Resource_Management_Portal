@@ -188,11 +188,14 @@ const userSchema = new mongoose.Schema({
     // Bulk attendance actions on admin summary (live refresh, end breaks)
     canManageBulkAttendanceActions: { type: Boolean, default: false },
 
-    // IT Support — read-only Operational Dashboard / ticket view
+    // IT Support tier 1 — view tickets / Operational Dashboard (IT)
     canViewITSupport: { type: Boolean, default: false },
 
-    // IT Support — read & write (assign, status, priority); implies view access
+    // IT Support tier 2 — update status/priority/comments; implies view
     canManageITSupport: { type: Boolean, default: false },
+
+    // IT Support tier 3 — assign tickets to IT staff; implies write + view
+    canAssignITSupport: { type: Boolean, default: false },
     
     // Privilege levels: 'restricted', 'normal', 'advanced'
     privilegeLevel: { 

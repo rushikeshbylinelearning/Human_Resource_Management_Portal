@@ -101,9 +101,19 @@ const MetaItem = ({ icon, label, value }) => {
     );
 };
 
-const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false, canWrite = false }) => {
-    // Staff viewers (isAdmin) can open tickets; only write access can assign/update
-    const canManageTicket = Boolean(isAdmin && canWrite);
+const ITTicketDetailsModal = ({
+    open,
+    onClose,
+    ticket,
+    onUpdate,
+    isAdmin = false,
+    canWrite = false,
+    canAssign = false
+}) => {
+    // Staff viewers (isAdmin) can open tickets
+    // Write: update status/comments; Assign: assign to IT staff (implies write in permissions)
+    const canUpdateTicket = Boolean(isAdmin && canWrite);
+    const canAssignTicket = Boolean(isAdmin && canAssign);
     const [comment, setComment] = useState('');
     const [submittingComment, setSubmittingComment] = useState(false);
     const [cancelling, setCancelling] = useState(false);
@@ -146,7 +156,7 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
 
     React.useEffect(() => {
         const fetchAssignableStaff = async () => {
-            if (!open || !canManageTicket) return;
+            if (!open || !canAssignTicket) return;
             setLoadingStaff(true);
             try {
                 const response = await api.get('/it-support/assignees');
@@ -160,7 +170,7 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
         };
 
         fetchAssignableStaff();
-    }, [open, canManageTicket]);
+    }, [open, canAssignTicket]);
 
     const canCancel = fullTicket &&
         ['OPEN', 'ACKNOWLEDGED'].includes(fullTicket.status) &&
@@ -561,13 +571,13 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
                     </Box>
                 )}
 
-                {isAdmin && !canManageTicket && (
+                {isAdmin && !canUpdateTicket && !canAssignTicket && (
                     <Alert severity="info" sx={{ mb: 2.5 }}>
-                        You have read-only IT ticket access. Ask an admin to grant IT Ticket Manage to assign or update tickets.
+                        You have view-only IT ticket access. Ask an admin for Write or Assign access to update tickets.
                     </Alert>
                 )}
 
-                {canManageTicket && (
+                {canAssignTicket && (
                     <Box
                         sx={{
                             mb: 2.5,
@@ -594,6 +604,7 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
                                         {staff.fullName}
                                         {staff.employeeCode ? ` (${staff.employeeCode})` : ''}
                                         {staff.role === 'Intern' ? ' · Intern' : ''}
+                                        {staff.role === 'Operations' ? ' · Operations' : ''}
                                         {staff.role === 'Admin' ? ' · Admin' : ''}
                                     </MenuItem>
                                 ))}
@@ -612,11 +623,23 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
                                 )
                             }
                             startIcon={assigning ? <CircularProgress size={16} color="inherit" /> : <AssignedIcon />}
-                            sx={{ textTransform: 'none', fontWeight: 600, mb: 2.5 }}
+                            sx={{ textTransform: 'none', fontWeight: 600 }}
                         >
                             {assigning ? 'Saving…' : 'Save assignment'}
                         </Button>
+                    </Box>
+                )}
 
+                {canUpdateTicket && (
+                    <Box
+                        sx={{
+                            mb: 2.5,
+                            p: 2,
+                            borderRadius: 2,
+                            border: '1px solid',
+                            borderColor: 'divider'
+                        }}
+                    >
                         <SectionLabel>Update status</SectionLabel>
                         <FormControl fullWidth size="small" sx={{ mb: 1.5 }}>
                             <InputLabel>Status</InputLabel>
@@ -756,7 +779,7 @@ const ITTicketDetailsModal = ({ open, onClose, ticket, onUpdate, isAdmin = false
                         </Typography>
                     )}
 
-                    {!['CLOSED', 'CANCELLED'].includes(fullTicket.status) && (!isAdmin || canManageTicket) && (
+                    {!['CLOSED', 'CANCELLED'].includes(fullTicket.status) && (!isAdmin || canUpdateTicket) && (
                         <Box
                             sx={{
                                 display: 'flex',
