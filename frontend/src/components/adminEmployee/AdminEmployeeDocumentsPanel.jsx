@@ -13,7 +13,7 @@ import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import { lazyWithRetry } from '../../utils/lazyWithRetry';
 import AdminEmployeeKycPanel from './AdminEmployeeKycPanel';
 import api from '../../api/axios';
-import { RED, RED_DARK, RED_BG, TEXT, MUTED, cardSx, sectionTitleSx } from './adminEmployeeTheme';
+import { RED, RED_DARK, RED_BG, TEXT, MUTED, BORDER, profileCardSx, iconWellSx } from './adminEmployeeTheme';
 
 const SecurePdfViewer = lazyWithRetry(() => import('../SecurePdfViewer'));
 
@@ -100,41 +100,47 @@ const AdminEmployeeDocumentsPanel = ({ employeeId }) => {
 
     return (
         <>
-            <Box sx={{ ...cardSx, borderLeft: `3px solid ${RED}` }}>
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-                    <DescriptionOutlinedIcon sx={{ fontSize: 20, color: RED }} />
+            <Box sx={profileCardSx}>
+                <Stack direction="row" alignItems="center" spacing={1.25} sx={{ mb: 2 }}>
+                    <Box sx={iconWellSx()}>
+                        <DescriptionOutlinedIcon sx={{ fontSize: 18 }} />
+                    </Box>
                     <Box>
-                        <Typography sx={{ ...sectionTitleSx, mb: 0 }}>
+                        <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: TEXT, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
                             Assigned Letters & Documents
                         </Typography>
-                        <Typography variant="caption" sx={{ color: MUTED }}>
+                        <Typography sx={{ color: MUTED, fontSize: '0.75rem', mt: 0.25 }}>
                             {documents.length} document{documents.length === 1 ? '' : 's'} on file
                         </Typography>
                     </Box>
                 </Stack>
 
                 {documents.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 5, bgcolor: RED_BG, borderRadius: 2 }}>
-                        <DescriptionOutlinedIcon sx={{ fontSize: 40, color: '#FBBCBC', mb: 1 }} />
-                        <Typography variant="body2" sx={{ color: MUTED }}>
-                            No documents have been assigned to this employee yet.
+                    <Box sx={{ textAlign: 'center', py: 5, borderRadius: '14px', border: '1px dashed #E4E7EC', bgcolor: '#FAFBFC' }}>
+                        <DescriptionOutlinedIcon sx={{ fontSize: 36, color: '#D0D5DD', mb: 1 }} />
+                        <Typography sx={{ color: TEXT, fontWeight: 700, fontSize: '0.9rem' }}>
+                            No documents yet
+                        </Typography>
+                        <Typography sx={{ color: MUTED, fontSize: '0.8rem', mt: 0.4 }}>
+                            Letters and assigned files will show up here.
                         </Typography>
                     </Box>
                 ) : (
-                    <TableContainer sx={{ border: '1px solid #e2e8f0', borderRadius: 2 }}>
+                    <TableContainer sx={{ border: `1px solid ${BORDER}`, borderRadius: '14px', overflow: 'hidden' }}>
                         <Table size="small">
                             <TableHead>
-                                <TableRow sx={{ background: '#f8fafc' }}>
+                                <TableRow sx={{ background: '#F8F9FB' }}>
                                     {['Document', 'Assigned', 'Method', 'Ack Required', 'Status', 'Actions'].map((col) => (
                                         <TableCell
                                             key={col}
                                             sx={{
-                                                fontWeight: 600,
-                                                fontSize: '0.72rem',
-                                                color: '#64748b',
+                                                fontWeight: 700,
+                                                fontSize: '0.68rem',
+                                                color: '#667085',
                                                 textTransform: 'uppercase',
-                                                letterSpacing: '0.04em',
-                                                py: 1.25,
+                                                letterSpacing: '0.06em',
+                                                py: 1.4,
+                                                borderBottom: `1px solid ${BORDER}`,
                                             }}
                                         >
                                             {col}

@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import './PublicProfileForm.css';
 import { getApiOrigin } from '../utils/apiBaseUrl';
+import { aadhaarError, panError, accountNumberError, ifscError, digitsOnly } from '../utils/indiaIdentity';
 
 // Plain axios — no auth interceptors
 const API_BASE_URL = getApiOrigin();
@@ -80,9 +81,6 @@ const buildFormFromEmployee = (emp) => ({
 
 const PATTERNS = {
   phone:   /^[6-9]\d{9}$/,
-  aadhaar: /^\d{12}$/,
-  pan:     /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/,
-  ifsc:    /^[A-Z]{4}0[A-Z0-9]{6}$/,
   pincode: /^\d{6}$/,
   email:   /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
 };
@@ -115,7 +113,7 @@ const KYC_OR_GROUPS = [
 ];
 
 const KYC_ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png'];
-const KYC_MAX_SIZE = 2 * 1024 * 1024;
+const KYC_MAX_SIZE = 5 * 1024 * 1024;
 
 function kycGetExt(filename = '') {
   const idx = filename.lastIndexOf('.');
@@ -154,7 +152,7 @@ const KycRow = ({ typeMeta, document: doc, token, onUploaded }) => {
       return;
     }
     if (file.size > KYC_MAX_SIZE) {
-      setError('File exceeds 2 MB limit.');
+      setError('File exceeds 5 MB limit.');
       return;
     }
     if (file.size === 0) {
@@ -426,7 +424,8 @@ const PublicProfileForm = () => {
     if (step === 1) {
       if (pd.phoneNumber && !PATTERNS.phone.test(pd.phoneNumber))
         errs.phoneNumber = 'Must be a valid 10-digit Indian mobile number';
-      if (pd.alternatePhone && !PATTERNS.phone.test(pd.alternatePhone))
+      const alternate = (pd.alternatePhone || '').trim();
+      if (alternate && !PATTERNS.phone.test(alternate))
         errs.alternatePhone = 'Must be a valid 10-digit Indian mobile number';
       if (pd.personalEmail && !PATTERNS.email.test(pd.personalEmail))
         errs.personalEmail = 'Invalid email format';
@@ -440,17 +439,25 @@ const PublicProfileForm = () => {
         errs.emergencyContactNumber = 'Must be a valid 10-digit Indian mobile number';
     }
     if (step === 4) {
-      if (id.aadhaarNumber && !PATTERNS.aadhaar.test(id.aadhaarNumber))
-        errs.aadhaarNumber = 'Must be exactly 12 digits';
-      if (id.panCardNumber && !PATTERNS.pan.test(id.panCardNumber))
-        errs.panCardNumber = 'Format: ABCDE1234F (5 letters, 4 digits, 1 letter)';
-      if (id.ifscCode && !PATTERNS.ifsc.test(id.ifscCode))
-        errs.ifscCode = 'Format: ABCD0123456';
+      const aadhaarMsg = aadhaarError(id.aadhaarNumber);
+      const panMsg = panError(id.panCardNumber);
+      const accountMsg = accountNumberError(id.accountNumber);
+      const ifscMsg = ifscError(id.ifscCode);
+      if (aadhaarMsg) errs.aadhaarNumber = aadhaarMsg;
+      if (panMsg) errs.panCardNumber = panMsg;
+      if (accountMsg) errs.accountNumber = accountMsg;
+      if (ifscMsg) errs.ifscCode = ifscMsg;
     }
 
     setValidationErrors(errs);
     return Object.keys(errs).length === 0;
   };
+
+  useEffect(() => {
+    if (!error || !employee) return;
+    const firstProblem = document.querySelector('.pf-error-text, [role="alert"].pf-error-text');
+    if (firstProblem) firstProblem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [error, employee, validationErrors, kycStepErrors]);
 
   const handleNext = () => { if (validateStep(currentStep)) setCurrentStep(s => Math.min(s + 1, 5)); };
   const handlePrev = () => setCurrentStep(s => Math.max(s - 1, 1));
@@ -475,6 +482,16 @@ const PublicProfileForm = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateStep(1)) {
+      setCurrentStep(1);
+      setError('Check the phone numbers. Alternate phone can be left blank.');
+      return;
+    }
+    if (!validateStep(4)) {
+      setCurrentStep(4);
+      setError('Check Aadhaar, PAN, account number, and IFSC. Leave a field blank, or match its format.');
+      return;
+    }
     if (!validateKycStep()) {
       setError('Please upload all required documents before submitting.');
       return;
@@ -630,6 +647,12 @@ const PublicProfileForm = () => {
 
   return (
     <div className="public-form-root">
+      {error && (
+        <div className="pf-alert pf-alert--error pf-alert-fixed" role="alert">
+          <span>{error}</span>
+          <button type="button" className="pf-alert-close" onClick={() => setError(null)} aria-label="Dismiss">×</button>
+        </div>
+      )}
       <div className="pf-card">
         {/* ── Header ── */}
         <div className="pf-header">
@@ -673,10 +696,16 @@ const PublicProfileForm = () => {
         </div>
 
         {/* ── Body ── */}
-        <form onSubmit={handleSubmit}>
+        <form
+          onSubmit={handleSubmit}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' && currentStep < 5 && e.target.tagName !== 'TEXTAREA') {
+              e.preventDefault();
+              handleNext();
+            }
+          }}
+        >
           <div className="pf-body">
-            {error && <div className="pf-alert pf-alert--error">{error}</div>}
-
             {/* ── Step 1: Personal ── */}
             {currentStep === 1 && (
               <div className="pf-step-content">
@@ -771,17 +800,17 @@ const PublicProfileForm = () => {
                 </div>
                 <div className="pf-grid">
                   <Field label="Aadhaar Number" error={validationErrors.aadhaarNumber} optional>
-                    <Input value={id.aadhaarNumber} onChange={v => setID('aadhaarNumber', v)} placeholder="12-digit Aadhaar" maxLength={12} hasError={!!validationErrors.aadhaarNumber} />
+                    <Input value={id.aadhaarNumber} onChange={v => setID('aadhaarNumber', digitsOnly(v, 12))} placeholder="12-digit Aadhaar" maxLength={12} inputMode="numeric" hasError={!!validationErrors.aadhaarNumber} />
                   </Field>
                   <Field label="PAN Number" error={validationErrors.panCardNumber} optional>
-                    <Input value={id.panCardNumber} onChange={v => setID('panCardNumber', v)} placeholder="ABCDE1234F" maxLength={10} upper hasError={!!validationErrors.panCardNumber} />
+                    <Input value={id.panCardNumber} onChange={v => setID('panCardNumber', v)} placeholder="ABCPD1234F" maxLength={10} upper hasError={!!validationErrors.panCardNumber} />
                   </Field>
                 </div>
                 <div className="pf-sub-label">Bank Details</div>
                 <div className="pf-grid">
                   <Field label="Bank Name" optional><Input value={id.bankName} onChange={v => setID('bankName', v)} placeholder="e.g. State Bank of India" /></Field>
                   <Field label="Account Number" error={validationErrors.accountNumber} optional>
-                    <Input value={id.accountNumber} onChange={v => setID('accountNumber', v)} placeholder="Bank account number" hasError={!!validationErrors.accountNumber} />
+                    <Input value={id.accountNumber} onChange={v => setID('accountNumber', digitsOnly(v, 18))} placeholder="9 to 18 digits" maxLength={18} inputMode="numeric" hasError={!!validationErrors.accountNumber} />
                   </Field>
                   <Field label="IFSC Code" error={validationErrors.ifscCode} optional>
                     <Input value={id.ifscCode} onChange={v => setID('ifscCode', v)} placeholder="SBIN0001234" maxLength={11} upper hasError={!!validationErrors.ifscCode} />
@@ -835,7 +864,7 @@ const PublicProfileForm = () => {
                         <polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                       Required &amp; Optional Documents
-                      <span className="kyc-badge-info">PDF, JPG, PNG · Max 2 MB</span>
+                      <span className="kyc-badge-info">PDF, JPG, PNG · Max 5 MB</span>
                     </div>
 
                     <div className="kyc-group-label">Required Documents</div>

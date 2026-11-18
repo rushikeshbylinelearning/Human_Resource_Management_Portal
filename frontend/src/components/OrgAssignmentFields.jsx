@@ -9,6 +9,16 @@ import {
 
 const defaultGrid = { xs: 12, md: 6 };
 
+const resolveGridSize = (gridProps = {}) => {
+    if (gridProps.size) return gridProps.size;
+    const size = {};
+    ['xs', 'sm', 'md', 'lg', 'xl'].forEach((key) => {
+        if (gridProps[key] != null) size[key] = gridProps[key];
+    });
+    if (size.xs == null) size.xs = 12;
+    return size;
+};
+
 const OrgAssignmentFields = ({
     department,
     designation,
@@ -55,7 +65,7 @@ const OrgAssignmentFields = ({
 
     return (
         <>
-            <Grid item {...gridProps}>
+            <Grid size={resolveGridSize(gridProps)}>
                 <Autocomplete
                     freeSolo
                     disabled={disabled}
@@ -77,7 +87,7 @@ const OrgAssignmentFields = ({
                     )}
                 />
             </Grid>
-            <Grid item {...gridProps}>
+            <Grid size={resolveGridSize(gridProps)}>
                 <Autocomplete
                     freeSolo
                     disabled={disabled}

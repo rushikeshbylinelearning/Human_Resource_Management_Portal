@@ -6,7 +6,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined';
 import api from '../../api/axios';
-import { RED, RED_DARK, RED_BG, TEXT, MUTED, cardSx, sectionTitleSx } from './adminEmployeeTheme';
+import { RED, RED_DARK, RED_BG, TEXT, MUTED, profileCardSx, iconWellSx } from './adminEmployeeTheme';
 
 const eventConfig = {
     account_created: { label: 'Account Created', color: RED },
@@ -62,7 +62,7 @@ const AdminEmployeeCompliancePanel = ({ employeeId }) => {
 
     if (!data) {
         return (
-            <Box sx={{ ...cardSx, textAlign: 'center', py: 4 }}>
+            <Box sx={{ ...profileCardSx, textAlign: 'center', py: 4 }}>
                 <Typography variant="body2" sx={{ color: MUTED }}>
                     No onboarding compliance data available.
                 </Typography>
@@ -76,10 +76,14 @@ const AdminEmployeeCompliancePanel = ({ employeeId }) => {
 
     return (
         <Stack spacing={2}>
-            <Box sx={{ ...cardSx, borderLeft: `3px solid ${RED}` }}>
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-                    <VerifiedUserOutlinedIcon sx={{ fontSize: 20, color: RED }} />
-                    <Typography sx={{ ...sectionTitleSx, mb: 0 }}>Onboarding Compliance</Typography>
+            <Box sx={profileCardSx}>
+                <Stack direction="row" alignItems="center" spacing={1.25} sx={{ mb: 2 }}>
+                    <Box sx={iconWellSx()}>
+                        <VerifiedUserOutlinedIcon sx={{ fontSize: 18 }} />
+                    </Box>
+                    <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: TEXT, letterSpacing: '-0.02em' }}>
+                        Onboarding Compliance
+                    </Typography>
                 </Stack>
 
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 2.5 }}>
@@ -150,8 +154,10 @@ const AdminEmployeeCompliancePanel = ({ employeeId }) => {
                 )}
             </Box>
 
-            <Box sx={cardSx}>
-                <Typography sx={sectionTitleSx}>Activity Timeline</Typography>
+            <Box sx={profileCardSx}>
+                <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: TEXT, letterSpacing: '-0.02em', mb: 2 }}>
+                    Activity Timeline
+                </Typography>
 
                 {(!data.timeline || data.timeline.length === 0) ? (
                     <Typography variant="body2" sx={{ color: MUTED }}>

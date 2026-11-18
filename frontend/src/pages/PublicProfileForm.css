@@ -287,6 +287,32 @@
   border: 1px solid #FECACA;
 }
 
+.pf-alert-fixed {
+  position: fixed;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  width: min(640px, calc(100vw - 32px));
+  margin: 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  align-items: center;
+}
+
+.pf-alert-fixed span {
+  flex: 1;
+}
+
+.pf-alert-close {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0 0 8px;
+}
+
 /* ── Section heading ─────────────────────────────────────── */
 .pf-section-title {
   font-size: 15px;

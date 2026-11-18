@@ -50,3 +50,44 @@ export const tabSx = {
     '& .Mui-selected': { color: RED },
     '& .MuiTabs-indicator': { backgroundColor: RED, height: 2 },
 };
+
+/** Profile dialog only — do not reuse on full pages. */
+export const profileCardSx = {
+    background: '#fff',
+    borderRadius: '16px',
+    padding: '22px',
+    border: '1px solid #E7E9EE',
+    boxShadow: '0 1px 2px rgba(16, 24, 40, 0.04), 0 10px 28px rgba(16, 24, 40, 0.04)',
+};
+
+export const profileTabSx = {
+    minHeight: 46,
+    '& .MuiTabs-flexContainer': { gap: 0.25 },
+    '& .MuiTab-root': {
+        textTransform: 'none',
+        fontWeight: 600,
+        fontSize: '0.84rem',
+        minHeight: 46,
+        color: '#667085',
+        px: 1.75,
+        letterSpacing: '-0.01em',
+    },
+    '& .Mui-selected': { color: RED },
+    '& .MuiTabs-indicator': {
+        backgroundColor: RED,
+        height: 2.5,
+        borderRadius: 2,
+    },
+};
+
+export const iconWellSx = (background = RED_BG, color = RED) => ({
+    width: 34,
+    height: 34,
+    borderRadius: '10px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background,
+    color,
+    flexShrink: 0,
+});

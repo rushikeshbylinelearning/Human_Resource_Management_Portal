@@ -9,6 +9,7 @@ import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined';
 import ContactPageOutlinedIcon from '@mui/icons-material/ContactPageOutlined';
 import AccountBalanceOutlinedIcon from '@mui/icons-material/AccountBalanceOutlined';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import CountryCodeSelector from './CountryCodeSelector';
 import CIFSummaryCard from './CIF/CIFSummaryCard';
 import AdminEmployeeCompliancePanel from './adminEmployee/AdminEmployeeCompliancePanel';
@@ -21,8 +22,8 @@ import { SkeletonBox } from '../components/SkeletonLoaders';
 import OrgAssignmentFields from './OrgAssignmentFields';
 import { resolveOrgFields } from '../utils/orgFieldOptions';
 import {
-    RED, RED_DARK, RED_BG, RED_LIGHT, TEXT, MUTED, BORDER, SURFACE,
-    cardSx, sectionTitleSx, primaryBtnSx, tabSx,
+    RED, RED_DARK, RED_BG, TEXT, MUTED, BORDER,
+    primaryBtnSx, profileCardSx, profileTabSx, iconWellSx,
 } from './adminEmployee/adminEmployeeTheme';
 
 const roles = ['Admin', 'HR', 'Employee', 'Intern', 'Operations'];
@@ -31,11 +32,37 @@ const employmentStatusOptions = ['Intern', 'Probation', 'Permanent'];
 
 const textFieldSx = {
     '& .MuiOutlinedInput-root': {
-        borderRadius: '8px',
+        borderRadius: '10px',
         backgroundColor: '#fff',
+        '& .MuiOutlinedInput-notchedOutline': { borderColor: '#E7E9EE' },
+        '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: '#D0D5DD' },
         '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: RED },
     },
     '& .MuiInputLabel-root.Mui-focused': { color: RED },
+};
+
+const VALUE_TONES = {
+    Active: { bg: '#ECFDF3', color: '#166534', border: '#ABEFC6' },
+    Inactive: { bg: '#FEF2F2', color: '#B42318', border: '#FECDCA' },
+    Permanent: { bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
+    Probation: { bg: '#FFF7ED', color: '#C2410C', border: '#FED7AA' },
+    Intern: { bg: '#F5F3FF', color: '#6D28D9', border: '#DDD6FE' },
+    Single: { bg: '#F8F9FB', color: '#344054', border: '#E7E9EE' },
+    Married: { bg: '#ECFDF3', color: '#166534', border: '#ABEFC6' },
+    Divorced: { bg: '#FFF7ED', color: '#C2410C', border: '#FED7AA' },
+    Widowed: { bg: '#F8F9FB', color: '#344054', border: '#E7E9EE' },
+    Employee: { bg: '#FDECEC', color: '#C62828', border: '#FBBCBC' },
+    Admin: { bg: '#FDECEC', color: '#C62828', border: '#FBBCBC' },
+    HR: { bg: '#EFF6FF', color: '#1D4ED8', border: '#BFDBFE' },
+    Operations: { bg: '#F5F3FF', color: '#6D28D9', border: '#DDD6FE' },
+};
+
+const formatDisplayValue = (value) => {
+    if (!value || typeof value !== 'string') return value || '';
+    if (!/^\d{4}-\d{2}-\d{2}/.test(value)) return value;
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return value;
+    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 
 const defaultFormState = {
@@ -335,37 +362,70 @@ const AdminEmployeeProfileDialog = ({
         }
     };
 
-    const renderValue = (label, value, icon = null) => (
-        <Box>
-            <Typography
-                variant="caption"
-                sx={{
-                    color: MUTED,
-                    fontWeight: 500,
-                    fontSize: '0.7rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 0.5,
-                    mb: 0.5,
-                }}
-            >
-                {icon}
-                {label}
-            </Typography>
-            <Typography
-                variant="body2"
-                sx={{
-                    color: value ? TEXT : '#cbd5e1',
-                    fontWeight: value ? 500 : 400,
-                    fontSize: '0.875rem',
-                }}
-            >
-                {value || '—'}
-            </Typography>
-        </Box>
-    );
+    const renderValue = (label, value, { mono = false, badge = false } = {}) => {
+        const raw = value == null ? '' : String(value).trim();
+        const shown = formatDisplayValue(raw);
+        const filled = Boolean(shown);
+        const tone = badge ? VALUE_TONES[shown] : null;
 
-    const renderField = ({ label, name, type = 'text', select = false, options = [] }) => (
+        return (
+            <Box
+                sx={{
+                    height: '100%',
+                    borderRadius: '12px',
+                    px: 1.75,
+                    py: 1.35,
+                    background: filled ? '#fff' : '#FAFBFC',
+                    border: filled ? '1px solid #E7E9EE' : '1px dashed #E4E7EC',
+                    boxShadow: filled ? 'inset 0 1px 0 rgba(255,255,255,0.8)' : 'none',
+                }}
+            >
+                <Typography
+                    sx={{
+                        color: '#8A93A3',
+                        fontWeight: 600,
+                        fontSize: '0.68rem',
+                        letterSpacing: '0.07em',
+                        textTransform: 'uppercase',
+                        mb: 0.7,
+                        lineHeight: 1.2,
+                    }}
+                >
+                    {label}
+                </Typography>
+                {tone ? (
+                    <Chip
+                        label={shown}
+                        size="small"
+                        sx={{
+                            height: 24,
+                            fontWeight: 700,
+                            fontSize: '0.75rem',
+                            bgcolor: tone.bg,
+                            color: tone.color,
+                            border: `1px solid ${tone.border}`,
+                        }}
+                    />
+                ) : (
+                    <Typography
+                        sx={{
+                            color: filled ? TEXT : '#C4C9D2',
+                            fontWeight: filled ? 600 : 500,
+                            fontSize: mono ? '0.84rem' : '0.92rem',
+                            lineHeight: 1.35,
+                            fontFamily: mono && filled ? 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace' : 'inherit',
+                            letterSpacing: mono && filled ? '0.02em' : '-0.01em',
+                            wordBreak: 'break-word',
+                        }}
+                    >
+                        {shown || '—'}
+                    </Typography>
+                )}
+            </Box>
+        );
+    };
+
+    const renderField = ({ label, name, type = 'text', select = false, options = [], mono = false, badge = false }) => (
         isEditing ? (
             <TextField
                 label={label}
@@ -373,6 +433,7 @@ const AdminEmployeeProfileDialog = ({
                 value={formData[name]}
                 onChange={handleChange}
                 fullWidth
+                size="small"
                 sx={textFieldSx}
                 type={type}
                 select={select}
@@ -386,31 +447,57 @@ const AdminEmployeeProfileDialog = ({
                     </MenuItem>
                 ))}
             </TextField>
-        ) : renderValue(label, formData[name])
+        ) : renderValue(label, formData[name], { mono, badge })
     );
 
-    const renderPhoneField = ({ label, name, countryCodeName }) => (
-        isEditing ? (
-            <Stack direction="row" spacing={1}>
-                <Box sx={{ minWidth: 180 }}>
-                    <CountryCodeSelector
-                        value={formData[countryCodeName]}
-                        onChange={handleCountryCodeChange(countryCodeName)}
-                        label="Country Code"
+    const renderPhoneField = ({ label, name, countryCodeName }) => {
+        if (isEditing) {
+            return (
+                <Stack direction="row" spacing={1}>
+                    <Box sx={{ minWidth: 160 }}>
+                        <CountryCodeSelector
+                            value={formData[countryCodeName]}
+                            onChange={handleCountryCodeChange(countryCodeName)}
+                            label="Code"
+                        />
+                    </Box>
+                    <TextField
+                        label={label}
+                        name={name}
+                        value={formData[name]}
+                        onChange={handleChange}
+                        fullWidth
+                        size="small"
+                        sx={textFieldSx}
+                        inputProps={{ maxLength: 15 }}
+                        helperText={`${formData[name].length} digits`}
                     />
-                </Box>
-                <TextField
-                    label={label}
-                    name={name}
-                    value={formData[name]}
-                    onChange={handleChange}
-                    fullWidth
-                    sx={textFieldSx}
-                    inputProps={{ maxLength: 15 }}
-                    helperText={`${formData[name].length} digits`}
-                />
-            </Stack>
-        ) : renderValue(label, formData[countryCodeName] ? `${formData[countryCodeName]} ${formData[name]}` : formData[name] || '—')
+                </Stack>
+            );
+        }
+        const number = String(formData[name] || '').trim();
+        const display = number ? `${formData[countryCodeName] || ''} ${number}`.trim() : '';
+        return renderValue(label, display, { mono: true });
+    };
+
+    const SectionHeading = ({ icon, title, hint }) => (
+        <Stack direction="row" alignItems="center" spacing={1.25} sx={{ mb: 2 }}>
+            <Box sx={iconWellSx()}>{icon}</Box>
+            <Box sx={{ minWidth: 0 }}>
+                <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: TEXT, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                    {title}
+                </Typography>
+                {hint && (
+                    <Typography sx={{ fontSize: '0.75rem', color: MUTED, mt: 0.25 }}>
+                        {hint}
+                    </Typography>
+                )}
+            </Box>
+        </Stack>
+    );
+
+    const Field = ({ children, md = 4, sm = 6 }) => (
+        <Grid size={{ xs: 12, sm, md }}>{children}</Grid>
     );
 
     return (
@@ -424,67 +511,106 @@ const AdminEmployeeProfileDialog = ({
                 maxWidth="lg"
                 PaperProps={{
                     sx: {
-                        borderRadius: '16px',
+                        borderRadius: '20px',
                         overflow: 'hidden',
-                        boxShadow: '0 16px 48px rgba(15, 23, 42, 0.12)',
+                        boxShadow: '0 24px 80px rgba(15, 23, 42, 0.22)',
+                        border: '1px solid rgba(255,255,255,0.7)',
+                        background: '#fff',
                     },
                 }}
             >
                 <DialogTitle
                     sx={{
                         px: 3,
-                        py: 2,
-                        background: '#fff',
-                        borderBottom: `1px solid ${BORDER}`,
-                        borderTop: `3px solid ${RED}`,
+                        pt: 2.5,
+                        pb: 2,
+                        background: 'linear-gradient(180deg, #FFF6F6 0%, #FFFFFF 78%)',
                     }}
                 >
-                    <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+                    <Stack direction="row" alignItems="flex-start" justifyContent="space-between" spacing={2}>
                         <Stack direction="row" alignItems="center" spacing={2} sx={{ minWidth: 0 }}>
                             <Avatar
                                 sx={{
-                                    width: 48,
-                                    height: 48,
-                                    background: `linear-gradient(135deg, ${RED} 0%, ${RED_DARK} 100%)`,
+                                    width: 56,
+                                    height: 56,
+                                    background: `linear-gradient(145deg, ${RED} 0%, ${RED_DARK} 100%)`,
                                     color: '#fff',
                                     fontWeight: 700,
-                                    fontSize: '1.1rem',
+                                    fontSize: '1.25rem',
+                                    boxShadow: '0 8px 18px rgba(198, 40, 40, 0.28)',
+                                    border: '2px solid #fff',
                                 }}
                             >
                                 {(employee?.fullName || 'U').charAt(0).toUpperCase()}
                             </Avatar>
                             <Box sx={{ minWidth: 0 }}>
-                                <Typography variant="h6" fontWeight={700} color={TEXT} lineHeight={1.3} noWrap>
+                                <Typography
+                                    sx={{
+                                        fontWeight: 700,
+                                        fontSize: '1.2rem',
+                                        color: TEXT,
+                                        letterSpacing: '-0.03em',
+                                        lineHeight: 1.2,
+                                    }}
+                                    noWrap
+                                >
                                     {employee?.fullName || 'Employee Details'}
                                 </Typography>
-                                <Typography variant="body2" sx={{ color: MUTED }} noWrap>
-                                    {[employee?.department, employee?.email].filter(Boolean).join(' · ') || employee?.employeeCode || '—'}
+                                <Typography sx={{ color: MUTED, fontSize: '0.84rem', mt: 0.35 }} noWrap>
+                                    {[employee?.department, employee?.email].filter(Boolean).join('  ·  ') || employee?.employeeCode || '—'}
                                 </Typography>
-                                <Stack direction="row" spacing={0.75} sx={{ mt: 0.75 }} flexWrap="wrap" useFlexGap>
-                                    <Chip label={employee?.employeeCode || 'N/A'} size="small" variant="outlined" sx={{ height: 22, fontSize: '0.7rem', fontWeight: 600, borderColor: BORDER }} />
-                                    <Chip label={employee?.role || 'Employee'} size="small" sx={{ height: 22, fontSize: '0.7rem', fontWeight: 600, bgcolor: RED_BG, color: RED, border: '1px solid #FBBCBC' }} />
+                                <Stack direction="row" spacing={0.75} sx={{ mt: 1 }} flexWrap="wrap" useFlexGap>
+                                    <Chip
+                                        label={employee?.employeeCode || 'N/A'}
+                                        size="small"
+                                        sx={{
+                                            height: 24,
+                                            fontSize: '0.72rem',
+                                            fontWeight: 700,
+                                            bgcolor: '#F8F9FB',
+                                            color: TEXT,
+                                            border: `1px solid ${BORDER}`,
+                                            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+                                        }}
+                                    />
+                                    <Chip
+                                        label={employee?.role || 'Employee'}
+                                        size="small"
+                                        sx={{ height: 24, fontSize: '0.72rem', fontWeight: 700, bgcolor: RED_BG, color: RED, border: '1px solid #FBBCBC' }}
+                                    />
                                     <Chip
                                         label={employee?.isActive === false ? 'Inactive' : 'Active'}
                                         size="small"
                                         sx={{
-                                            height: 22,
-                                            fontSize: '0.7rem',
-                                            fontWeight: 600,
-                                            bgcolor: employee?.isActive === false ? '#fef2f2' : '#f0fdf4',
-                                            color: employee?.isActive === false ? '#991b1b' : '#166534',
+                                            height: 24,
+                                            fontSize: '0.72rem',
+                                            fontWeight: 700,
+                                            bgcolor: employee?.isActive === false ? '#FEF2F2' : '#ECFDF3',
+                                            color: employee?.isActive === false ? '#B42318' : '#166534',
+                                            border: `1px solid ${employee?.isActive === false ? '#FECDCA' : '#ABEFC6'}`,
                                         }}
                                     />
                                 </Stack>
                             </Box>
                         </Stack>
-                        <IconButton onClick={handleClose} size="small" sx={{ color: MUTED, '&:hover': { color: RED, bgcolor: RED_BG } }}>
-                            <CloseIcon />
+                        <IconButton
+                            onClick={handleClose}
+                            size="small"
+                            aria-label="Close"
+                            sx={{
+                                color: MUTED,
+                                bgcolor: '#fff',
+                                border: `1px solid ${BORDER}`,
+                                '&:hover': { color: RED, bgcolor: RED_BG, borderColor: '#FBBCBC' },
+                            }}
+                        >
+                            <CloseIcon fontSize="small" />
                         </IconButton>
                     </Stack>
                 </DialogTitle>
 
-                <Box sx={{ px: 3, background: '#fff', borderBottom: `1px solid ${BORDER}` }}>
-                    <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={tabSx}>
+                <Box sx={{ px: 2.5, background: '#fff', borderBottom: `1px solid ${BORDER}` }}>
+                    <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={profileTabSx} variant="scrollable" scrollButtons="auto">
                         <Tab label="Overview" />
                         <Tab label="Personal" />
                         <Tab label="Compliance" />
@@ -493,21 +619,22 @@ const AdminEmployeeProfileDialog = ({
                     </Tabs>
                 </Box>
 
-                <DialogContent sx={{ backgroundColor: SURFACE, px: 3, py: 2.5 }}>
+                <DialogContent sx={{ backgroundColor: '#F3F5F8', px: { xs: 2, sm: 3 }, py: 2.75 }}>
                     {activeTab === 0 && (
                     <Stack spacing={2}>
                         {(user?.role === 'Admin' || user?.role === 'HR') && employee?._id && (
                             <CIFSummaryCard employeeId={employee._id} />
                         )}
 
-                        <Box sx={{ ...cardSx, borderLeft: `3px solid ${RED}` }}>
-                            <Typography sx={sectionTitleSx}>
-                                <BadgeOutlinedIcon sx={{ fontSize: 18, color: RED }} />
-                                Employment Details
-                            </Typography>
-                            <Grid container spacing={2.5}>
-                                <Grid item xs={12} sm={6} md={4}>{renderField({ label: 'Full Name', name: 'fullName' })}</Grid>
-                                <Grid item xs={12} sm={6} md={4}>{renderField({ label: 'Employee ID', name: 'employeeCode' })}</Grid>
+                        <Box sx={profileCardSx}>
+                            <SectionHeading
+                                icon={<BadgeOutlinedIcon sx={{ fontSize: 18 }} />}
+                                title="Employment Details"
+                                hint="Role, team, and how this person is engaged"
+                            />
+                            <Grid container spacing={1.5}>
+                                <Field>{renderField({ label: 'Full Name', name: 'fullName' })}</Field>
+                                <Field>{renderField({ label: 'Employee ID', name: 'employeeCode', mono: true })}</Field>
                                 {isEditing ? (
                                     <OrgAssignmentFields
                                         department={formData.department}
@@ -518,37 +645,23 @@ const AdminEmployeeProfileDialog = ({
                                     />
                                 ) : (
                                     <>
-                                        <Grid item xs={12} sm={6} md={4}>{renderValue('Department', formData.department)}</Grid>
-                                        <Grid item xs={12} sm={6} md={4}>{renderValue('Designation', formData.designation)}</Grid>
+                                        <Field>{renderValue('Department', formData.department)}</Field>
+                                        <Field>{renderValue('Designation', formData.designation)}</Field>
                                     </>
                                 )}
-                                <Grid item xs={12} sm={6} md={4}>{renderField({ label: 'Email', name: 'email', type: 'email' })}</Grid>
-                                <Grid item xs={12} sm={6} md={4}>{renderField({ label: 'Joining Date', name: 'joiningDate', type: 'date' })}</Grid>
-                                <Grid item xs={12} sm={6} md={4}>
-                                    {isEditing
-                                        ? renderField({ label: 'Role', name: 'role', select: true, options: roles })
-                                        : renderValue('Role', formData.role)
-                                    }
-                                </Grid>
-                                <Grid item xs={12} sm={6} md={4}>
-                                    {isEditing
-                                        ? renderField({ label: 'Status', name: 'status', select: true, options: statusOptions })
-                                        : renderValue('Status', formData.status)
-                                    }
-                                </Grid>
-                                <Grid item xs={12} sm={6} md={4}>
-                                    {isEditing
-                                        ? renderField({ label: 'Employment Status', name: 'employmentStatus', select: true, options: employmentStatusOptions })
-                                        : renderValue('Employment Status', formData.employmentStatus)
-                                    }
-                                </Grid>
+                                <Field>{renderField({ label: 'Email', name: 'email', type: 'email' })}</Field>
+                                <Field>{renderField({ label: 'Joining Date', name: 'joiningDate', type: 'date' })}</Field>
+                                <Field>{renderField({ label: 'Role', name: 'role', select: true, options: roles, badge: true })}</Field>
+                                <Field>{renderField({ label: 'Status', name: 'status', select: true, options: statusOptions, badge: true })}</Field>
+                                <Field>{renderField({ label: 'Employment Status', name: 'employmentStatus', select: true, options: employmentStatusOptions, badge: true })}</Field>
                             </Grid>
 
-                            <Box sx={{ borderTop: `1px solid ${BORDER}`, mt: 2.5, pt: 2.5 }}>
-                                <Typography sx={{ ...sectionTitleSx, mb: 1.5 }}>
-                                    <PersonOutlineIcon sx={{ fontSize: 18, color: RED }} />
-                                    Reporting Manager
-                                </Typography>
+                            <Box sx={{ borderTop: `1px solid ${BORDER}`, mt: 2.75, pt: 2.25 }}>
+                                <SectionHeading
+                                    icon={<PersonOutlineIcon sx={{ fontSize: 18 }} />}
+                                    title="Reporting Manager"
+                                    hint="Who this employee reports to"
+                                />
 
                                 {isEditing && (
                                     <Box mb={2}>
@@ -582,22 +695,71 @@ const AdminEmployeeProfileDialog = ({
                                 )}
 
                                 {!isEditing && !employee?.reportingPerson?.fullName ? (
-                                    <Typography variant="body2" sx={{ color: MUTED }}>
-                                        No reporting manager assigned
-                                    </Typography>
-                                ) : (
-                                    <Grid container spacing={2.5}>
-                                        <Grid item xs={12} sm={4}>
-                                            {renderValue('Name', employee?.reportingPerson?.fullName)}
-                                        </Grid>
-                                        <Grid item xs={12} sm={4}>
-                                            {renderValue('Email', employee?.reportingPerson?.email)}
-                                        </Grid>
-                                        <Grid item xs={12} sm={4}>
-                                            {renderValue('Department', employee?.reportingPerson?.department)}
-                                        </Grid>
-                                    </Grid>
-                                )}
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 1.5,
+                                            px: 1.75,
+                                            py: 1.5,
+                                            borderRadius: '14px',
+                                            border: '1px dashed #E4E7EC',
+                                            background: '#FAFBFC',
+                                        }}
+                                    >
+                                        <Avatar sx={{ width: 38, height: 38, bgcolor: '#F2F4F7', color: '#98A2B3' }}>
+                                            <PersonOutlineIcon fontSize="small" />
+                                        </Avatar>
+                                        <Box>
+                                            <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: TEXT, letterSpacing: '-0.01em' }}>
+                                                No manager assigned
+                                            </Typography>
+                                            <Typography sx={{ fontSize: '0.78rem', color: MUTED, mt: 0.15 }}>
+                                                This employee does not report to anyone yet.
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                ) : !isEditing ? (
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 1.75,
+                                            px: 1.75,
+                                            py: 1.5,
+                                            borderRadius: '14px',
+                                            border: '1px solid #E7E9EE',
+                                            background: 'linear-gradient(180deg, #FFFFFF 0%, #FAFBFC 100%)',
+                                        }}
+                                    >
+                                        <Avatar
+                                            sx={{
+                                                width: 42,
+                                                height: 42,
+                                                background: `linear-gradient(145deg, ${RED} 0%, ${RED_DARK} 100%)`,
+                                                fontWeight: 700,
+                                                fontSize: '0.95rem',
+                                            }}
+                                        >
+                                            {(employee?.reportingPerson?.fullName || 'M').charAt(0).toUpperCase()}
+                                        </Avatar>
+                                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                                            <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: TEXT, letterSpacing: '-0.02em' }} noWrap>
+                                                {employee?.reportingPerson?.fullName}
+                                            </Typography>
+                                            <Typography sx={{ fontSize: '0.8rem', color: MUTED }} noWrap>
+                                                {employee?.reportingPerson?.email || 'No email on file'}
+                                            </Typography>
+                                        </Box>
+                                        {employee?.reportingPerson?.department && (
+                                            <Chip
+                                                label={employee.reportingPerson.department}
+                                                size="small"
+                                                sx={{ fontWeight: 700, fontSize: '0.72rem', bgcolor: '#F8F9FB', border: `1px solid ${BORDER}` }}
+                                            />
+                                        )}
+                                    </Box>
+                                ) : null}
                             </Box>
                         </Box>
 
@@ -607,48 +769,60 @@ const AdminEmployeeProfileDialog = ({
                     {/* ── Tab 1: Personal ── */}
                     {activeTab === 1 && (
                     <Stack spacing={2}>
-                        <Box sx={cardSx}>
-                            <Typography sx={sectionTitleSx}>
-                                <ContactPageOutlinedIcon sx={{ fontSize: 18, color: RED }} />
-                                Personal Details
-                            </Typography>
-                            <Grid container spacing={2.5}>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Date of Birth', name: 'dateOfBirth', type: 'date' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Gender', name: 'gender', select: true, options: ['Male', 'Female', 'Other'] })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Blood Group', name: 'bloodGroup' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Marital Status', name: 'maritalStatus', select: true, options: ['Single', 'Married', 'Divorced', 'Widowed'] })}</Grid>
-                                <Grid item xs={12} md={6}>{renderPhoneField({ label: 'Phone Number', name: 'phoneNumber', countryCodeName: 'phoneCountryCode' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Alternate Phone', name: 'alternatePhone' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Personal Email', name: 'personalEmail', type: 'email' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Emergency Contact Name', name: 'emergencyContactName' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Relationship', name: 'emergencyContactRelationship' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderPhoneField({ label: 'Emergency Contact Number', name: 'emergencyContactNumber', countryCodeName: 'emergencyContactCountryCode' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Emergency Contact Email', name: 'emergencyContactEmail', type: 'email' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Flat / House', name: 'addressFlat' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Area / Street', name: 'addressArea' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'City', name: 'addressCity' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'State', name: 'addressState' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Pincode', name: 'addressPincode' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Marriage Date', name: 'marriageDate', type: 'date' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Interests', name: 'interests' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Hobbies', name: 'hobbies' })}</Grid>
+                        <Box sx={profileCardSx}>
+                            <SectionHeading
+                                icon={<ContactPageOutlinedIcon sx={{ fontSize: 18 }} />}
+                                title="Personal Details"
+                                hint="Identity, contact, and home address"
+                            />
+                            <Grid container spacing={1.5}>
+                                <Field>{renderField({ label: 'Date of Birth', name: 'dateOfBirth', type: 'date' })}</Field>
+                                <Field>{renderField({ label: 'Gender', name: 'gender', select: true, options: ['Male', 'Female', 'Other'] })}</Field>
+                                <Field>{renderField({ label: 'Blood Group', name: 'bloodGroup' })}</Field>
+                                <Field>{renderField({ label: 'Marital Status', name: 'maritalStatus', select: true, options: ['Single', 'Married', 'Divorced', 'Widowed'], badge: true })}</Field>
+                                <Field>{renderField({ label: 'Marriage Date', name: 'marriageDate', type: 'date' })}</Field>
+                                <Field>{renderField({ label: 'Interests', name: 'interests' })}</Field>
+                                <Field>{renderField({ label: 'Hobbies', name: 'hobbies' })}</Field>
+                                <Field md={isEditing ? 6 : 4}>{renderPhoneField({ label: 'Phone Number', name: 'phoneNumber', countryCodeName: 'phoneCountryCode' })}</Field>
+                                <Field>{renderField({ label: 'Alternate Phone', name: 'alternatePhone' })}</Field>
+                                <Field>{renderField({ label: 'Personal Email', name: 'personalEmail', type: 'email' })}</Field>
+                                <Field md={12}>
+                                    <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#98A2B3', pt: 0.5 }}>
+                                        Address
+                                    </Typography>
+                                </Field>
+                                <Field>{renderField({ label: 'Flat / House', name: 'addressFlat' })}</Field>
+                                <Field>{renderField({ label: 'Area / Street', name: 'addressArea' })}</Field>
+                                <Field>{renderField({ label: 'City', name: 'addressCity' })}</Field>
+                                <Field>{renderField({ label: 'State', name: 'addressState' })}</Field>
+                                <Field>{renderField({ label: 'Pincode', name: 'addressPincode', mono: true })}</Field>
+                                <Field md={12}>
+                                    <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#98A2B3', pt: 0.5 }}>
+                                        Emergency contact
+                                    </Typography>
+                                </Field>
+                                <Field>{renderField({ label: 'Contact Name', name: 'emergencyContactName' })}</Field>
+                                <Field>{renderField({ label: 'Relationship', name: 'emergencyContactRelationship' })}</Field>
+                                <Field md={isEditing ? 6 : 4}>{renderPhoneField({ label: 'Contact Number', name: 'emergencyContactNumber', countryCodeName: 'emergencyContactCountryCode' })}</Field>
+                                <Field>{renderField({ label: 'Contact Email', name: 'emergencyContactEmail', type: 'email' })}</Field>
                             </Grid>
                         </Box>
 
-                        <Box sx={cardSx}>
-                            <Typography sx={sectionTitleSx}>
-                                <AccountBalanceOutlinedIcon sx={{ fontSize: 18, color: RED }} />
-                                Identity &amp; Bank Details
-                            </Typography>
-                            <Grid container spacing={2.5}>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Aadhaar Number', name: 'aadhaarNumber' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'PAN Card Number', name: 'panCardNumber' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Bank Name', name: 'bankName' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Account Number', name: 'accountNumber' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'IFSC Code', name: 'ifscCode' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'Branch Name', name: 'bankBranch' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'UAN Number', name: 'uanNumber' })}</Grid>
-                                <Grid item xs={12} md={6}>{renderField({ label: 'PF Account Number', name: 'pfAccountNumber' })}</Grid>
+                        <Box sx={profileCardSx}>
+                            <SectionHeading
+                                icon={<AccountBalanceOutlinedIcon sx={{ fontSize: 18 }} />}
+                                title="Identity & Bank Details"
+                                hint="Government IDs and salary account"
+                            />
+                            <Grid container spacing={1.5}>
+                                <Field>{renderField({ label: 'Aadhaar Number', name: 'aadhaarNumber', mono: true })}</Field>
+                                <Field>{renderField({ label: 'PAN Card Number', name: 'panCardNumber', mono: true })}</Field>
+                                <Field>{renderField({ label: 'UAN Number', name: 'uanNumber', mono: true })}</Field>
+                                <Field>{renderField({ label: 'PF Account Number', name: 'pfAccountNumber', mono: true })}</Field>
+                                <Field>{renderField({ label: 'Bank Name', name: 'bankName' })}</Field>
+                                <Field>{renderField({ label: 'Account Number', name: 'accountNumber', mono: true })}</Field>
+                                <Field>{renderField({ label: 'IFSC Code', name: 'ifscCode', mono: true })}</Field>
+                                <Field>{renderField({ label: 'Branch Name', name: 'bankBranch' })}</Field>
                             </Grid>
                         </Box>
                     </Stack>
@@ -666,7 +840,7 @@ const AdminEmployeeProfileDialog = ({
 
                     {/* ── Tab 4: KYC Documents ── */}
                     {activeTab === 4 && employee?._id && (
-                        <AdminEmployeeKycPanel employeeId={employee._id} />
+                        <AdminEmployeeKycPanel employeeId={employee._id} flush />
                     )}
                 </DialogContent>
 
@@ -674,7 +848,7 @@ const AdminEmployeeProfileDialog = ({
                 <DialogActions
                     sx={{
                         px: 3,
-                        py: 2,
+                        py: 1.75,
                         background: '#fff',
                         borderTop: `1px solid ${BORDER}`,
                         gap: 1,
@@ -685,7 +859,7 @@ const AdminEmployeeProfileDialog = ({
                             variant="text"
                             onClick={onOpenAdvancedEditor}
                             disabled={saving}
-                            sx={{ mr: 'auto', color: MUTED, fontWeight: 500, textTransform: 'none', '&:hover': { color: RED, bgcolor: 'transparent' } }}
+                            sx={{ mr: 'auto', color: MUTED, fontWeight: 600, textTransform: 'none', borderRadius: '10px', '&:hover': { color: RED, bgcolor: RED_BG } }}
                         >
                             Advanced Editor
                         </Button>
@@ -713,7 +887,17 @@ const AdminEmployeeProfileDialog = ({
                         <Button
                             variant="contained"
                             onClick={() => setIsEditing(true)}
-                            sx={primaryBtnSx}
+                            startIcon={<EditOutlinedIcon />}
+                            sx={{
+                                ...primaryBtnSx,
+                                borderRadius: '10px',
+                                px: 2.5,
+                                boxShadow: '0 8px 16px rgba(198, 40, 40, 0.22)',
+                                '&:hover': {
+                                    background: `linear-gradient(135deg, ${RED_DARK} 0%, #B71C1C 100%)`,
+                                    boxShadow: '0 10px 20px rgba(198, 40, 40, 0.28)',
+                                },
+                            }}
                         >
                             Edit Details
                         </Button>

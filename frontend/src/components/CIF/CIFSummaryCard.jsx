@@ -11,12 +11,7 @@ import {
   InfoOutlined as InfoIcon
 } from '@mui/icons-material';
 import api from '../../api/axios';
-
-const RED = '#E53935';
-const RED_DARK = '#C62828';
-const RED_BG = '#FDECEC';
-const TEXT = '#1A1A1A';
-const MUTED = '#6B7280';
+import { RED, TEXT, MUTED, profileCardSx, iconWellSx } from '../adminEmployee/adminEmployeeTheme';
 
 const CIFSummaryCard = ({ employeeId }) => {
   const [summary, setSummary] = useState(null);
@@ -62,11 +57,14 @@ const CIFSummaryCard = ({ employeeId }) => {
     });
   };
 
-  const cardBase = {
+  const cardBase = profileCardSx;
+
+  const statTile = {
     background: '#fff',
     borderRadius: '12px',
-    padding: '16px 20px',
-    border: '1px solid #e2e8f0',
+    padding: '12px 14px',
+    border: '1px solid #E7E9EE',
+    height: '100%',
   };
 
   if (loading) {
@@ -91,24 +89,45 @@ const CIFSummaryCard = ({ employeeId }) => {
 
   if (!summary || summary.total === 0) {
     return (
-      <Box sx={{ ...cardBase, display: 'flex', alignItems: 'center', gap: 1.5, borderLeft: `3px solid ${RED}` }}>
-        <InfoIcon sx={{ fontSize: 20, color: RED }} />
-        <Box>
-          <Typography sx={{ fontWeight: 600, fontSize: '0.875rem', color: TEXT }}>CIF Records</Typography>
-          <Typography sx={{ fontSize: '0.8125rem', color: MUTED }}>
+      <Box sx={{ ...cardBase, display: 'flex', alignItems: 'center', gap: 1.75, py: 1.75 }}>
+        <Box sx={iconWellSx('#ECFDF3', '#166534')}>
+          <InfoIcon sx={{ fontSize: 18 }} />
+        </Box>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.92rem', color: TEXT, letterSpacing: '-0.02em' }}>
+            Clear record
+          </Typography>
+          <Typography sx={{ fontSize: '0.8rem', color: MUTED, mt: 0.2 }}>
             No incident records on file for this employee.
           </Typography>
         </Box>
+        <Chip
+          label="No cases"
+          size="small"
+          sx={{
+            height: 26,
+            fontWeight: 700,
+            fontSize: '0.72rem',
+            bgcolor: '#ECFDF3',
+            color: '#166534',
+            border: '1px solid #ABEFC6',
+          }}
+        />
       </Box>
     );
   }
 
   return (
-    <Box sx={{ ...cardBase, borderLeft: `3px solid ${RED}` }}>
+    <Box sx={cardBase}>
       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 2 }}>
-        <Typography sx={{ fontWeight: 600, fontSize: '0.875rem', color: TEXT }}>
-          CIF Summary
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.25 }}>
+          <Box sx={iconWellSx()}>
+            <InfoIcon sx={{ fontSize: 18 }} />
+          </Box>
+          <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: TEXT, letterSpacing: '-0.02em' }}>
+            CIF Summary
+          </Typography>
+        </Box>
         <Chip
           label={`Risk: ${summary.riskLevel.toUpperCase()}`}
           size="small"
@@ -124,15 +143,8 @@ const CIFSummaryCard = ({ employeeId }) => {
 
       {/* Stats Grid */}
       <Grid container spacing={2}>
-        <Grid item xs={6}>
-          <Box
-            sx={{
-              background: '#fff',
-              borderRadius: '12px',
-              padding: '12px 14px',
-              border: '1px solid #E5E7EB'
-            }}
-          >
+        <Grid size={{ xs: 6, sm: 3 }}>
+          <Box sx={statTile}>
             <Typography sx={{ fontSize: '10px', fontWeight: 600, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', mb: 0.5 }}>
               Total Cases
             </Typography>
@@ -141,15 +153,8 @@ const CIFSummaryCard = ({ employeeId }) => {
             </Typography>
           </Box>
         </Grid>
-        <Grid item xs={6}>
-          <Box
-            sx={{
-              background: '#fff',
-              borderRadius: '12px',
-              padding: '12px 14px',
-              border: '1px solid #E5E7EB'
-            }}
-          >
+        <Grid size={{ xs: 6, sm: 3 }}>
+          <Box sx={statTile}>
             <Typography sx={{ fontSize: '10px', fontWeight: 600, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', mb: 0.5 }}>
               Open Cases
             </Typography>
@@ -158,15 +163,8 @@ const CIFSummaryCard = ({ employeeId }) => {
             </Typography>
           </Box>
         </Grid>
-        <Grid item xs={6}>
-          <Box
-            sx={{
-              background: '#fff',
-              borderRadius: '12px',
-              padding: '12px 14px',
-              border: '1px solid #E5E7EB'
-            }}
-          >
+        <Grid size={{ xs: 6, sm: 3 }}>
+          <Box sx={statTile}>
             <Typography sx={{ fontSize: '10px', fontWeight: 600, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', mb: 0.5 }}>
               High Severity
             </Typography>
@@ -175,15 +173,8 @@ const CIFSummaryCard = ({ employeeId }) => {
             </Typography>
           </Box>
         </Grid>
-        <Grid item xs={6}>
-          <Box
-            sx={{
-              background: '#fff',
-              borderRadius: '12px',
-              padding: '12px 14px',
-              border: '1px solid #E5E7EB'
-            }}
-          >
+        <Grid size={{ xs: 6, sm: 3 }}>
+          <Box sx={statTile}>
             <Typography sx={{ fontSize: '10px', fontWeight: 600, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.08em', mb: 0.5 }}>
               Last Incident
             </Typography>

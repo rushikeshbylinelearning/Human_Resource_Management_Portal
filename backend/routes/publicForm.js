@@ -116,7 +116,7 @@ router.get('/kyc/my-documents', kycUploadLimiter, requireProfileFormSession, kyc
  * POST /api/public/kyc/upload?token=<token>
  * Content-Type: multipart/form-data
  * Fields:
- *   file         — the file (PDF / JPEG / PNG, max 2 MB)
+ *   file         — the file (PDF / JPEG / PNG, max 5 MB)
  *   documentType — one of the VALID_TYPES keys
  *
  * The token MUST be supplied as a query parameter, not a form field, because

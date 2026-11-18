@@ -8,7 +8,7 @@
 'use strict';
 
 const { randomUUID } = require('crypto');
-const { PutObjectCommand, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { PutObjectCommand, GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const { getR2Client, BUCKET_NAME } = require('../config/r2');
 const { EmployeeKycDocument, KYC_DOCUMENT_TYPES } = require('../models/EmployeeKycDocument');
@@ -215,6 +215,41 @@ exports.rejectDocument = async (req, res) => {
     } catch (err) {
         console.error('[KYC] rejectDocument error:', err);
         res.status(500).json({ error: 'Failed to reject document.' });
+    }
+};
+
+// ─── DELETE /kyc/admin/:docId ────────────────────────────────────────────────
+// Admin/HR: remove the uploaded file and its current record.
+exports.deleteDocument = async (req, res) => {
+    try {
+        if (!isAdminOrHr(req.user.role)) {
+            return res.status(403).json({ error: 'Access denied.' });
+        }
+
+        const doc = await EmployeeKycDocument.findById(req.params.docId);
+        if (!doc || doc.superseded) {
+            return res.status(404).json({ error: 'Document not found.' });
+        }
+
+        try {
+            const client = getR2Client();
+            await client.send(new DeleteObjectCommand({
+                Bucket: BUCKET_NAME(),
+                Key: doc.storageKey,
+            }));
+        } catch (storageErr) {
+            const code = storageErr.name || storageErr.Code;
+            if (code !== 'NoSuchKey' && code !== 'NotFound') {
+                console.error('[KYC] deleteDocument — storage delete failed:', storageErr);
+                return res.status(502).json({ error: 'Could not delete the file from storage. It was not removed.' });
+            }
+        }
+
+        await doc.deleteOne();
+        res.json({ message: 'Document deleted.' });
+    } catch (err) {
+        console.error('[KYC] deleteDocument error:', err);
+        res.status(500).json({ error: 'Failed to delete document.' });
     }
 };
 

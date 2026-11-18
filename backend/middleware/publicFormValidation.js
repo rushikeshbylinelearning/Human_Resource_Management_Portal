@@ -1,5 +1,21 @@
 // backend/middleware/publicFormValidation.js
 const { body, validationResult } = require('express-validator');
+const {
+  aadhaarError,
+  panError,
+  accountNumberError,
+  ifscError,
+} = require('../utils/indiaIdentity');
+
+const optionalFilled = { values: 'falsy' };
+
+function rejectWhen(check) {
+  return (value) => {
+    const message = check(value);
+    if (message) throw new Error(message);
+    return true;
+  };
+}
 
 // Validation patterns
 const PATTERNS = {
@@ -42,7 +58,7 @@ const profileSubmissionRules = [
     .withMessage('Phone must be a valid 10-digit Indian mobile number'),
   
   body('personalDetails.alternatePhone')
-    .optional()
+    .optional(optionalFilled)
     .matches(PATTERNS.phone)
     .withMessage('Alternate phone must be a valid 10-digit Indian mobile number'),
   
@@ -95,14 +111,20 @@ const profileSubmissionRules = [
   
   // Identity Details
   body('identityDetails.aadhaar')
-    .optional({ checkFalsy: true })
-    .matches(PATTERNS.aadhaar)
-    .withMessage('Aadhaar must be a valid 12-digit number'),
+    .optional(optionalFilled)
+    .custom(rejectWhen(aadhaarError)),
+
+  body('identityDetails.aadhaarNumber')
+    .optional(optionalFilled)
+    .custom(rejectWhen(aadhaarError)),
   
   body('identityDetails.pan')
-    .optional({ checkFalsy: true })
-    .matches(PATTERNS.pan)
-    .withMessage('PAN must be in format: ABCDE1234F (e.g. ABCDE1234F)'),
+    .optional(optionalFilled)
+    .custom(rejectWhen(panError)),
+
+  body('identityDetails.panCardNumber')
+    .optional(optionalFilled)
+    .custom(rejectWhen(panError)),
   
   body('identityDetails.bankName')
     .optional({ checkFalsy: true })
@@ -111,16 +133,16 @@ const profileSubmissionRules = [
     .withMessage('Bank name must be between 2 and 100 characters'),
   
   body('identityDetails.bankAccountNumber')
-    .optional({ checkFalsy: true })
-    .trim()
-    .isLength({ min: 9, max: 18 })
-    .isNumeric()
-    .withMessage('Bank account number must be between 9 and 18 digits'),
+    .optional(optionalFilled)
+    .custom(rejectWhen(accountNumberError)),
+
+  body('identityDetails.accountNumber')
+    .optional(optionalFilled)
+    .custom(rejectWhen(accountNumberError)),
   
   body('identityDetails.ifscCode')
-    .optional({ checkFalsy: true })
-    .matches(PATTERNS.ifsc)
-    .withMessage('IFSC code must be in format: ABCD0123456 (e.g. SBIN0123456)'),
+    .optional(optionalFilled)
+    .custom(rejectWhen(ifscError)),
   
   body('identityDetails.uanNumber')
     .optional({ checkFalsy: true })

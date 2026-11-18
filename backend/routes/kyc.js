@@ -29,7 +29,7 @@ router.get('/my-documents', authenticateToken, ctrl.getMyDocuments);
 // POST /api/kyc/upload
 // Content-Type: multipart/form-data
 // Fields:
-//   file         — the file (PDF / JPEG / PNG, max 2 MB)
+//   file         — the file (PDF / JPEG / PNG, max 5 MB)
 //   documentType — one of the VALID_TYPES keys (e.g. "aadhaar", "pan", ...)
 router.post(
     '/upload',
@@ -54,5 +54,8 @@ router.post('/admin/verify/:docId', authenticateToken, isAdminOrHr, ctrl.verifyD
 
 // Reject a document (requires a reason in the body)
 router.post('/admin/reject/:docId', authenticateToken, isAdminOrHr, ctrl.rejectDocument);
+
+// Delete the current uploaded file for a document type
+router.delete('/admin/:docId', authenticateToken, isAdminOrHr, ctrl.deleteDocument);
 
 module.exports = router;

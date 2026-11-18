@@ -3,7 +3,7 @@
 // Embedded as a sub-section inside the existing Employee Documents tab.
 import { useEffect, useState, useCallback } from 'react';
 import {
-    Box, Typography, Chip, CircularProgress, Stack, Table, TableBody,
+    Box, Typography, Chip, CircularProgress, Stack, Grid, Table, TableBody,
     TableCell, TableContainer, TableHead, TableRow, Button, IconButton,
     Tooltip, Dialog, DialogTitle, DialogContent, DialogActions,
     TextField, MenuItem, Select, FormControl, InputLabel,
@@ -16,8 +16,9 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import HourglassEmptyOutlinedIcon from '@mui/icons-material/HourglassEmptyOutlined';
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import api from '../../api/axios';
-import { RED, TEXT, MUTED, BORDER, cardSx, sectionTitleSx } from './adminEmployeeTheme';
+import { RED, TEXT, MUTED, BORDER, profileCardSx, iconWellSx } from './adminEmployeeTheme';
 
 // ─── Document type catalogue (mirrors backend) ────────────────────────────────
 const KYC_TYPES = [
@@ -156,11 +157,12 @@ const RejectDialog = ({ open, onClose, onConfirm, loading }) => {
 };
 
 // ─── Main panel ───────────────────────────────────────────────────────────────
-const AdminEmployeeKycPanel = ({ employeeId }) => {
+const AdminEmployeeKycPanel = ({ employeeId, flush = false }) => {
     const [rows, setRows] = useState([]); // array of { key, label, isOptional, document | null }
     const [loading, setLoading] = useState(false);
     const [actionLoading, setActionLoading] = useState(null); // docId | null
     const [rejectTarget, setRejectTarget] = useState(null);   // { docId } | null
+    const [deleteTarget, setDeleteTarget] = useState(null);   // { docId, label } | null
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterType, setFilterType] = useState('all');
     const [snack, setSnack] = useState({ open: false, msg: '', isError: false });
@@ -231,6 +233,22 @@ const AdminEmployeeKycPanel = ({ employeeId }) => {
         }
     };
 
+    const handleDeleteConfirm = async () => {
+        if (!deleteTarget) return;
+        const { docId } = deleteTarget;
+        setActionLoading(docId);
+        try {
+            await api.delete(`/kyc/admin/${docId}`);
+            showSnack('Document deleted.');
+            setDeleteTarget(null);
+            load();
+        } catch (e) {
+            showSnack(e.response?.data?.error || 'Delete failed.', true);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
     const handleRejectConfirm = async (reason) => {
         if (!rejectTarget) return;
         const { docId } = rejectTarget;
@@ -274,11 +292,16 @@ const AdminEmployeeKycPanel = ({ employeeId }) => {
         return acc;
     }, {});
 
+    const panelSx = {
+        ...profileCardSx,
+        mt: flush ? 0 : 2,
+    };
+
     if (loading) {
         return (
-            <Box sx={{ ...cardSx, borderLeft: `3px solid #6366f1`, mt: 2.5 }}>
+            <Box sx={panelSx}>
                 <Box sx={{ display: 'flex', justifyContent: 'center', py: 5 }}>
-                    <CircularProgress size={26} sx={{ color: '#6366f1' }} />
+                    <CircularProgress size={26} sx={{ color: RED }} />
                 </Box>
             </Box>
         );
@@ -286,52 +309,58 @@ const AdminEmployeeKycPanel = ({ employeeId }) => {
 
     return (
         <>
-            <Box sx={{ ...cardSx, borderLeft: '3px solid #6366f1', mt: 2.5 }}>
-                {/* ── Header ── */}
-                <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-                    <FingerprintOutlinedIcon sx={{ fontSize: 20, color: '#6366f1' }} />
-                    <Box sx={{ flex: 1 }}>
-                        <Typography sx={{ ...sectionTitleSx, mb: 0 }}>KYC Documents</Typography>
-                        <Typography variant="caption" sx={{ color: MUTED }}>
+            <Box sx={panelSx}>
+                <Stack direction="row" alignItems="center" spacing={1.25} sx={{ mb: 2 }}>
+                    <Box sx={iconWellSx('#EEF2FF', '#4338CA')}>
+                        <FingerprintOutlinedIcon sx={{ fontSize: 18 }} />
+                    </Box>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography sx={{ fontWeight: 700, fontSize: '0.95rem', color: TEXT, letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+                            KYC Documents
+                        </Typography>
+                        <Typography sx={{ color: MUTED, fontSize: '0.75rem', mt: 0.25 }}>
                             {rows.length} document types · {counts.verified || 0} verified · {counts.pending_review || 0} pending
                         </Typography>
                     </Box>
                 </Stack>
 
-                {/* ── Summary pills ── */}
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ mb: 2 }}>
+                <Grid container spacing={1.25} sx={{ mb: 2 }}>
                     {['verified', 'pending_review', 'rejected', 'not_uploaded'].map((s) => {
                         const cfg = statusConfig[s];
                         const count = counts[s] || 0;
-                        if (count === 0) return null;
                         return (
-                            <Chip
-                                key={s}
-                                size="small"
-                                icon={cfg.icon}
-                                label={`${cfg.label}: ${count}`}
-                                sx={{
-                                    background: cfg.bg,
-                                    color: cfg.color,
-                                    fontWeight: 600,
-                                    fontSize: '0.72rem',
-                                    border: `1px solid ${cfg.border}`,
-                                    '& .MuiChip-icon': { color: 'inherit' },
-                                }}
-                            />
+                            <Grid key={s} size={{ xs: 6, sm: 3 }}>
+                                <Box
+                                    sx={{
+                                        px: 1.5,
+                                        py: 1.25,
+                                        borderRadius: '12px',
+                                        background: cfg.bg,
+                                        border: `1px solid ${cfg.border}`,
+                                        height: '100%',
+                                    }}
+                                >
+                                    <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: cfg.color }}>
+                                        {cfg.label}
+                                    </Typography>
+                                    <Typography sx={{ fontSize: '1.35rem', fontWeight: 800, color: cfg.color, lineHeight: 1.15, mt: 0.4, letterSpacing: '-0.03em' }}>
+                                        {count}
+                                    </Typography>
+                                </Box>
+                            </Grid>
                         );
                     })}
-                </Stack>
+                </Grid>
 
                 {/* ── Filters ── */}
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 2 }}>
                     <FormControl size="small" sx={{ minWidth: 160 }}>
-                        <InputLabel sx={{ '&.Mui-focused': { color: '#6366f1' } }}>Status</InputLabel>
+                        <InputLabel sx={{ '&.Mui-focused': { color: RED } }}>Status</InputLabel>
                         <Select
                             value={filterStatus}
                             label="Status"
                             onChange={(e) => setFilterStatus(e.target.value)}
-                            sx={{ borderRadius: 2, '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6366f1' } }}
+                            sx={{ borderRadius: '10px', bgcolor: '#fff', '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: RED } }}
                         >
                             <MenuItem value="all">All Statuses</MenuItem>
                             <MenuItem value="pending_review">Pending Review</MenuItem>
@@ -342,12 +371,12 @@ const AdminEmployeeKycPanel = ({ employeeId }) => {
                     </FormControl>
 
                     <FormControl size="small" sx={{ minWidth: 200 }}>
-                        <InputLabel sx={{ '&.Mui-focused': { color: '#6366f1' } }}>Document Type</InputLabel>
+                        <InputLabel sx={{ '&.Mui-focused': { color: RED } }}>Document Type</InputLabel>
                         <Select
                             value={filterType}
                             label="Document Type"
                             onChange={(e) => setFilterType(e.target.value)}
-                            sx={{ borderRadius: 2, '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#6366f1' } }}
+                            sx={{ borderRadius: '10px', bgcolor: '#fff', '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: RED } }}
                         >
                             <MenuItem value="all">All Types</MenuItem>
                             {KYC_TYPES.map((t) => (
@@ -359,30 +388,34 @@ const AdminEmployeeKycPanel = ({ employeeId }) => {
 
                 {/* ── Table ── */}
                 {filteredRows.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 5, bgcolor: '#f9fafb', borderRadius: 2 }}>
-                        <FingerprintOutlinedIcon sx={{ fontSize: 40, color: '#d1d5db', mb: 1 }} />
-                        <Typography variant="body2" sx={{ color: MUTED }}>
+                    <Box sx={{ textAlign: 'center', py: 5, borderRadius: '14px', border: '1px dashed #E4E7EC', bgcolor: '#FAFBFC' }}>
+                        <FingerprintOutlinedIcon sx={{ fontSize: 36, color: '#D0D5DD', mb: 1 }} />
+                        <Typography sx={{ color: TEXT, fontWeight: 700, fontSize: '0.9rem' }}>
+                            {rows.length === 0 ? 'Nothing uploaded yet' : 'No matches'}
+                        </Typography>
+                        <Typography sx={{ color: MUTED, fontSize: '0.8rem', mt: 0.4 }}>
                             {rows.length === 0
-                                ? 'No KYC documents have been uploaded yet.'
+                                ? 'Uploaded identity documents will appear in this list.'
                                 : 'No documents match the selected filters.'}
                         </Typography>
                     </Box>
                 ) : (
-                    <TableContainer sx={{ border: `1px solid ${BORDER}`, borderRadius: 2 }}>
+                    <TableContainer sx={{ border: `1px solid ${BORDER}`, borderRadius: '14px', overflow: 'hidden' }}>
                         <Table size="small">
                             <TableHead>
-                                <TableRow sx={{ background: '#f8fafc' }}>
+                                <TableRow sx={{ background: '#F8F9FB' }}>
                                     {['Document', 'Required', 'Uploaded', 'Size', 'Status', 'Verified By', 'Actions'].map((col) => (
                                         <TableCell
                                             key={col}
                                             sx={{
-                                                fontWeight: 600,
-                                                fontSize: '0.72rem',
-                                                color: '#64748b',
+                                                fontWeight: 700,
+                                                fontSize: '0.68rem',
+                                                color: '#667085',
                                                 textTransform: 'uppercase',
-                                                letterSpacing: '0.04em',
-                                                py: 1.25,
+                                                letterSpacing: '0.06em',
+                                                py: 1.4,
                                                 whiteSpace: 'nowrap',
+                                                borderBottom: `1px solid ${BORDER}`,
                                             }}
                                         >
                                             {col}
@@ -397,22 +430,47 @@ const AdminEmployeeKycPanel = ({ employeeId }) => {
                                     const isActing = actionLoading === doc?._id;
 
                                     return (
-                                        <TableRow key={row.key} hover>
-                                            {/* Document type */}
+                                        <TableRow
+                                            key={row.key}
+                                            hover
+                                            sx={{
+                                                '&:last-child td': { borderBottom: 0 },
+                                                '& td': { py: 1.35, borderColor: '#F0F2F5' },
+                                            }}
+                                        >
                                             <TableCell>
-                                                <Typography variant="body2" sx={{ fontWeight: 600, color: TEXT, whiteSpace: 'nowrap' }}>
-                                                    {row.label}
-                                                </Typography>
-                                                {doc?.originalFileName && (
-                                                    <Typography variant="caption" sx={{ color: '#94a3b8', display: 'block' }}>
-                                                        {doc.originalFileName}
-                                                    </Typography>
-                                                )}
-                                                {doc?.status === 'rejected' && doc?.rejectionReason && (
-                                                    <Typography variant="caption" sx={{ color: '#b91c1c', display: 'block', fontStyle: 'italic' }}>
-                                                        Reason: {doc.rejectionReason}
-                                                    </Typography>
-                                                )}
+                                                <Stack direction="row" spacing={1.25} alignItems="center">
+                                                    <Box
+                                                        sx={{
+                                                            width: 32,
+                                                            height: 32,
+                                                            borderRadius: '9px',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            flexShrink: 0,
+                                                            bgcolor: doc ? (statusConfig[docStatus]?.bg || '#F8F9FB') : '#F8F9FB',
+                                                            color: doc ? (statusConfig[docStatus]?.color || '#98A2B3') : '#98A2B3',
+                                                        }}
+                                                    >
+                                                        <UploadFileOutlinedIcon sx={{ fontSize: 16 }} />
+                                                    </Box>
+                                                    <Box sx={{ minWidth: 0 }}>
+                                                        <Typography sx={{ fontWeight: 700, fontSize: '0.84rem', color: TEXT, letterSpacing: '-0.01em', whiteSpace: 'nowrap' }}>
+                                                            {row.label}
+                                                        </Typography>
+                                                        {doc?.originalFileName && (
+                                                            <Typography variant="caption" sx={{ color: '#98A2B3', display: 'block' }}>
+                                                                {doc.originalFileName}
+                                                            </Typography>
+                                                        )}
+                                                        {doc?.status === 'rejected' && doc?.rejectionReason && (
+                                                            <Typography variant="caption" sx={{ color: '#b91c1c', display: 'block' }}>
+                                                                {doc.rejectionReason}
+                                                            </Typography>
+                                                        )}
+                                                    </Box>
+                                                </Stack>
                                             </TableCell>
 
                                             {/* Required / Either / Optional */}
@@ -474,10 +532,10 @@ const AdminEmployeeKycPanel = ({ employeeId }) => {
                                                                     size="small"
                                                                     onClick={() => handleView(doc._id)}
                                                                     disabled={isActing}
-                                                                    sx={{ color: '#6366f1' }}
+                                                                    sx={{ color: '#4338CA', bgcolor: '#EEF2FF', '&:hover': { bgcolor: '#E0E7FF' } }}
                                                                 >
                                                                     {isActing ? (
-                                                                        <CircularProgress size={14} sx={{ color: '#6366f1' }} />
+                                                                        <CircularProgress size={14} sx={{ color: '#4338CA' }} />
                                                                     ) : (
                                                                         <VisibilityOutlinedIcon fontSize="small" />
                                                                     )}
@@ -516,6 +574,21 @@ const AdminEmployeeKycPanel = ({ employeeId }) => {
                                                         </Tooltip>
                                                     )}
 
+                                                    {doc && (
+                                                        <Tooltip title="Delete document">
+                                                            <span>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    onClick={() => setDeleteTarget({ docId: doc._id, label: row.label })}
+                                                                    disabled={isActing}
+                                                                    sx={{ color: '#b91c1c' }}
+                                                                >
+                                                                    <DeleteOutlineIcon fontSize="small" />
+                                                                </IconButton>
+                                                            </span>
+                                                        </Tooltip>
+                                                    )}
+
                                                     {doc && docStatus !== 'rejected' && (
                                                         <Tooltip title="Reject document">
                                                             <span>
@@ -532,9 +605,18 @@ const AdminEmployeeKycPanel = ({ employeeId }) => {
                                                     )}
 
                                                     {!doc && (
-                                                        <Typography variant="caption" sx={{ color: '#94a3b8', pl: 0.5 }}>
-                                                            Awaiting upload
-                                                        </Typography>
+                                                        <Chip
+                                                            size="small"
+                                                            label="Awaiting upload"
+                                                            sx={{
+                                                                height: 24,
+                                                                fontSize: '0.7rem',
+                                                                fontWeight: 600,
+                                                                color: '#667085',
+                                                                bgcolor: '#F8F9FB',
+                                                                border: `1px solid ${BORDER}`,
+                                                            }}
+                                                        />
                                                     )}
                                                 </Stack>
                                             </TableCell>
@@ -555,6 +637,37 @@ const AdminEmployeeKycPanel = ({ employeeId }) => {
                     </Box>
                 )}
             </Box>
+
+            <Dialog
+                open={!!deleteTarget}
+                onClose={() => actionLoading !== deleteTarget?.docId && setDeleteTarget(null)}
+                maxWidth="xs"
+                fullWidth
+            >
+                <DialogTitle sx={{ fontWeight: 700, fontSize: '1rem' }}>Delete document</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body2" sx={{ color: TEXT }}>
+                        Delete the uploaded {deleteTarget?.label || 'document'}? The file is removed and this row goes back to not uploaded.
+                    </Typography>
+                </DialogContent>
+                <DialogActions sx={{ px: 3, pb: 2 }}>
+                    <Button
+                        onClick={() => setDeleteTarget(null)}
+                        disabled={actionLoading === deleteTarget?.docId}
+                        sx={{ textTransform: 'none' }}
+                    >
+                        Cancel
+                    </Button>
+                    <Button
+                        variant="contained"
+                        onClick={handleDeleteConfirm}
+                        disabled={actionLoading === deleteTarget?.docId}
+                        sx={{ textTransform: 'none', fontWeight: 700, background: '#b91c1c', boxShadow: 'none', '&:hover': { background: '#991b1b', boxShadow: 'none' } }}
+                    >
+                        {actionLoading === deleteTarget?.docId ? 'Deleting…' : 'Delete'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
 
             {/* Reject dialog */}
             <RejectDialog
