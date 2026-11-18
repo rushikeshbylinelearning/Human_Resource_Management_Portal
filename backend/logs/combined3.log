@@ -210188,3 +210188,168 @@
   message: 'Request',
   timestamp: '2026-10-26 15:38:36'
 }
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/',
+  statusCode: 401,
+  duration: '3ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-26 16:24:02'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/analytics/late-grace-settings',
+  statusCode: 404,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-26 16:24:37'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/analytics/late-grace-settings',
+  statusCode: 404,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-26 16:24:37'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/analytics/late-grace-settings',
+  statusCode: 404,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-26 16:25:22'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/analytics/late-grace-settings',
+  statusCode: 404,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-10-26 16:25:22'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '4ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-11-18 16:16:42'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-11-18 16:16:42'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-11-18 16:31:15'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/analytics/late-grace-settings',
+  statusCode: 404,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-11-18 16:33:49'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/analytics/late-grace-settings',
+  statusCode: 404,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-11-18 16:33:49'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/attendance?startDate=2026-11-01&endDate=2026-11-18&page=1&limit=50',
+  statusCode: 200,
+  duration: '2524ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-11-18 16:34:46'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/active?_t=1794999885232',
+  statusCode: 200,
+  duration: '1173ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-11-18 16:34:46'
+}
+{
+  service: 'attendance-system',
+  method: 'GET',
+  url: '/admin/all?&_t=1794999885432',
+  statusCode: 200,
+  duration: '1027ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-11-18 16:34:46'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-11-18 16:55:14'
+}
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '0ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-11-18 16:55:39'
+}

@@ -2,7 +2,7 @@
 // Supports both AMS local tokens and SSO tokens (RS256)
 const jwt = require('jsonwebtoken');
 const jwtUtils = require('../utils/jwtUtils');
-const { normalizeEmail } = require('../utils/emailUtils');
+const { normalizeEmail, caseInsensitiveEmailClause } = require('../utils/emailUtils');
 
 // ─── SSO User Cache ───────────────────────────────────────────────────────────
 // A2 Hosting shared environments have slow MongoDB round-trips.
@@ -88,13 +88,16 @@ async function authenticateToken(req, res, next) {
 
             if (!cachedUser) {
                 const User = require('../models/User');
-                const dbUser = await User.findOne({
-                    isActive: true,
-                    $or: [
-                        { email: normalizedEmail },
-                        { email: rawLowerEmail }
-                    ]
-                }).select('_id email role').lean(); // select only needed fields
+                const emailMatches = [normalizedEmail, rawLowerEmail]
+                    .map((value) => caseInsensitiveEmailClause(value))
+                    .filter(Boolean)
+                    .map((clause) => ({ email: clause }));
+                const dbUser = emailMatches.length
+                    ? await User.findOne({
+                        isActive: true,
+                        $or: emailMatches
+                    }).select('_id email role').lean()
+                    : null; // select only needed fields
 
                 if (!dbUser) {
                     throw new Error('User not found for SSO token email: ' + normalizedEmail);

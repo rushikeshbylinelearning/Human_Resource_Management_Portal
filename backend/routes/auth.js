@@ -43,6 +43,7 @@ const { attachLeavesSectionFlag } = require('../utils/leavesSectionSetting');
 // until the module reference is confirmed safe to remove.
 // const { isNightShiftEmployee } = require('../utils/istTime');
 const rateLimit = require('express-rate-limit');
+const { caseInsensitiveEmailClause } = require('../utils/emailUtils');
 const {
     RefreshTokenReuseError,
     issueRefreshToken,
@@ -178,15 +179,14 @@ router.post('/login', validateLogin, loginGeofencingMiddleware, async (req, res)
         // ### START OF FIX ###
         // Support both exact email match and normalized email match for login
         // This handles cases where admin saved email with dots/aliases but user types without
-        const normalizedEmail = normalizeEmail(email);
-        
-        // Try to find user by exact email first, then by normalized email
-        // This supports both admin-saved emails (exact) and SSO-created emails (normalized)
+        // Letter case must not decide whether a login succeeds. Stored emails
+        // may be mixed case; match the address case-insensitively, and still
+        // allow an exact employee-code login.
+        const emailClause = caseInsensitiveEmailClause(email);
         let user = await User.findOne({
             $or: [
-                { email: email }, // Exact match (for admin-created users)
-                { email: normalizedEmail }, // Normalized match (for SSO-created users or Gmail variations)
-                { employeeCode: email } // Employee code match
+                ...(emailClause ? [{ email: emailClause }] : []),
+                { employeeCode: email }
             ]
         }).populate('shiftGroup');
 
@@ -401,15 +401,17 @@ router.get('/me', async (req, res) => {
                             if (process.env.NODE_ENV !== 'production') console.log('[/me] SSO email from token:', ssoEmail);
                             if (process.env.NODE_ENV !== 'production') console.log('[/me] Normalized email for lookup:', normalizedSsoEmail);
                             
-                            // Find AMS user by normalized OR exact raw lowercase email
-                            console.log('[/me] Looking up AMS user by normalized or raw email:', normalizedSsoEmail, rawLowerEmail);
-                            const amsUser = await User.findOne({ 
-                                isActive: true,
-                                $or: [
-                                    { email: normalizedSsoEmail },
-                                    { email: rawLowerEmail }
-                                ]
-                            }).lean();
+                            const ssoEmailMatches = [normalizedSsoEmail, rawLowerEmail]
+                                .map((value) => caseInsensitiveEmailClause(value))
+                                .filter(Boolean)
+                                .map((clause) => ({ email: clause }));
+                            console.log('[/me] Looking up AMS user by case-insensitive email');
+                            const amsUser = ssoEmailMatches.length
+                                ? await User.findOne({
+                                    isActive: true,
+                                    $or: ssoEmailMatches
+                                }).lean()
+                                : null;
                             
                             if (!amsUser) {
                                 if (process.env.NODE_ENV !== 'production') console.log('[/me] ❌ AMS user not found for normalized email:', normalizedSsoEmail);
@@ -907,23 +909,26 @@ router.post('/sso-consume', async (req, res) => {
         };
 
         // Find existing user in AMS by normalized OR exact raw lowercase email (prevent duplicate creation)
-        let user = await User.findOne({ 
-            isActive: true,
-            $or: [
-                { email: userEmail },            // normalized
-                { email: rawLowerEmail }         // exact as stored by admin
-            ]
-        }).populate('shiftGroup');
+        const ssoLookup = [userEmail, rawLowerEmail]
+            .map((value) => caseInsensitiveEmailClause(value))
+            .filter(Boolean)
+            .map((clause) => ({ email: clause }));
+
+        let user = ssoLookup.length
+            ? await User.findOne({
+                isActive: true,
+                $or: ssoLookup
+            }).populate('shiftGroup')
+            : null;
 
         if (!user) {
             // Check if user exists but is inactive (try both variants)
-            const inactiveUser = await User.findOne({ 
-                isActive: false,
-                $or: [
-                    { email: userEmail },
-                    { email: rawLowerEmail }
-                ]
-            });
+            const inactiveUser = ssoLookup.length
+                ? await User.findOne({
+                    isActive: false,
+                    $or: ssoLookup
+                })
+                : null;
             if (inactiveUser) {
                 if (process.env.NODE_ENV !== 'production') console.log(`[SSO-Consume] Found inactive user with normalized email: ${userEmail} - reactivating`);
                 if (process.env.NODE_ENV !== 'production') console.log(`[SSO-Consume] Original raw email was: ${rawEmail}`);

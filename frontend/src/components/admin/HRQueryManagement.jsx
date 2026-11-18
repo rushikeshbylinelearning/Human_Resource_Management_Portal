@@ -28,6 +28,7 @@ import PendingActionsIcon from '@mui/icons-material/PendingActions';
 import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import api from '../../api/axios';
+import socket from '../../socket';
 import {
     RED, RED_DARK, RED_BG, RED_LIGHT, TEXT, MUTED, BORDER, SURFACE,
     FONT, SUCCESS_BG, SUCCESS_TEXT, WARN_BG, WARN_TEXT, INFO_BG, INFO_TEXT,
@@ -78,6 +79,18 @@ const HRQueryManagement = () => {
     useEffect(() => {
         fetchQueries();
         fetchStats();
+    }, [filterStatus, filterCategory]);
+
+    // Keep admin HR Query panel in sync when new queries arrive
+    useEffect(() => {
+        const handleHrQueryCreated = () => {
+            fetchQueries();
+            fetchStats();
+        };
+        socket.on('hr_query_created', handleHrQueryCreated);
+        return () => {
+            socket.off('hr_query_created', handleHrQueryCreated);
+        };
     }, [filterStatus, filterCategory]);
 
     useEffect(() => {

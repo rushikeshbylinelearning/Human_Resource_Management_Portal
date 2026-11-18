@@ -81,6 +81,7 @@ const EmployeesPage = () => {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [profileDialog, setProfileDialog] = useState({ open: false, employee: null, mode: 'view' });
     const [linkGeneratorDialog, setLinkGeneratorDialog] = useState({ open: false, employee: null });
+    const [sharedLinkOpen, setSharedLinkOpen] = useState(false);
     const initialLoadRef = useRef(true);
     const searchDebounceRef = useRef(null);
     const allEmployeesRef = useRef([]);
@@ -621,6 +622,18 @@ const EmployeesPage = () => {
                     }
                 }}
             >
+                <MenuItem
+                    onClick={() => { handleMenuClose(); setSharedLinkOpen(true); }}
+                    sx={{
+                        py: 1.5,
+                        px: 2,
+                        '&:hover': {
+                            backgroundColor: 'rgba(211, 47, 47, 0.08)',
+                        }
+                    }}
+                >
+                    Create link for all employees
+                </MenuItem>
                 <MenuItem 
                     onClick={handleViewDeactivated}
                     sx={{
@@ -652,6 +665,13 @@ const EmployeesPage = () => {
                     employeeId={linkGeneratorDialog.employee?.employeeCode}
                     employeeName={linkGeneratorDialog.employee?.fullName}
                     onClose={() => setLinkGeneratorDialog({ open: false, employee: null })}
+                />
+            )}
+
+            {sharedLinkOpen && (
+                <PublicFormLinkGenerator
+                    mode="shared"
+                    onClose={() => setSharedLinkOpen(false)}
                 />
             )}
         </div>

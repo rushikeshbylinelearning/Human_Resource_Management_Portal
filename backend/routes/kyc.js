@@ -29,7 +29,7 @@ router.get('/my-documents', authenticateToken, ctrl.getMyDocuments);
 // POST /api/kyc/upload
 // Content-Type: multipart/form-data
 // Fields:
-//   file         — the file (PDF / JPEG / PNG, max 5 MB)
+//   file         — the file (PDF / JPEG / PNG, max 2 MB)
 //   documentType — one of the VALID_TYPES keys (e.g. "aadhaar", "pan", ...)
 router.post(
     '/upload',

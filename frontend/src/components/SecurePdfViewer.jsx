@@ -170,8 +170,10 @@ const SecurePdfViewer = ({ pdfUrl, policyName, role = 'employee', onClose }) => 
         setScale(prevScale => Math.max(prevScale - 0.2, 0.5));
     };
 
+    const canDownload = ['admin', 'hr'].includes(String(role || '').toLowerCase());
+
     const handleDownload = useCallback(() => {
-        if (role !== 'admin' || !downloadBuffer) return;
+        if (!canDownload || !downloadBuffer) return;
 
         const blob = new Blob([downloadBuffer], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
@@ -182,7 +184,7 @@ const SecurePdfViewer = ({ pdfUrl, policyName, role = 'employee', onClose }) => 
         link.click();
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
-    }, [downloadBuffer, policyName, role]);
+    }, [canDownload, downloadBuffer, policyName]);
 
     if (loading) {
         return (
@@ -263,8 +265,8 @@ const SecurePdfViewer = ({ pdfUrl, policyName, role = 'employee', onClose }) => 
                 </Stack>
 
                 <Stack direction="row" spacing={1}>
-                    {/* Download Button (Admin Only) */}
-                    {role === 'admin' && (
+                    {/* Download Button (Admin / HR) */}
+                    {canDownload && (
                         <IconButton onClick={handleDownload} size="small" title="Download PDF">
                             <DownloadIcon />
                         </IconButton>

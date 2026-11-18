@@ -31,25 +31,27 @@ const RED = '#C62828';
 const RED_LIGHT = '#FFEBEE';
 const RED_BORDER = 'rgba(198,40,40,0.18)';
 
-const PublicFormLinkGenerator = ({ employeeId, employeeName, onClose }) => {
+const PublicFormLinkGenerator = ({ employeeId, employeeName, onClose, mode = 'individual' }) => {
+  const isShared = mode === 'shared';
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [generatedLink, setGeneratedLink] = useState(null);
-  const [expiryHours, setExpiryHours] = useState(48);
+  const [expiryHours, setExpiryHours] = useState(isShared ? 168 : 48);
   const [allowMultipleSubmissions, setAllowMultipleSubmissions] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const handleGenerate = async () => {
+  const handleGenerate = async (forceNew = false) => {
     try {
       setLoading(true);
       setError(null);
       setSuccess(false);
-      const response = await axios.post('/admin/public-form/generate-link', {
-        employeeId,
-        expiryHours,
-        allowMultipleSubmissions,
-      });
+      const response = await axios.post(
+        isShared ? '/admin/public-form/generate-shared-link' : '/admin/public-form/generate-link',
+        isShared
+          ? { expiryHours, forceNew }
+          : { employeeId, expiryHours, allowMultipleSubmissions }
+      );
       if (response.data.success) {
         setGeneratedLink(response.data);
         setSuccess(true);
@@ -76,6 +78,7 @@ const PublicFormLinkGenerator = ({ employeeId, employeeName, onClose }) => {
         `Dear ${generatedLink.employee.fullName},\n\n` +
           `Please complete your employee profile by clicking the link below:\n\n` +
           `${generatedLink.url}\n\n` +
+          `The link is password protected. Sign in with your work email and account password. It updates only your employee record.\n\n` +
           `This link will expire on ${new Date(generatedLink.expiresAt).toLocaleString()}.\n\n` +
           `If you have any questions, please contact HR.\n\nBest regards,\nHR Team`
       );
@@ -120,7 +123,7 @@ const PublicFormLinkGenerator = ({ employeeId, employeeName, onClose }) => {
         }}
       >
         <Typography variant="h6" sx={{ fontWeight: 600, color: '#111827', fontSize: '16px' }}>
-          Generate Profile Form Link
+          {isShared ? 'Shared Profile Link' : 'Generate Profile Form Link'}
         </Typography>
         <IconButton size="small" onClick={onClose} sx={{ color: '#9CA3AF' }}>
           <CloseIcon fontSize="small" />
@@ -140,14 +143,25 @@ const PublicFormLinkGenerator = ({ employeeId, employeeName, onClose }) => {
                 py: 1.5,
               }}
             >
-              <Typography variant="body2" sx={{ color: '#4B5563', mb: 0.5 }}>
-                <Box component="span" sx={{ fontWeight: 600, color: '#111827' }}>Employee: </Box>
-                {employeeName}
-              </Typography>
-              <Typography variant="body2" sx={{ color: '#4B5563' }}>
-                <Box component="span" sx={{ fontWeight: 600, color: '#111827' }}>Employee ID: </Box>
-                {employeeId}
-              </Typography>
+              {isShared ? (
+                <Typography variant="body2" sx={{ color: '#4B5563' }}>
+                  One link for every employee. Each person signs in with their work email and password, and the form updates only that employee. The change shows on their profile and in the admin record.
+                </Typography>
+              ) : (
+                <>
+                  <Typography variant="body2" sx={{ color: '#4B5563', mb: 0.5 }}>
+                    <Box component="span" sx={{ fontWeight: 600, color: '#111827' }}>Employee: </Box>
+                    {employeeName}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#4B5563', mb: 0.5 }}>
+                    <Box component="span" sx={{ fontWeight: 600, color: '#111827' }}>Employee ID: </Box>
+                    {employeeId}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#4B5563' }}>
+                    The employee must sign in with their work email and password before the form opens.
+                  </Typography>
+                </>
+              )}
             </Box>
 
             {/* Expiry select */}
@@ -161,13 +175,14 @@ const PublicFormLinkGenerator = ({ employeeId, employeeName, onClose }) => {
                 sx={{ '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: RED } }}
               >
                 <MenuItem value={24}>24 hours</MenuItem>
-                <MenuItem value={48}>48 hours (Recommended)</MenuItem>
+                <MenuItem value={48}>{isShared ? '48 hours' : '48 hours (Recommended)'}</MenuItem>
                 <MenuItem value={72}>72 hours</MenuItem>
-                <MenuItem value={168}>7 days</MenuItem>
+                <MenuItem value={168}>{isShared ? '7 days (Recommended)' : '7 days'}</MenuItem>
               </Select>
             </FormControl>
 
             {/* Checkbox */}
+            {!isShared && (
             <FormControlLabel
               control={
                 <Checkbox
@@ -184,6 +199,7 @@ const PublicFormLinkGenerator = ({ employeeId, employeeName, onClose }) => {
                 </Typography>
               }
             />
+            )}
 
             {error && (
               <Alert severity="error" sx={{ borderRadius: '8px', fontSize: '13px' }}>
@@ -231,13 +247,22 @@ const PublicFormLinkGenerator = ({ employeeId, employeeName, onClose }) => {
                 py: 1.5,
               }}
             >
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.75 }}>
-                <Typography variant="body2" sx={{ color: '#6B7280', fontWeight: 500 }}>Employee</Typography>
-                <Typography variant="body2" sx={{ color: '#111827', fontWeight: 600 }}>
-                  {generatedLink?.employee?.fullName}
+              {!isShared && (
+                <>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.75 }}>
+                    <Typography variant="body2" sx={{ color: '#6B7280', fontWeight: 500 }}>Employee</Typography>
+                    <Typography variant="body2" sx={{ color: '#111827', fontWeight: 600 }}>
+                      {generatedLink?.employee?.fullName}
+                    </Typography>
+                  </Box>
+                  <Divider sx={{ my: 0.75 }} />
+                </>
+              )}
+              {isShared && (
+                <Typography variant="body2" sx={{ color: '#4B5563', mb: 1 }}>
+                  Anyone with an active account can open this link. Their email and password decide which record is updated.
                 </Typography>
-              </Box>
-              <Divider sx={{ my: 0.75 }} />
+              )}
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2" sx={{ color: '#6B7280', fontWeight: 500 }}>Expires</Typography>
                 <Typography variant="body2" sx={{ color: '#111827', fontWeight: 600 }}>
@@ -313,7 +338,7 @@ const PublicFormLinkGenerator = ({ employeeId, employeeName, onClose }) => {
               Cancel
             </Button>
             <Button
-              onClick={handleGenerate}
+              onClick={() => handleGenerate(false)}
               variant="contained"
               disabled={loading}
               startIcon={loading ? <CircularProgress size={14} color="inherit" /> : null}
@@ -331,6 +356,7 @@ const PublicFormLinkGenerator = ({ employeeId, employeeName, onClose }) => {
           </>
         ) : (
           <>
+            {!isShared && (
             <Button
               onClick={handleSendEmail}
               variant="outlined"
@@ -345,8 +371,9 @@ const PublicFormLinkGenerator = ({ employeeId, employeeName, onClose }) => {
             >
               Send via Email
             </Button>
+            )}
             <Button
-              onClick={handleReset}
+              onClick={() => handleGenerate(isShared)}
               variant="contained"
               startIcon={<RefreshIcon fontSize="small" />}
               sx={{

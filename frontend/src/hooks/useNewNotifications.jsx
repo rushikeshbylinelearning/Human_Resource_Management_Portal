@@ -139,7 +139,20 @@ export const NewNotificationProvider = ({ children }) => {
             return;
         }
 
-        const title = notification.category?.charAt(0).toUpperCase() + notification.category?.slice(1) || 'Notification';
+        const categoryTitles = {
+            hr_query: 'HR Query',
+            it_support: 'IT Request',
+            request: 'Request',
+            attendance: 'Attendance',
+            leave: 'Leave',
+            break: 'Break',
+            admin: 'Admin',
+            system: 'System',
+        };
+        const title = categoryTitles[notification.category]
+            || (notification.category
+                ? notification.category.charAt(0).toUpperCase() + notification.category.slice(1)
+                : 'Notification');
         showNotification(title, notification.message, { data: notification });
     }, [showNotification, user?.role, user?._id, user?.id]);
 

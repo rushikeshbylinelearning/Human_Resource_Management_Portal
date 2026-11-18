@@ -204,18 +204,18 @@ class NewNotificationService {
         }
     }
 
-    /** Notify Admin users and employees granted canManageHRQueries. */
+    /** Notify Admin/HR users and employees granted canManageHRQueries. */
     static async broadcastToHRQueryManagers(commonData, originatingUserId = null) {
         try {
             if (process.env.NODE_ENV !== 'production') {
                 console.log('[SVC] Broadcasting HR query notification:', commonData);
             }
 
+            // Match IT broadcast resilience: treat missing isActive as active.
             const managers = await User.find({
-                isActive: true,
+                isActive: { $ne: false },
                 $or: [
-                    { role: 'Admin' },
-                    { role: 'HR' },
+                    { role: { $in: ['Admin', 'HR'] } },
                     { 'featurePermissions.canManageHRQueries': true },
                 ],
             }).select('_id fullName').lean();
@@ -238,14 +238,21 @@ class NewNotificationService {
             };
 
             const notification = await this.createNotification(notificationData);
+            const payload = {
+                ...notification.toObject(),
+                userName: 'System',
+            };
 
-            const io = getIO();
+            let io = null;
+            try {
+                io = getIO();
+            } catch (socketError) {
+                console.error('[SVC] Socket not ready for HR query notification emit:', socketError.message);
+            }
+
             if (io) {
                 for (const manager of filteredManagers) {
-                    io.to(`user_${manager._id}`).emit('new_notification', {
-                        ...notification.toObject(),
-                        userName: 'System',
-                    });
+                    io.to(`user_${manager._id}`).emit('new_notification', payload);
                 }
             }
 

@@ -14,7 +14,7 @@ const profileSubmissionAuditSchema = new mongoose.Schema({
   },
   action: {
     type: String,
-    enum: ['PROFILE_SUBMITTED', 'PROFILE_UPDATED', 'TOKEN_GENERATED', 'TOKEN_EXPIRED', 'TOKEN_REUSED'],
+    enum: ['PROFILE_SUBMITTED', 'PROFILE_UPDATED', 'TOKEN_GENERATED', 'TOKEN_EXPIRED', 'TOKEN_REUSED', 'FORM_UNLOCKED'],
     required: true
   },
   source: {

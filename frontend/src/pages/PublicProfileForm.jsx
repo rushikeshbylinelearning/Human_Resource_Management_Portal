@@ -7,7 +7,14 @@ import { getApiOrigin } from '../utils/apiBaseUrl';
 
 // Plain axios — no auth interceptors
 const API_BASE_URL = getApiOrigin();
-const publicApi = axios.create({ baseURL: API_BASE_URL, withCredentials: false, headers: { 'Content-Type': 'application/json' } });
+const publicApi = axios.create({
+  baseURL: API_BASE_URL,
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest',
+  },
+});
 
 // ── Default state (flat field names matching the rest of the app) ──
 const DEFAULT_FORM = {
@@ -83,24 +90,32 @@ const PATTERNS = {
 const STEPS = ['Personal', 'Address', 'Emergency', 'Identity', 'Documents'];
 
 // ── KYC document types (mirrors backend catalogue) ────────────────────────────
+// Always required: Aadhaar, PAN, Educational Certificates.
+// Each orGroup needs one upload. Everything else is optional.
 const KYC_TYPES = [
-  { key: 'aadhaar',                 label: 'Aadhaar Card',                    isOptional: false },
-  { key: 'pan',                     label: 'PAN Card',                        isOptional: false },
-  { key: 'utility_bill',            label: 'Utility Bill',                    isOptional: false },
-  { key: 'rent_agreement',          label: 'Rent Agreement',                  isOptional: false },
-  { key: 'educational_certificate', label: 'Educational Certificates',        isOptional: false },
-  { key: 'salary_slip',             label: 'Salary Slips',                    isOptional: false },
-  { key: 'bank_statement',          label: 'Bank Statement',                  isOptional: false },
-  { key: 'bank_details',            label: 'Bank Details / Cancelled Cheque', isOptional: false },
-  { key: 'passport',                label: 'Passport',                        isOptional: true },
-  { key: 'driving_license',         label: "Driver's License",                isOptional: true },
-  { key: 'relieving_letter',        label: 'Relieving Letter',                isOptional: true },
-  { key: 'experience_letter',       label: 'Experience Letter',               isOptional: true },
+  { key: 'aadhaar',                 label: 'Aadhaar Card',             isOptional: false },
+  { key: 'pan',                     label: 'PAN Card',                 isOptional: false },
+  { key: 'educational_certificate', label: 'Educational Certificates', isOptional: false },
+  { key: 'utility_bill',            label: 'Utility Bill',             isOptional: false, orGroup: 'address_proof' },
+  { key: 'rent_agreement',          label: 'Rent Agreement',           isOptional: false, orGroup: 'address_proof' },
+  { key: 'salary_slip',             label: 'Salary Slips',             isOptional: false, orGroup: 'income_proof' },
+  { key: 'bank_statement',          label: 'Bank Statements',          isOptional: false, orGroup: 'income_proof' },
+  { key: 'bank_details',            label: 'Bank Details',             isOptional: false, orGroup: 'bank_proof' },
+  { key: 'cancelled_cheque',        label: 'Cancelled Cheque',         isOptional: false, orGroup: 'bank_proof' },
+  { key: 'passport',                label: 'Passport',                 isOptional: true },
+  { key: 'driving_license',         label: "Driver's License",         isOptional: true },
+  { key: 'relieving_letter',        label: 'Relieving Letter',         isOptional: true },
+  { key: 'experience_letter',       label: 'Experience Letter',        isOptional: true },
 ];
 
-const KYC_REQUIRED_KEYS = KYC_TYPES.filter(t => !t.isOptional).map(t => t.key);
+const KYC_OR_GROUPS = [
+  { id: 'address_proof', label: 'Utility Bill or Rent Agreement' },
+  { id: 'income_proof',  label: 'Salary Slips or Bank Statements' },
+  { id: 'bank_proof',    label: 'Bank Details or Cancelled Cheque' },
+];
+
 const KYC_ALLOWED_EXTENSIONS = ['.pdf', '.jpg', '.jpeg', '.png'];
-const KYC_MAX_SIZE = 5 * 1024 * 1024;
+const KYC_MAX_SIZE = 2 * 1024 * 1024;
 
 function kycGetExt(filename = '') {
   const idx = filename.lastIndexOf('.');
@@ -139,7 +154,7 @@ const KycRow = ({ typeMeta, document: doc, token, onUploaded }) => {
       return;
     }
     if (file.size > KYC_MAX_SIZE) {
-      setError('File exceeds 5 MB limit.');
+      setError('File exceeds 2 MB limit.');
       return;
     }
     if (file.size === 0) {
@@ -183,8 +198,10 @@ const KycRow = ({ typeMeta, document: doc, token, onUploaded }) => {
         };
         xhr.onerror = () => reject(new Error('Network error during upload. Check your connection and try again.'));
         xhr.ontimeout = () => reject(new Error('Upload timed out. Please try again on a faster connection.'));
-        xhr.timeout = 2 * 60 * 1000; // 2 minutes — well above what a 5MB upload to our own server needs
+        xhr.timeout = 2 * 60 * 1000; // 2 minutes — well above what a 2MB upload to our own server needs
         xhr.open('POST', `/api/public/kyc/upload?token=${encodeURIComponent(token)}`);
+        xhr.withCredentials = true;
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
         // No manual Content-Type header — the browser sets the correct
         // multipart/form-data boundary automatically for FormData bodies.
         xhr.send(form);
@@ -214,6 +231,9 @@ const KycRow = ({ typeMeta, document: doc, token, onUploaded }) => {
           {typeMeta.label}
           {typeMeta.isOptional && (
             <span className="pf-label-optional" style={{ marginLeft: 6 }}>Optional</span>
+          )}
+          {typeMeta.orGroup && (
+            <span className="pf-label-optional" style={{ marginLeft: 6 }}>Either</span>
           )}
         </span>
         <span className={`kyc-status ${statusMeta.className}`}>{statusMeta.label}</span>
@@ -309,6 +329,12 @@ const PublicProfileForm = () => {
   const [error, setError]           = useState(null);
   const [success, setSuccess]       = useState(false);
   const [employee, setEmployee]     = useState(null);
+  const [needsAuth, setNeedsAuth]   = useState(false);
+  const [linkType, setLinkType]     = useState('individual');
+  const [authEmail, setAuthEmail]   = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authError, setAuthError]   = useState('');
+  const [authSubmitting, setAuthSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [validationErrors, setValidationErrors] = useState({});
   const [formData, setFormData]     = useState(DEFAULT_FORM);
@@ -323,7 +349,13 @@ const PublicProfileForm = () => {
     if (!token) { setError('Invalid or missing link.'); setLoading(false); return; }
     publicApi.get('/api/public/validate', { params: { token } })
       .then(({ data }) => {
-        if (data.success) {
+        if (data.requiresAuth) {
+          setNeedsAuth(true);
+          setLinkType(data.linkType || 'individual');
+          return;
+        }
+        if (data.success && data.employee) {
+          setNeedsAuth(false);
           setEmployee(data.employee);
           setFormData(buildFormFromEmployee(data.employee));
         }
@@ -337,16 +369,18 @@ const PublicProfileForm = () => {
       .finally(() => setLoading(false));
   }, [token]);
 
-  useEffect(() => {
-    if (!token || !employee) return;
-    const id = setTimeout(() => localStorage.setItem(`pf_${token}`, JSON.stringify(formData)), 800);
-    return () => clearTimeout(id);
-  }, [formData, token, employee]);
+  const draftKey = employee?._id ? `pf_draft_${employee._id}` : null;
 
   useEffect(() => {
-    if (!token || !employee) return;
+    if (!draftKey || !employee) return;
+    const id = setTimeout(() => localStorage.setItem(draftKey, JSON.stringify(formData)), 800);
+    return () => clearTimeout(id);
+  }, [formData, draftKey, employee]);
+
+  useEffect(() => {
+    if (!draftKey || !employee) return;
     try {
-      const saved = localStorage.getItem(`pf_${token}`);
+      const saved = localStorage.getItem(draftKey);
       if (saved) {
         const p = JSON.parse(saved);
         setFormData({
@@ -355,7 +389,7 @@ const PublicProfileForm = () => {
         });
       }
     } catch (_) {}
-  }, [token, employee]);
+  }, [draftKey, employee]);
 
   // Load existing KYC documents when step 5 is first reached
   useEffect(() => {
@@ -423,9 +457,16 @@ const PublicProfileForm = () => {
 
   const validateKycStep = () => {
     const errs = {};
-    for (const key of KYC_REQUIRED_KEYS) {
-      if (!kycDocMap[key]) {
-        errs[key] = 'This document is required before submitting.';
+    for (const typeMeta of KYC_TYPES) {
+      if (typeMeta.isOptional || typeMeta.orGroup) continue;
+      if (!kycDocMap[typeMeta.key]) {
+        errs[typeMeta.key] = 'This document is required before submitting.';
+      }
+    }
+    for (const group of KYC_OR_GROUPS) {
+      const hasOne = KYC_TYPES.some((t) => t.orGroup === group.id && kycDocMap[t.key]);
+      if (!hasOne) {
+        errs[group.id] = `Upload at least one: ${group.label}.`;
       }
     }
     setKycStepErrors(errs);
@@ -448,10 +489,16 @@ const PublicProfileForm = () => {
       });
       if (data.success) {
         setSuccess(true);
-        localStorage.removeItem(`pf_${token}`);
+        if (employee?._id) localStorage.removeItem(`pf_draft_${employee._id}`);
       }
     } catch (err) {
       const d = err.response?.data || {};
+      if (d.requiresAuth || err.response?.status === 401) {
+        setNeedsAuth(true);
+        setEmployee(null);
+        setAuthError('Your sign-in expired. Please enter your email and password again.');
+        return;
+      }
       if (d.errors) {
         setValidationErrors(d.errors);
         setError(Object.values(d.errors).flat().join(' • '));
@@ -464,6 +511,31 @@ const PublicProfileForm = () => {
   };
 
 
+  const handleUnlock = async (e) => {
+    e.preventDefault();
+    setAuthError('');
+    setAuthSubmitting(true);
+    try {
+      const { data } = await publicApi.post('/api/public/unlock', {
+        token,
+        email: authEmail.trim(),
+        password: authPassword,
+      });
+      if (data.success && data.employee) {
+        setAuthPassword('');
+        setNeedsAuth(false);
+        setEmployee(data.employee);
+        setFormData(buildFormFromEmployee(data.employee));
+        setKycDocMap({});
+      }
+    } catch (err) {
+      const d = err.response?.data || {};
+      setAuthError(d.error || 'Sign-in failed. Please try again.');
+    } finally {
+      setAuthSubmitting(false);
+    }
+  };
+
   if (loading) return (
     <div className="pf-state-page">
       <div className="pf-state-card">
@@ -471,6 +543,55 @@ const PublicProfileForm = () => {
         <h2 className="pf-state-title">Validating your link…</h2>
         <p className="pf-state-body">Please wait while we verify your access.</p>
       </div>
+    </div>
+  );
+
+  if (needsAuth && !employee) return (
+    <div className="public-form-root">
+      <form className="pf-card pf-auth-card" onSubmit={handleUnlock}>
+        <div className="pf-header">
+          <div className="pf-header-top">
+            <div className="pf-header-text">
+              <h1>Sign in to continue</h1>
+              <p>
+                {linkType === 'shared'
+                  ? 'Use your work email and password. This form updates only your employee record.'
+                  : 'This link is protected. Sign in with the work email and password for this employee.'}
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="pf-auth-body">
+          {authError && <div className="pf-alert pf-alert--error" role="alert">{authError}</div>}
+          <label className="pf-label" htmlFor="pf-auth-email">Work email</label>
+          <input
+            id="pf-auth-email"
+            className="pf-input"
+            type="email"
+            autoComplete="username"
+            value={authEmail}
+            onChange={(e) => setAuthEmail(e.target.value)}
+            placeholder="name@company.com"
+            required
+            disabled={authSubmitting}
+          />
+          <label className="pf-label" htmlFor="pf-auth-password">Password</label>
+          <input
+            id="pf-auth-password"
+            className="pf-input"
+            type="password"
+            autoComplete="current-password"
+            value={authPassword}
+            onChange={(e) => setAuthPassword(e.target.value)}
+            placeholder="Your account password"
+            required
+            disabled={authSubmitting}
+          />
+          <button type="submit" className="pf-btn pf-btn--primary" disabled={authSubmitting}>
+            {authSubmitting ? 'Checking…' : 'Continue'}
+          </button>
+        </div>
+      </form>
     </div>
   );
 
@@ -685,7 +806,7 @@ const PublicProfileForm = () => {
             {currentStep === 5 && (
               <div className="pf-step-content">
                 <h3 className="pf-section-title">KYC &amp; Compliance Documents</h3>
-                <p className="pf-section-desc">Upload your identity and compliance documents. Files are stored securely and reviewed by HR.</p>
+                <p className="pf-section-desc">Upload your identity and compliance documents. Aadhaar, PAN, and educational certificates are required. For the pairs below, upload either document. Files are stored securely and reviewed by HR.</p>
 
                 <div className="pf-security-banner" style={{ marginBottom: 20 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -714,12 +835,12 @@ const PublicProfileForm = () => {
                         <polyline points="14 2 14 8 20 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                       Required &amp; Optional Documents
-                      <span className="kyc-badge-info">PDF, JPG, PNG · Max 5 MB</span>
+                      <span className="kyc-badge-info">PDF, JPG, PNG · Max 2 MB</span>
                     </div>
 
                     <div className="kyc-group-label">Required Documents</div>
                     <div className="kyc-list" role="list">
-                      {KYC_TYPES.filter(t => !t.isOptional).map((typeMeta) => (
+                      {KYC_TYPES.filter(t => !t.isOptional && !t.orGroup).map((typeMeta) => (
                         <div key={typeMeta.key}>
                           <KycRow
                             typeMeta={typeMeta}
@@ -738,6 +859,34 @@ const PublicProfileForm = () => {
                         </div>
                       ))}
                     </div>
+
+                    {KYC_OR_GROUPS.map((group) => (
+                      <div key={group.id} className="kyc-or-group">
+                        <div className="kyc-group-label">
+                          {group.label}
+                          <span className="kyc-optional-note">Upload either one</span>
+                        </div>
+                        <div className="kyc-list" role="list">
+                          {KYC_TYPES.filter(t => t.orGroup === group.id).map((typeMeta) => (
+                            <KycRow
+                              key={typeMeta.key}
+                              typeMeta={typeMeta}
+                              document={kycDocMap[typeMeta.key] || null}
+                              token={token}
+                              onUploaded={(key, doc) => {
+                                setKycDocMap(prev => ({ ...prev, [key]: doc }));
+                                setKycStepErrors(prev => { const n = { ...prev }; delete n[group.id]; return n; });
+                              }}
+                            />
+                          ))}
+                        </div>
+                        {kycStepErrors[group.id] && (
+                          <span className="pf-error-text" role="alert" style={{ display: 'block', marginTop: 8 }}>
+                            ⚠ {kycStepErrors[group.id]}
+                          </span>
+                        )}
+                      </div>
+                    ))}
 
                     <div className="kyc-group-label kyc-group-label--optional" style={{ marginTop: 24 }}>
                       Optional Documents

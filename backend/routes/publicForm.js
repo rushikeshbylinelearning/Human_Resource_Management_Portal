@@ -5,8 +5,7 @@ const rateLimit = require('express-rate-limit');
 const publicFormController = require('../controllers/publicFormController');
 const kycController        = require('../controllers/kycController');
 const uploadKycDocumentToR2 = require('../middleware/uploadKycDocumentToR2');
-const EmployeePublicToken  = require('../models/EmployeePublicToken');
-const User                 = require('../models/User');
+const publicFormService    = require('../services/publicFormService');
 const {
   profileSubmissionRules,
   validate,
@@ -37,37 +36,32 @@ const kycUploadLimiter = rateLimit(kycUploadLimiterConfig);
 // For the /kyc/upload route: pass the token as a query-string parameter
 //   POST /api/public/kyc/upload?token=<token>
 // (req.query is populated before any middleware touches the body stream.)
-const validatePublicFormToken = async (req, res, next) => {
+// The link token only identifies the form. The employee is taken from the
+// password session cookie, so a shared link cannot read or write anyone
+// except the person who signed in.
+const requireProfileFormSession = async (req, res, next) => {
   try {
-    // For multipart KYC uploads the token must be in the query string.
-    const token = req.query.token;
+    if (req.get('X-Requested-With') !== 'XMLHttpRequest') {
+      return res.status(403).json({ error: 'Request blocked.' });
+    }
+
+    const token = req.query.token || req.body?.token;
     if (!token) {
-      return res.status(401).json({ error: 'Token is required.' });
+      return res.status(401).json({ error: 'Sign in required.', requiresAuth: true });
     }
 
-    const tokenDoc = await EmployeePublicToken.findOne({ token });
-    if (!tokenDoc) {
-      return res.status(401).json({ error: 'Invalid token.' });
-    }
-    if (new Date() > tokenDoc.expiresAt) {
-      return res.status(401).json({ error: 'Token expired.', expired: true });
-    }
-    if (tokenDoc.isUsed && !tokenDoc.allowMultipleSubmissions) {
-      return res.status(401).json({ error: 'Token already used.', alreadyUsed: true });
+    const session = await publicFormService.employeeFromSession(req.cookies?.pf_session, token);
+    if (!session) {
+      return res.status(401).json({ error: 'Sign in required.', requiresAuth: true });
     }
 
-    // Resolve employee — tokenDoc.employeeId stores the employeeCode string
-    const employee = await User.findOne({ employeeCode: tokenDoc.employeeId }).select('_id').lean();
-    if (!employee) {
-      return res.status(401).json({ error: 'Employee not found.' });
-    }
-
-    // Attach the MongoDB ObjectId so KYC controller can use it directly
-    req.employeeId = employee._id.toString();
+    req.profileEmployee = session.employee;
+    req.profileTokenDoc = session.tokenDoc;
+    req.employeeId = session.employee._id.toString();
     next();
   } catch (err) {
-    console.error('[PublicFormToken] Middleware error:', err);
-    res.status(500).json({ error: 'Token validation failed.' });
+    console.error('[PublicFormSession] Middleware error:', err);
+    res.status(500).json({ error: 'Sign-in check failed.' });
   }
 };
 
@@ -80,12 +74,27 @@ const validatePublicFormToken = async (req, res, next) => {
 router.get('/validate', validateLimiter, publicFormController.validateToken);
 
 /**
+ * Sign in with the employee's work email and password.
+ * POST /api/public/unlock
+ */
+const unlockLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Too many attempts. Please try again later.' },
+});
+
+router.post('/unlock', unlockLimiter, publicFormController.unlock);
+
+/**
  * Submit profile data
  * POST /api/public/submit
  */
 router.post(
   '/submit',
   publicLimiter,
+  requireProfileFormSession,
   sanitizeProfileData,
   profileSubmissionRules,
   validate,
@@ -98,7 +107,7 @@ router.post(
  * Get current KYC document statuses for the employee
  * GET /api/public/kyc/my-documents?token=xxx
  */
-router.get('/kyc/my-documents', kycUploadLimiter, validatePublicFormToken, kycController.publicGetMyDocuments);
+router.get('/kyc/my-documents', kycUploadLimiter, requireProfileFormSession, kycController.publicGetMyDocuments);
 
 // ── NEW: single-request proxy upload (public token / onboarding form) ─────────
 /**
@@ -107,7 +116,7 @@ router.get('/kyc/my-documents', kycUploadLimiter, validatePublicFormToken, kycCo
  * POST /api/public/kyc/upload?token=<token>
  * Content-Type: multipart/form-data
  * Fields:
- *   file         — the file (PDF / JPEG / PNG, max 5 MB)
+ *   file         — the file (PDF / JPEG / PNG, max 2 MB)
  *   documentType — one of the VALID_TYPES keys
  *
  * The token MUST be supplied as a query parameter, not a form field, because
@@ -116,7 +125,7 @@ router.get('/kyc/my-documents', kycUploadLimiter, validatePublicFormToken, kycCo
 router.post(
   '/kyc/upload',
   kycUploadLimiter,
-  validatePublicFormToken,
+  requireProfileFormSession,
   uploadKycDocumentToR2({ context: 'public' }),
     kycController.publicUploadDocument
 );

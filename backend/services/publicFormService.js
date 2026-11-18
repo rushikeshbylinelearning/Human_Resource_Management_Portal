@@ -1,8 +1,27 @@
 // backend/services/publicFormService.js
 const crypto = require('crypto');
+const bcrypt = require('bcrypt');
 const User = require('../models/User');
 const EmployeePublicToken = require('../models/EmployeePublicToken');
 const ProfileSubmissionAudit = require('../models/ProfileSubmissionAudit');
+const ProfileFormSession = require('../models/ProfileFormSession');
+const { caseInsensitiveEmailClause } = require('../utils/emailUtils');
+
+const SESSION_TTL_MS = 2 * 60 * 60 * 1000;
+const UNLOCK_MAX_FAILURES = 8;
+const UNLOCK_WINDOW_MS = 15 * 60 * 1000;
+const unlockFailures = new Map();
+
+function sha256(value) {
+  return crypto.createHash('sha256').update(String(value)).digest('hex');
+}
+
+function isSharedLink(tokenDoc) {
+  return tokenDoc?.linkType === 'shared';
+}
+
+// Computed once so a missing account takes about as long as a real password check.
+const dummyPasswordHash = bcrypt.hashSync('public-form-timing-pad', 10);
 
 class PublicFormService {
   /**
@@ -164,16 +183,35 @@ class PublicFormService {
   }
 
   /**
-   * Submit profile data
+   * Submit profile data for the employee who unlocked this link.
+   * authorizedEmployee must come from the password session, never from the client.
    */
-  async submitProfile(token, profileData, metadata = {}) {
+  async submitProfile(token, profileData, metadata = {}, authorizedEmployee = null) {
     try {
-      const validation = await this.validateToken(token);
-      if (!validation.valid) {
-        return { success: false, error: validation.error };
+      if (!authorizedEmployee?._id) {
+        return { success: false, error: 'Sign in required.', requiresAuth: true };
       }
 
-      const { employee } = validation;
+      const tokenDoc = await EmployeePublicToken.findOne({ token });
+      if (!tokenDoc) {
+        return { success: false, error: 'Invalid token' };
+      }
+      if (new Date() > tokenDoc.expiresAt) {
+        return { success: false, error: 'Token expired' };
+      }
+
+      const shared = isSharedLink(tokenDoc);
+      if (!shared && tokenDoc.isUsed && !tokenDoc.allowMultipleSubmissions) {
+        return { success: false, error: 'Token already used' };
+      }
+      if (shared && tokenDoc.isUsed) {
+        return { success: false, error: 'This link is no longer active' };
+      }
+      if (!shared && authorizedEmployee.employeeCode !== tokenDoc.employeeId) {
+        return { success: false, error: 'Sign in required.', requiresAuth: true };
+      }
+
+      const employee = authorizedEmployee;
       const pd = profileData.personalDetails || {};
       const id = profileData.identityDetails || {};
 
@@ -245,10 +283,14 @@ class PublicFormService {
         { new: true }
       );
 
-      // Mark token as used
-      const tokenDoc = await EmployeePublicToken.findOneAndUpdate(
+      // A shared link stays open for every employee. An individual link
+      // is marked used; allowMultipleSubmissions still permits another submit.
+      const tokenUpdate = shared
+        ? { $inc: { submissionCount: 1 } }
+        : { $set: { isUsed: true, usedAt: new Date() }, $inc: { submissionCount: 1 } };
+      const updatedToken = await EmployeePublicToken.findOneAndUpdate(
         { token },
-        { $set: { isUsed: true, usedAt: new Date() }, $inc: { submissionCount: 1 } },
+        tokenUpdate,
         { new: true }
       );
 
@@ -256,7 +298,7 @@ class PublicFormService {
       await ProfileSubmissionAudit.create({
         employeeId: employee.employeeCode,
         userId: employee._id,
-        action: tokenDoc.submissionCount > 1 ? 'PROFILE_UPDATED' : 'PROFILE_SUBMITTED',
+        action: updatedToken.submissionCount > 1 ? 'PROFILE_UPDATED' : 'PROFILE_SUBMITTED',
         source: 'PUBLIC_FORM',
         token,
         ipAddress: metadata.ipAddress,
@@ -411,6 +453,221 @@ class PublicFormService {
       console.error('Decryption error:', error);
       return encryptedData;
     }
+  }
+
+  presentEmployee(employee) {
+    return {
+      _id: employee._id,
+      employeeCode: employee.employeeCode,
+      fullName: employee.fullName,
+      email: employee.email,
+      department: employee.department,
+      designation: employee.designation,
+      joiningDate: employee.joiningDate,
+      role: employee.role,
+      personalDetails: employee.personalDetails || {},
+      identityDetails: employee.identityDetails || {},
+    };
+  }
+
+  /**
+   * Check a link without returning any employee record.
+   */
+  async inspectLink(token) {
+    const tokenDoc = await EmployeePublicToken.findOne({ token });
+    if (!tokenDoc) return { ok: false, error: 'Invalid token' };
+    if (new Date() > tokenDoc.expiresAt) {
+      return { ok: false, error: 'Token expired', expired: true };
+    }
+    const shared = isSharedLink(tokenDoc);
+    if (shared && tokenDoc.isUsed) {
+      return { ok: false, error: 'This link is no longer active' };
+    }
+    if (!shared && tokenDoc.isUsed && !tokenDoc.allowMultipleSubmissions) {
+      return {
+        ok: false,
+        error: 'Token already used',
+        alreadyUsed: true,
+        submittedAt: tokenDoc.usedAt,
+      };
+    }
+    return {
+      ok: true,
+      linkType: shared ? 'shared' : 'individual',
+      tokenInfo: {
+        expiresAt: tokenDoc.expiresAt,
+        allowMultipleSubmissions: shared ? true : tokenDoc.allowMultipleSubmissions,
+        submissionCount: tokenDoc.submissionCount,
+      },
+    };
+  }
+
+  failureBucket(email, ip) {
+    const key = sha256(`${String(email || '').trim().toLowerCase()}|${ip || ''}`);
+    const now = Date.now();
+    const current = unlockFailures.get(key);
+    if (!current || current.resetAt <= now) {
+      return { key, count: 0, resetAt: now + UNLOCK_WINDOW_MS };
+    }
+    return { key, ...current };
+  }
+
+  /**
+   * Verify the employee's own login password, then issue a session cookie value.
+   * The raw session token is returned once so the controller can set an httpOnly cookie.
+   */
+  async unlock(linkToken, email, password, metadata = {}) {
+    const emailText = typeof email === 'string' ? email.trim() : '';
+    const passwordText = typeof password === 'string' ? password : '';
+    if (!emailText || !passwordText || passwordText.length > 200) {
+      return { ok: false, status: 400, error: 'Email and password are required.' };
+    }
+
+    const bucket = this.failureBucket(emailText, metadata.ipAddress);
+    if (bucket.count >= UNLOCK_MAX_FAILURES) {
+      return { ok: false, status: 429, error: 'Too many attempts. Please try again later.' };
+    }
+
+    const inspection = await this.inspectLink(linkToken);
+    if (!inspection.ok) {
+      return { ok: false, status: 400, error: inspection.error, expired: inspection.expired, alreadyUsed: inspection.alreadyUsed };
+    }
+
+    const tokenDoc = await EmployeePublicToken.findOne({ token: linkToken });
+    if (!tokenDoc) {
+      return { ok: false, status: 400, error: 'Invalid token' };
+    }
+    const shared = isSharedLink(tokenDoc);
+    const emailClause = caseInsensitiveEmailClause(emailText);
+    const user = emailClause ? await User.findOne({ email: emailClause }) : null;
+    const passwordOk = await bcrypt.compare(passwordText, user?.passwordHash || dummyPasswordHash);
+    const active = !!(user && user.isActive !== false && user.passwordHash);
+    const linkOk = !!(user && (shared || user.employeeCode === tokenDoc.employeeId));
+
+    if (!active || !passwordOk || !linkOk) {
+      unlockFailures.set(bucket.key, { count: bucket.count + 1, resetAt: bucket.resetAt });
+      return { ok: false, status: 401, error: 'Invalid email or password.' };
+    }
+
+    unlockFailures.delete(bucket.key);
+
+    const linkTokenHash = sha256(linkToken);
+    await ProfileFormSession.deleteMany({ userId: user._id, linkTokenHash });
+
+    const rawSession = crypto.randomBytes(32).toString('hex');
+    await ProfileFormSession.create({
+      tokenHash: sha256(rawSession),
+      userId: user._id,
+      linkTokenHash,
+      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+    });
+
+    await ProfileSubmissionAudit.create({
+      employeeId: user.employeeCode,
+      userId: user._id,
+      action: 'FORM_UNLOCKED',
+      source: 'PUBLIC_FORM',
+      token: linkToken,
+      ipAddress: metadata.ipAddress || null,
+      userAgent: metadata.userAgent || null,
+      metadata: { linkType: shared ? 'shared' : 'individual' },
+    });
+
+    return {
+      ok: true,
+      sessionToken: rawSession,
+      linkType: shared ? 'shared' : 'individual',
+      employee: this.presentEmployee(user),
+      tokenInfo: inspection.tokenInfo,
+    };
+  }
+
+  /**
+   * Load the employee bound to this cookie and this exact link.
+   * Returns null when the cookie is missing, expired, or for a different link.
+   */
+  async employeeFromSession(rawCookie, linkToken) {
+    if (!rawCookie || !linkToken) return null;
+    const session = await ProfileFormSession.findOne({
+      tokenHash: sha256(rawCookie),
+      linkTokenHash: sha256(linkToken),
+      expiresAt: { $gt: new Date() },
+    });
+    if (!session) return null;
+
+    const tokenDoc = await EmployeePublicToken.findOne({ token: linkToken });
+    if (!tokenDoc || new Date() > tokenDoc.expiresAt) return null;
+    const shared = isSharedLink(tokenDoc);
+    if (shared && tokenDoc.isUsed) return null;
+    if (!shared && tokenDoc.isUsed && !tokenDoc.allowMultipleSubmissions) return null;
+
+    const user = await User.findById(session.userId).select('-passwordHash');
+    if (!user || user.isActive === false) return null;
+    if (!shared && user.employeeCode !== tokenDoc.employeeId) return null;
+
+    return { employee: user, tokenDoc };
+  }
+
+  /**
+   * One reusable link. Whoever signs in with their own password edits only their record.
+   */
+  async generateSharedToken(generatedBy, options = {}) {
+    if (!options.forceNew) {
+      const existing = await EmployeePublicToken.findOne({
+        linkType: 'shared',
+        isUsed: false,
+        expiresAt: { $gt: new Date() },
+      }).sort({ createdAt: -1 });
+
+      if (existing) {
+        return {
+          token: existing.token,
+          expiresAt: existing.expiresAt,
+          isExisting: true,
+          linkType: 'shared',
+        };
+      }
+    } else {
+      await EmployeePublicToken.updateMany(
+        { linkType: 'shared', isUsed: false },
+        { $set: { isUsed: true, usedAt: new Date() } }
+      );
+    }
+
+    const randomEntropy = crypto.randomBytes(32).toString('hex');
+    const secureToken = crypto
+      .createHash('sha256')
+      .update(randomEntropy + 'shared' + Date.now())
+      .digest('hex');
+
+    const expiryHours = options.expiryHours || 168;
+    const expiresAt = new Date(Date.now() + expiryHours * 60 * 60 * 1000);
+
+    await EmployeePublicToken.create({
+      linkType: 'shared',
+      token: secureToken,
+      expiresAt,
+      generatedBy,
+      allowMultipleSubmissions: true,
+    });
+
+    if (generatedBy) {
+      await ProfileSubmissionAudit.create({
+        employeeId: 'SHARED',
+        userId: generatedBy,
+        action: 'TOKEN_GENERATED',
+        source: 'ADMIN_PANEL',
+        token: secureToken,
+        metadata: { linkType: 'shared', generatedBy, expiryHours },
+      });
+    }
+
+    return {
+      token: secureToken,
+      expiresAt,
+      isExisting: false,
+      linkType: 'shared',
+    };
   }
 
   /**

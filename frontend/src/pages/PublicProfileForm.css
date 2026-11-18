@@ -823,6 +823,34 @@
   color: var(--text-muted);
 }
 
+.kyc-or-group {
+  margin-top: 8px;
+  padding: 4px 12px 12px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.kyc-or-group .kyc-group-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pf-auth-card {
+  max-width: 460px;
+}
+
+.pf-auth-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 36px 32px;
+}
+
+.pf-auth-body .pf-btn {
+  margin-top: 12px;
+}
+
 .kyc-optional-note {
   font-size: 10px;
   font-weight: 400;

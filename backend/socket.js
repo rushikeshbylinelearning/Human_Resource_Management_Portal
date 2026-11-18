@@ -96,18 +96,20 @@ const init = (httpServer) => {
                             throw new Error('MongoDB not connected - cannot query user');
                         }
 
-                        const { normalizeEmail } = require('./utils/emailUtils');
+                        const { normalizeEmail, caseInsensitiveEmailClause } = require('./utils/emailUtils');
                         const normalizedEmail = normalizeEmail(userEmail);
                         const rawLowerEmail = String(userEmail).toLowerCase();
-                        
-                        user = await User.findOne({
-                            isActive: { $ne: false },
-                            $or: [
-                                { email: normalizedEmail },
-                                { email: rawLowerEmail },
-                                { email: userEmail },
-                            ],
-                        }).lean();
+                        const emailMatches = [normalizedEmail, rawLowerEmail, userEmail]
+                            .map((value) => caseInsensitiveEmailClause(value))
+                            .filter(Boolean)
+                            .map((clause) => ({ email: clause }));
+
+                        user = emailMatches.length
+                            ? await User.findOne({
+                                isActive: { $ne: false },
+                                $or: emailMatches,
+                            }).lean()
+                            : null;
                         if (!user) {
                             throw new Error('User not found for SSO token email: ' + userEmail);
                         }

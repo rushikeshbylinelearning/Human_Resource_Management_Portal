@@ -2,9 +2,19 @@
 const mongoose = require('mongoose');
 
 const employeePublicTokenSchema = new mongoose.Schema({
+  // individual = one employee. shared = one link for every employee;
+  // the signed-in email decides whose record is updated.
+  linkType: {
+    type: String,
+    enum: ['individual', 'shared'],
+    default: 'individual',
+    index: true
+  },
   employeeId: {
     type: String,
-    required: true,
+    required: function requiredEmployee() {
+      return this.linkType !== 'shared';
+    },
     index: true
   },
   token: {

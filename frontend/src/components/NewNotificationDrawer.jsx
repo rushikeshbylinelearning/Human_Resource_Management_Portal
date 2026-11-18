@@ -1,4 +1,4 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { openAnnouncementHub } from '../utils/announcementHubEvents';
 import { useAuth } from '../context/AuthContext';
@@ -62,6 +62,15 @@ const getNotificationIcon = (type) => {
         teams_report_preview: <TeamsIcon className="notification-icon info" style={{ color: '#6264A7' }} />,
         resource_request: <Inventory2Icon className="notification-icon info" />,
         resource_request_status: <Inventory2Icon className="notification-icon success" />,
+        hr_query_new: <MessageIcon className="notification-icon warning" />,
+        hr_query_response: <MessageIcon className="notification-icon info" />,
+        hr_query_status_changed: <MessageIcon className="notification-icon success" />,
+        it_ticket_created: <WarningIcon className="notification-icon warning" />,
+        it_ticket_status: <InfoIcon className="notification-icon info" />,
+        it_ticket_assigned: <InfoIcon className="notification-icon info" />,
+        it_ticket_priority: <WarningIcon className="notification-icon warning" />,
+        it_ticket_comment: <MessageIcon className="notification-icon info" />,
+        it_ticket_cancelled: <ErrorIcon className="notification-icon error" />,
         success: <CheckCircleIcon className="notification-icon success" />,
         error: <ErrorIcon className="notification-icon error" />,
         warning: <WarningIcon className="notification-icon warning" />,
@@ -139,6 +148,8 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, onNavigate, on
             }
         } else if (notification.type === 'resource_request' || notification.type === 'resource_request_status') {
             onNavigate(notification.navigationData || {}, notification.type, notification.metadata);
+        } else if (notification.type?.startsWith('hr_query') || notification.type?.startsWith('it_ticket')) {
+            onNavigate(notification.navigationData || {}, notification.type, notification.metadata);
         } else if (notification.type === 'early_checkout_request' || notification.metadata?.type === 'EARLY_CHECKOUT_REQUEST') {
             onNavigate(notification.navigationData || {}, notification.type, notification.metadata);
         } else if (notification.navigationData) {
@@ -170,6 +181,12 @@ const NotificationItem = ({ notification, onMarkAsRead, onDelete, onNavigate, on
                     <Box>
                         {notification.type === 'resource_request' && (
                             <span className="notification-type-tag">Request</span>
+                        )}
+                        {notification.type?.startsWith('hr_query') && (
+                            <span className="notification-type-tag">HR Query</span>
+                        )}
+                        {notification.type?.startsWith('it_ticket') && (
+                            <span className="notification-type-tag">IT Request</span>
                         )}
                         {notification.type === 'early_checkout_request' && (
                             <span className="notification-type-tag">Early checkout</span>
@@ -313,6 +330,15 @@ const NewNotificationDrawer = ({ open, onClose, onOpenECRModal }) => {
     const displayedUnread = isAdmin
         ? (adminTab === 0 ? attendanceUnread : requestsUnread)
         : unreadCount;
+
+    // On drawer open, prefer the Requests tab when it has unread HR/IT/request items.
+    const wasOpenRef = useRef(false);
+    useEffect(() => {
+        if (open && !wasOpenRef.current && isAdmin && requestsUnread > 0) {
+            setAdminTab(1);
+        }
+        wasOpenRef.current = open;
+    }, [open, isAdmin, requestsUnread]);
 
     const handleOpenTeamsPreview = (notificationId) => {
         onClose();
@@ -670,7 +696,7 @@ const NewNotificationDrawer = ({ open, onClose, onOpenECRModal }) => {
                     emptyTitle={isAdmin && adminTab === 1 ? 'No Request Logs' : 'All Caught Up!'}
                     emptySubtitle={
                         isAdmin && adminTab === 1
-                            ? 'Employee resource requests will appear here.'
+                            ? 'HR queries, IT requests, and resource requests will appear here.'
                             : 'You have no new notifications.'
                     }
                     onMarkAsRead={markAsRead}

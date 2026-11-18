@@ -65,9 +65,23 @@ function emailsMatch(email1, email2) {
   return normalizeEmail(email1) === normalizeEmail(email2);
 }
 
+/**
+ * MongoDB clause that matches an email regardless of letter case.
+ * The address is trimmed and lowercased, then escaped so it cannot
+ * change the regex. Returns null when the value is not an email.
+ */
+function caseInsensitiveEmailClause(email) {
+  if (!email || typeof email !== 'string') return null;
+  const normalized = email.trim().toLowerCase();
+  if (!normalized || !normalized.includes('@') || normalized.length > 254) return null;
+  const escaped = normalized.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return { $regex: `^${escaped}$`, $options: 'i' };
+}
+
 module.exports = {
   normalizeEmail,
-  emailsMatch
+  emailsMatch,
+  caseInsensitiveEmailClause,
 };
 
 

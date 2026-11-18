@@ -11,27 +11,29 @@ import {
 import FingerprintOutlinedIcon from '@mui/icons-material/FingerprintOutlined';
 import VerifiedOutlinedIcon from '@mui/icons-material/VerifiedOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 import HourglassEmptyOutlinedIcon from '@mui/icons-material/HourglassEmptyOutlined';
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
 import api from '../../api/axios';
-import { RED, RED_DARK, RED_BG, TEXT, MUTED, BORDER, cardSx, sectionTitleSx } from './adminEmployeeTheme';
+import { RED, TEXT, MUTED, BORDER, cardSx, sectionTitleSx } from './adminEmployeeTheme';
 
 // ─── Document type catalogue (mirrors backend) ────────────────────────────────
 const KYC_TYPES = [
-    { key: 'aadhaar',                 label: 'Aadhaar Card',                    isOptional: false },
-    { key: 'pan',                     label: 'PAN Card',                        isOptional: false },
-    { key: 'utility_bill',            label: 'Utility Bill',                    isOptional: false },
-    { key: 'rent_agreement',          label: 'Rent Agreement',                  isOptional: false },
-    { key: 'educational_certificate', label: 'Educational Certificates',        isOptional: false },
-    { key: 'salary_slip',             label: 'Salary Slips',                    isOptional: false },
-    { key: 'bank_statement',          label: 'Bank Statement',                  isOptional: false },
-    { key: 'bank_details',            label: 'Bank Details / Cancelled Cheque', isOptional: false },
-    { key: 'passport',                label: 'Passport',                        isOptional: true },
-    { key: 'driving_license',         label: "Driver's License",                isOptional: true },
-    { key: 'relieving_letter',        label: 'Relieving Letter',                isOptional: true },
-    { key: 'experience_letter',       label: 'Experience Letter',               isOptional: true },
+    { key: 'aadhaar',                 label: 'Aadhaar Card',             isOptional: false },
+    { key: 'pan',                     label: 'PAN Card',                 isOptional: false },
+    { key: 'educational_certificate', label: 'Educational Certificates', isOptional: false },
+    { key: 'utility_bill',            label: 'Utility Bill',             isOptional: false, orGroup: 'address_proof' },
+    { key: 'rent_agreement',          label: 'Rent Agreement',           isOptional: false, orGroup: 'address_proof' },
+    { key: 'salary_slip',             label: 'Salary Slips',             isOptional: false, orGroup: 'income_proof' },
+    { key: 'bank_statement',          label: 'Bank Statements',          isOptional: false, orGroup: 'income_proof' },
+    { key: 'bank_details',            label: 'Bank Details',             isOptional: false, orGroup: 'bank_proof' },
+    { key: 'cancelled_cheque',        label: 'Cancelled Cheque',         isOptional: false, orGroup: 'bank_proof' },
+    { key: 'passport',                label: 'Passport',                 isOptional: true },
+    { key: 'driving_license',         label: "Driver's License",         isOptional: true },
+    { key: 'relieving_letter',        label: 'Relieving Letter',         isOptional: true },
+    { key: 'experience_letter',       label: 'Experience Letter',        isOptional: true },
 ];
 
 // ─── Status config ────────────────────────────────────────────────────────────
@@ -190,6 +192,27 @@ const AdminEmployeeKycPanel = ({ employeeId }) => {
             window.open(data.presignedGetUrl, '_blank', 'noopener,noreferrer');
         } catch (e) {
             showSnack(e.response?.data?.error || 'Failed to open document.', true);
+        } finally {
+            setActionLoading(null);
+        }
+    };
+
+    const handleDownload = async (doc) => {
+        if (!doc?._id) return;
+        setActionLoading(doc._id);
+        try {
+            const { data } = await api.get(`/kyc/view/${doc._id}`, {
+                params: { download: 1 },
+            });
+            const a = document.createElement('a');
+            a.href = data.presignedGetUrl;
+            a.download = data.fileName || doc.originalFileName || 'document';
+            a.rel = 'noopener';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        } catch (e) {
+            showSnack(e.response?.data?.error || 'Failed to download document.', true);
         } finally {
             setActionLoading(null);
         }
@@ -392,19 +415,28 @@ const AdminEmployeeKycPanel = ({ employeeId }) => {
                                                 )}
                                             </TableCell>
 
-                                            {/* Required / Optional */}
+                                            {/* Required / Either / Optional */}
                                             <TableCell>
-                                                <Chip
-                                                    size="small"
-                                                    label={row.isOptional ? 'Optional' : 'Required'}
-                                                    sx={{
-                                                        fontSize: '0.68rem',
-                                                        fontWeight: 600,
-                                                        background: row.isOptional ? '#f0f9ff' : '#fef3c7',
-                                                        color: row.isOptional ? '#0369a1' : '#92400e',
-                                                        border: `1px solid ${row.isOptional ? '#bae6fd' : '#fde68a'}`,
-                                                    }}
-                                                />
+                                                {(() => {
+                                                    const requirement = row.orGroup
+                                                        ? { label: 'Either', background: '#f5f3ff', color: '#5b21b6', border: '#ddd6fe' }
+                                                        : row.isOptional
+                                                            ? { label: 'Optional', background: '#f0f9ff', color: '#0369a1', border: '#bae6fd' }
+                                                            : { label: 'Required', background: '#fef3c7', color: '#92400e', border: '#fde68a' };
+                                                    return (
+                                                        <Chip
+                                                            size="small"
+                                                            label={requirement.label}
+                                                            sx={{
+                                                                fontSize: '0.68rem',
+                                                                fontWeight: 600,
+                                                                background: requirement.background,
+                                                                color: requirement.color,
+                                                                border: `1px solid ${requirement.border}`,
+                                                            }}
+                                                        />
+                                                    );
+                                                })()}
                                             </TableCell>
 
                                             {/* Uploaded date */}
@@ -449,6 +481,21 @@ const AdminEmployeeKycPanel = ({ employeeId }) => {
                                                                     ) : (
                                                                         <VisibilityOutlinedIcon fontSize="small" />
                                                                     )}
+                                                                </IconButton>
+                                                            </span>
+                                                        </Tooltip>
+                                                    )}
+
+                                                    {doc && (
+                                                        <Tooltip title="Download document">
+                                                            <span>
+                                                                <IconButton
+                                                                    size="small"
+                                                                    onClick={() => handleDownload(doc)}
+                                                                    disabled={isActing}
+                                                                    sx={{ color: '#64748b' }}
+                                                                >
+                                                                    <DownloadOutlinedIcon fontSize="small" />
                                                                 </IconButton>
                                                             </span>
                                                         </Tooltip>

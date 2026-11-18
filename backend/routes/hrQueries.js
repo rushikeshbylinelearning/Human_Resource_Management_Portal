@@ -115,24 +115,20 @@ router.post('/create', authenticateToken, uploadHRQueryImageGridFS, async (req, 
         
         logger.info(`HR Query created by employee ${req.user.userId}: ${subject}`);
         
-        // Create notification for HR Query managers using the service
+        // Create notification for HR Query managers (parity with IT ticket create)
         try {
+            const queryId = query._id.toString();
             await NewNotificationService.broadcastToHRQueryManagers({
                 message: `New HR Query: ${subject}`,
                 type: 'hr_query_new',
                 category: 'hr_query',
                 priority: 'high',
-                actionData: {
-                    actionType: 'navigate',
-                    actionUrl: `/operational-dashboard?tab=hr`,
-                    requiresAction: true
-                },
                 navigationData: {
-                    page: 'operational-dashboard',
-                    params: { tab: 'hr', queryId: query._id }
+                    page: '/operational-dashboard',
+                    params: { tab: 'hr', queryId }
                 },
                 metadata: {
-                    queryId: query._id,
+                    queryId,
                     queryCategory: query.category,
                     status: query.status,
                     type: 'HR_QUERY_CREATED'
@@ -192,24 +188,20 @@ router.post('/:queryId/message', authenticateToken, uploadHRQueryImageGridFS, as
         
         await query.addMessage('employee', employee.fullName, req.user.userId, message, attachments);
         
-        // Create notification for HR Query managers using the service
+        // Create notification for HR Query managers (parity with IT ticket comments)
         try {
+            const queryId = query._id.toString();
             await NewNotificationService.broadcastToHRQueryManagers({
                 message: `${employee.fullName} added a message to HR Query: ${query.subject}`,
                 type: 'hr_query_response',
                 category: 'hr_query',
                 priority: 'medium',
-                actionData: {
-                    actionType: 'navigate',
-                    actionUrl: `/operational-dashboard?tab=hr`,
-                    requiresAction: true
-                },
                 navigationData: {
-                    page: 'operational-dashboard',
-                    params: { tab: 'hr', queryId: query._id }
+                    page: '/operational-dashboard',
+                    params: { tab: 'hr', queryId }
                 },
                 metadata: {
-                    queryId: query._id,
+                    queryId,
                     queryCategory: query.category,
                     status: query.status,
                     type: 'HR_QUERY_MESSAGE'

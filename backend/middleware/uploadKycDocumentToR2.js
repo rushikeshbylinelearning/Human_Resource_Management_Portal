@@ -26,7 +26,7 @@ const busboy = require('busboy');
 const { VALID_TYPES } = require('../models/EmployeeKycDocument');
 
 // ─── Constants ─────────────────────────────────────────────────────────────────
-const MAX_FILE_SIZE        = 5 * 1024 * 1024; // 5 MB hard cap
+const MAX_FILE_SIZE        = 2 * 1024 * 1024; // 2 MB hard cap
 const ALLOWED_EXTENSIONS   = ['.pdf', '.jpg', '.jpeg', '.png'];
 const ALLOWED_MIME_TYPES   = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
 
@@ -180,7 +180,7 @@ function uploadKycDocumentToR2({ context = 'authenticated' } = {}) {
                 totalSize += chunk.length;
                 if (totalSize > MAX_FILE_SIZE) {
                     // Abort BEFORE buffering the oversized byte — do not push the chunk.
-                    sendError(413, 'File size exceeds the 5 MB limit.');
+                    sendError(413, 'File size exceeds the 2 MB limit.');
                     file.destroy();
                     return;
                 }
@@ -189,7 +189,7 @@ function uploadKycDocumentToR2({ context = 'authenticated' } = {}) {
 
             // busboy emits 'limit' on the file stream when fileSize limit is hit.
             file.on('limit', () => {
-                if (!rejected) sendError(413, 'File size exceeds the 5 MB limit.');
+                if (!rejected) sendError(413, 'File size exceeds the 2 MB limit.');
             });
 
             file.on('error', () => {

@@ -8,15 +8,17 @@ const mongoose = require('mongoose');
 
 // ─── Document type catalogue ──────────────────────────────────────────────────
 const KYC_DOCUMENT_TYPES = [
-    // Required
+    // Always required
     { key: 'aadhaar',                 label: 'Aadhaar Card',               isOptional: false },
     { key: 'pan',                     label: 'PAN Card',                   isOptional: false },
-    { key: 'utility_bill',            label: 'Utility Bill',               isOptional: false },
-    { key: 'rent_agreement',          label: 'Rent Agreement',             isOptional: false },
     { key: 'educational_certificate', label: 'Educational Certificates',   isOptional: false },
-    { key: 'salary_slip',             label: 'Salary Slips',               isOptional: false },
-    { key: 'bank_statement',          label: 'Bank Statement',             isOptional: false },
-    { key: 'bank_details',            label: 'Bank Details / Cancelled Cheque', isOptional: false },
+    // One document from each pair is required (orGroup)
+    { key: 'utility_bill',            label: 'Utility Bill',               isOptional: false, orGroup: 'address_proof' },
+    { key: 'rent_agreement',          label: 'Rent Agreement',             isOptional: false, orGroup: 'address_proof' },
+    { key: 'salary_slip',             label: 'Salary Slips',               isOptional: false, orGroup: 'income_proof' },
+    { key: 'bank_statement',          label: 'Bank Statements',            isOptional: false, orGroup: 'income_proof' },
+    { key: 'bank_details',            label: 'Bank Details',               isOptional: false, orGroup: 'bank_proof' },
+    { key: 'cancelled_cheque',        label: 'Cancelled Cheque',           isOptional: false, orGroup: 'bank_proof' },
     // Optional
     { key: 'passport',                label: 'Passport',                   isOptional: true },
     { key: 'driving_license',         label: "Driver's License",           isOptional: true },

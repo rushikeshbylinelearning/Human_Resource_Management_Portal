@@ -32,6 +32,7 @@ import InventoryIcon from '@mui/icons-material/Inventory';
 import ComputerIcon from '@mui/icons-material/Computer';
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import api from '../api/axios';
+import socket from '../socket';
 import { formatISTDate, formatISTDateTime } from '../utils/istTime';
 import useDraggableFab from '../hooks/useDraggableFab';
 import {
@@ -129,6 +130,18 @@ const HRQueryFloatingChat = ({ defaultOpen = false, onClose }) => {
         const interval = setInterval(fetchUnreadCount, 30000);
         return () => clearInterval(interval);
     }, []);
+
+    // Real-time refresh when employees create/update HR queries (parity with IT tickets)
+    useEffect(() => {
+        const handleHrQueryCreated = () => {
+            fetchUnreadCount();
+            if (isOpen) fetchQueries();
+        };
+        socket.on('hr_query_created', handleHrQueryCreated);
+        return () => {
+            socket.off('hr_query_created', handleHrQueryCreated);
+        };
+    }, [isOpen]);
 
     useEffect(() => {
         const el = messageListRef.current;

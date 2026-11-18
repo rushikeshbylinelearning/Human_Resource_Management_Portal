@@ -66,14 +66,20 @@ const AdminEmployeeDocumentsPanel = ({ employeeId }) => {
         e?.stopPropagation();
         try {
             const response = await api.get(`/employee-documents/${doc._id}/file`, { responseType: 'blob' });
+            const contentType = response.headers?.['content-type'] || '';
+            if (contentType.includes('application/json')) {
+                throw new Error('Server returned an error instead of a file');
+            }
             const url = window.URL.createObjectURL(response.data);
             const a = document.createElement('a');
             a.href = url;
-            a.download = doc.fileName || `${doc.documentTypeLabel}.pdf`;
+            a.download = doc.fileName || `${doc.documentTypeLabel || 'document'}.pdf`;
+            document.body.appendChild(a);
             a.click();
+            a.remove();
             window.URL.revokeObjectURL(url);
         } catch (err) {
-            console.error(err);
+            console.error('Failed to download document:', err);
         }
     };
 

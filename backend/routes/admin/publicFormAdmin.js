@@ -14,6 +14,12 @@ router.use(requireAuth);
 router.post('/generate-link', publicFormController.generateToken);
 
 /**
+ * One password-protected link for every employee.
+ * POST /api/admin/public-form/generate-shared-link
+ */
+router.post('/generate-shared-link', publicFormController.generateSharedToken);
+
+/**
  * Bulk generate tokens
  * POST /api/admin/public-form/bulk-generate
  */

@@ -71,9 +71,19 @@ exports.getMyDocuments = async (req, res) => {
     }
 };
 
+function contentDispositionAttachment(filename) {
+    const raw = (filename || 'document').replace(/[\r\n"]/g, '_');
+    const ascii = raw.replace(/[^\x20-\x7E]/g, '_');
+    const encoded = encodeURIComponent(raw).replace(/['()*]/g, (c) =>
+        `%${c.charCodeAt(0).toString(16).toUpperCase()}`
+    );
+    return `attachment; filename="${ascii || 'document'}"; filename*=UTF-8''${encoded}`;
+}
+
 // ─── GET /kyc/view/:docId ─────────────────────────────────────────────────────
 // Returns a short-lived presigned GET URL.
 // Employees can only access their own documents; Admin/HR can access any.
+// Pass ?download=1 to force Content-Disposition: attachment (browser download).
 exports.viewDocument = async (req, res) => {
     try {
         const { docId } = req.params;
@@ -87,18 +97,27 @@ exports.viewDocument = async (req, res) => {
             return res.status(403).json({ error: 'Access denied.' });
         }
 
+        const asDownload = req.query.download === '1' || req.query.download === 'true';
+
         // ── Generate presigned GET URL ──
         const client = getR2Client();
         const command = new GetObjectCommand({
             Bucket: BUCKET_NAME(),
             Key: doc.storageKey,
+            ...(asDownload
+                ? { ResponseContentDisposition: contentDispositionAttachment(doc.originalFileName) }
+                : {}),
         });
 
         const presignedGetUrl = await getSignedUrl(client, command, {
             expiresIn: DOWNLOAD_URL_EXPIRY_SECONDS,
         });
 
-        res.json({ presignedGetUrl, expiresInSeconds: DOWNLOAD_URL_EXPIRY_SECONDS });
+        res.json({
+            presignedGetUrl,
+            expiresInSeconds: DOWNLOAD_URL_EXPIRY_SECONDS,
+            fileName: doc.originalFileName || null,
+        });
     } catch (err) {
         console.error('[KYC] viewDocument error:', err);
         res.status(500).json({ error: 'Failed to generate view URL.' });
