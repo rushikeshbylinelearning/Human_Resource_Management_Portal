@@ -62,21 +62,47 @@ export const profileCardSx = {
 
 export const profileTabSx = {
     minHeight: 46,
+    '& .MuiTabs-scroller': {
+        overflow: 'hidden !important',
+    },
     '& .MuiTabs-flexContainer': { gap: 0.25 },
     '& .MuiTab-root': {
         textTransform: 'none',
         fontWeight: 600,
         fontSize: '0.84rem',
         minHeight: 46,
+        minWidth: 0,
         color: '#667085',
         px: 1.75,
         letterSpacing: '-0.01em',
+        border: 'none',
+        outline: 'none',
+        boxShadow: 'none',
+        backgroundColor: 'transparent',
+        transition: 'color 180ms ease',
+        '&:hover': {
+            color: TEXT,
+            backgroundColor: 'transparent',
+            border: 'none',
+            outline: 'none',
+            boxShadow: 'none',
+        },
+        '&:focus, &:focus-visible, &.Mui-focusVisible': {
+            outline: 'none',
+            border: 'none',
+            boxShadow: 'none',
+            backgroundColor: 'transparent',
+        },
     },
-    '& .Mui-selected': { color: RED },
+    '& .Mui-selected': {
+        color: RED,
+        '&:hover': { color: RED },
+    },
     '& .MuiTabs-indicator': {
         backgroundColor: RED,
         height: 2.5,
         borderRadius: 2,
+        transition: 'left 220ms cubic-bezier(0.22, 1, 0.36, 1), width 220ms cubic-bezier(0.22, 1, 0.36, 1) !important',
     },
 };
 

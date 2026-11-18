@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
     Dialog, DialogTitle, DialogContent, DialogActions, Box, Typography, Grid, Stack,
     Avatar, Chip, TextField, Button, Snackbar, Alert, IconButton, MenuItem, Autocomplete,
@@ -125,6 +125,7 @@ const AdminEmployeeProfileDialog = ({
     const [reportingOptionsLoading, setReportingOptionsLoading] = useState(false);
     const [selectedReportingOption, setSelectedReportingOption] = useState(null);
     const [activeTab, setActiveTab] = useState(0);
+    const contentRef = useRef(null);
 
     const buildFormState = useMemo(() => (data) => {
         const orgFields = resolveOrgFields(data);
@@ -188,6 +189,10 @@ const AdminEmployeeProfileDialog = ({
         setIsEditing(mode === 'edit');
         if (open) setActiveTab(0);
     }, [employee, mode, buildFormState, open]);
+
+    useEffect(() => {
+        if (contentRef.current) contentRef.current.scrollTop = 0;
+    }, [activeTab]);
 
     useEffect(() => {
         if (!open) return;
@@ -516,6 +521,10 @@ const AdminEmployeeProfileDialog = ({
                         boxShadow: '0 24px 80px rgba(15, 23, 42, 0.22)',
                         border: '1px solid rgba(255,255,255,0.7)',
                         background: '#fff',
+                        height: 'min(820px, calc(100vh - 48px))',
+                        maxHeight: 'calc(100vh - 48px)',
+                        display: 'flex',
+                        flexDirection: 'column',
                     },
                 }}
             >
@@ -524,6 +533,7 @@ const AdminEmployeeProfileDialog = ({
                         px: 3,
                         pt: 2.5,
                         pb: 2,
+                        flexShrink: 0,
                         background: 'linear-gradient(180deg, #FFF6F6 0%, #FFFFFF 78%)',
                     }}
                 >
@@ -609,17 +619,32 @@ const AdminEmployeeProfileDialog = ({
                     </Stack>
                 </DialogTitle>
 
-                <Box sx={{ px: 2.5, background: '#fff', borderBottom: `1px solid ${BORDER}` }}>
-                    <Tabs value={activeTab} onChange={(_, v) => setActiveTab(v)} sx={profileTabSx} variant="scrollable" scrollButtons="auto">
-                        <Tab label="Overview" />
-                        <Tab label="Personal" />
-                        <Tab label="Compliance" />
-                        <Tab label="Documents" />
-                        <Tab label="KYC Documents" />
+                <Box sx={{ px: 2.5, flexShrink: 0, background: '#fff', borderBottom: `1px solid ${BORDER}` }}>
+                    <Tabs
+                        value={activeTab}
+                        onChange={(_, v) => setActiveTab(v)}
+                        sx={profileTabSx}
+                    >
+                        <Tab disableRipple label="Overview" />
+                        <Tab disableRipple label="Personal" />
+                        <Tab disableRipple label="Compliance" />
+                        <Tab disableRipple label="Documents" />
+                        <Tab disableRipple label="KYC Documents" />
                     </Tabs>
                 </Box>
 
-                <DialogContent sx={{ backgroundColor: '#F3F5F8', px: { xs: 2, sm: 3 }, py: 2.75 }}>
+                <DialogContent
+                    ref={contentRef}
+                    sx={{
+                        backgroundColor: '#F3F5F8',
+                        px: { xs: 2, sm: 3 },
+                        py: 2.75,
+                        flex: '1 1 auto',
+                        minHeight: 0,
+                        overflowY: 'auto',
+                        scrollbarGutter: 'stable',
+                    }}
+                >
                     {activeTab === 0 && (
                     <Stack spacing={2}>
                         {(user?.role === 'Admin' || user?.role === 'HR') && employee?._id && (
@@ -849,6 +874,7 @@ const AdminEmployeeProfileDialog = ({
                     sx={{
                         px: 3,
                         py: 1.75,
+                        flexShrink: 0,
                         background: '#fff',
                         borderTop: `1px solid ${BORDER}`,
                         gap: 1,

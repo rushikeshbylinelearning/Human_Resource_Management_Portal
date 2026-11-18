@@ -210441,3 +210441,14 @@
   message: 'Request',
   timestamp: '2026-11-18 18:09:58'
 }
+{
+  service: 'attendance-system',
+  method: 'POST',
+  url: '/refresh',
+  statusCode: 401,
+  duration: '1ms',
+  ip: '127.0.0.1',
+  level: 'info',
+  message: 'Request',
+  timestamp: '2026-11-18 18:34:24'
+}
