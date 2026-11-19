@@ -1,10 +1,176 @@
 /* frontend/src/styles/EmployeesPage.css */
 
+/* Route host: fit below topbar, no outer page scroll */
+.main-content.employees-layout {
+    padding: 72px 20px 12px !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+.main-content.employees-layout > * {
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
 .employees-page {
     padding: 0;
     height: 100%;
+    max-height: 100%;
+    min-height: 0;
     display: flex;
     flex-direction: column;
+    background: #F8F9FB;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.employees-page > .page-hero-header,
+.employees-page > .employees-tabs-wrap {
+    flex-shrink: 0;
+}
+
+/* Keep hero height stable when directory actions fade in/out */
+.employees-page > .page-hero-header {
+    min-height: 76px;
+    transition: box-shadow 0.2s ease;
+}
+
+.employees-hero-actions {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.employees-hero-actions.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* Scrollable section area under sticky header + tabs */
+.employees-section-body {
+    position: relative;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.employees-section-panel {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(8px);
+    transition:
+        opacity 0.22s ease,
+        transform 0.22s ease,
+        visibility 0.22s ease;
+    will-change: opacity, transform;
+}
+
+.employees-section-panel.is-active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0);
+    z-index: 1;
+}
+
+.employees-section-panel--scroll {
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.employees-section-panel .employees-card,
+.employees-section-panel .employees-compliance-host,
+.employees-section-panel > .MuiBox-root {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.employees-section-panel .flex-center {
+    flex: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .employees-section-panel,
+    .employees-hero-actions,
+    .employees-tabs-actions .MuiButton-root {
+        transition: none !important;
+        transform: none !important;
+    }
+}
+
+/* Pill-style section tabs (matches Policies Management pattern) */
+.employees-tabs-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    background: #fff;
+    border: 1px solid #E5E7EB;
+    border-radius: 14px;
+    padding: 4px 8px;
+    margin-bottom: 12px;
+    min-height: 56px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04), 0 6px 18px rgba(16, 24, 40, 0.04);
+}
+
+/* Fixed-width action slot so tab buttons don't shift the bar */
+.employees-tabs-actions {
+    position: relative;
+    width: 220px;
+    height: 40px;
+    flex-shrink: 0;
+}
+
+.employees-tabs-actions .MuiButton-root {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+.employees-tabs-actions .MuiButton-root.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+@media (max-width: 900px) {
+    .employees-tabs-wrap {
+        flex-wrap: wrap;
+        min-height: 0;
+    }
+
+    .employees-tabs-actions {
+        width: 100%;
+        height: 40px;
+        order: 2;
+    }
+}
+
+.employees-tabs-wrap .MuiTabs-scroller {
+    overflow-x: auto !important;
+    scrollbar-width: none;
+}
+
+.employees-tabs-wrap .MuiTabs-scroller::-webkit-scrollbar {
+    display: none;
 }
 
 /* --- Pill Header --- */
@@ -43,7 +209,8 @@
 
 /* --- Main Content Card --- */
 .employees-page .employees-card {
-    flex-grow: 1;
+    flex: 1 1 auto;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     background-color: white;
@@ -53,17 +220,26 @@
     border: 1px solid #eef2f6;
 }
 
+.employees-page .employees-card .MuiTablePagination-root {
+    flex-shrink: 0;
+    border-top: 1px solid #eef2f6;
+}
+
 /* --- NEW DIV-BASED TABLE STYLES --- */
 .employee-grid-table {
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
+    flex: 1 1 auto;
+    min-height: 0;
     overflow: hidden;
 }
 
 .employee-grid-body {
     overflow-y: auto;
-    flex-grow: 1;
+    overflow-x: hidden;
+    flex: 1 1 auto;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
 }
 
 .employee-grid-header,

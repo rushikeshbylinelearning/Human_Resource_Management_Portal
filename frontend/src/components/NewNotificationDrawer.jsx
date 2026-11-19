@@ -392,7 +392,7 @@ const NewNotificationDrawer = ({ open, onClose, onOpenECRModal }) => {
         }
 
         if (notificationType === 'employee_document_pending_hr') {
-            navigate('/admin/policies?tab=employee-documents');
+            navigate('/employees?tab=employee-documents');
             return;
         }
 
@@ -514,11 +514,28 @@ const NewNotificationDrawer = ({ open, onClose, onOpenECRModal }) => {
         const path = navigationData?.page;
         console.log('[Notification] Default navigation - path:', path);
         
-        // Handle admin/policies path
+        // Handle admin/policies path (including legacy sections now under Employees)
         if (path === 'admin/policies') {
+            const section = navigationData?.params?.section || navigationData?.params?.tab;
+            if (section === 'employee-documents' || section === '4') {
+                navigate('/employees?tab=employee-documents');
+                return;
+            }
+            if (section === 'onboarding-compliance' || section === '3') {
+                navigate('/employees?tab=onboarding-compliance');
+                return;
+            }
+            if (section === 'consent-templates' || section === '5') {
+                navigate('/employees?tab=consent-templates');
+                return;
+            }
             if (!isAdmin) {
                 console.warn('[Notification] Non-admin user attempted to access admin policies');
                 navigate('/dashboard');
+                return;
+            }
+            if (section === 'anonymous-messages' || section === '2') {
+                navigate('/admin/policies?tab=anonymous-messages');
                 return;
             }
             navigate('/admin/policies');
@@ -544,8 +561,11 @@ const NewNotificationDrawer = ({ open, onClose, onOpenECRModal }) => {
         else if (path === 'admin/dashboard') navigate('/admin/dashboard', { state: { refresh: true } });
         else if (path === '/employees' || path === '/admin/employees' || path?.includes('employees')) {
             const employeeId = navigationData?.params?.employeeId || metadata?.employeeId || navigationData?.actionParams?.employeeId;
+            const tab = navigationData?.params?.tab;
             if (employeeId) {
                 navigate(`/employees?employeeId=${employeeId}&openProfile=true`);
+            } else if (tab) {
+                navigate(`/employees?tab=${encodeURIComponent(tab)}`);
             } else {
                 navigate('/employees');
             }

@@ -17,7 +17,7 @@ const PageTransition = ({ children }) => {
 
     // CRITICAL FIX: Disable transitions for Profile and Leaves pages
     // These pages have zero-mutation requirements
-    const NO_TRANSITION_ROUTES = ['/profile', '/leaves', '/live-attendance', '/resource-requests/manage'];
+    const NO_TRANSITION_ROUTES = ['/profile', '/leaves', '/live-attendance', '/resource-requests/manage', '/employees'];
     const shouldDisableTransition = NO_TRANSITION_ROUTES.includes(location.pathname);
 
     // CRITICAL: Return children directly for protected routes (no animation wrapper)

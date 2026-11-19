@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
     Box,
     Typography,
@@ -16,25 +16,17 @@ import {
 } from '@mui/material';
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import ForumOutlinedIcon from '@mui/icons-material/ForumOutlined';
-import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined';
-import FolderCopyOutlinedIcon from '@mui/icons-material/FolderCopyOutlined';
 import QuestionAnswerIcon from '@mui/icons-material/QuestionAnswer';
-import PolicyIcon from '@mui/icons-material/Policy';
 import PageHeroHeader from '../components/PageHeroHeader';
 import PolicyUploadForm from '../components/PolicyUploadForm';
 import PolicyViewer from '../components/PolicyViewer';
 import AnonymousMessagesList from '../components/AnonymousMessagesList';
 import PolicyListCompact from '../components/PolicyListCompact';
-import ComplianceDashboard from '../components/onboarding/ComplianceDashboard';
-import EmployeeDocumentsDashboard from '../components/employeeDocuments/EmployeeDocumentsDashboard';
-import OnboardingControlPanel from '../components/admin/OnboardingControlPanel';
 import HRQueryManagement from '../components/admin/HRQueryManagement';
-import PolicyTemplateList from '../components/admin/PolicyTemplateList';
 import api from '../api/axios';
 import '../styles/AdminPoliciesPage.css';
 import {
     cardSx,
-    primaryBtnSx,
     tabBarSx,
     TEXT,
     MUTED,
@@ -46,6 +38,23 @@ import {
     FONT,
 } from '../theme/policiesPageTheme';
 
+/** Old Policies-page tabs that now live under Employees — redirect safely. */
+const LEGACY_EMPLOYEE_SECTION_TABS = new Set([
+    'employee-documents',
+    'onboarding-compliance',
+    'consent-templates',
+    '3',
+    '4',
+    '5',
+]);
+
+const legacyTabToEmployeesPath = (tab) => {
+    if (tab === 'employee-documents' || tab === '4') return '/employees?tab=employee-documents';
+    if (tab === 'consent-templates' || tab === '5') return '/employees?tab=consent-templates';
+    if (tab === 'onboarding-compliance' || tab === '3') return '/employees?tab=onboarding-compliance';
+    return '/employees';
+};
+
 const scrollBoxSx = {
     overflowY: 'auto',
     pr: 1,
@@ -56,9 +65,9 @@ const scrollBoxSx = {
 };
 
 const AdminPoliciesPage = () => {
+    const navigate = useNavigate();
     const [searchParams, setSearchParams] = useSearchParams();
-    const initialTab = searchParams.get('tab') === 'employee-documents' ? 4 : 0;
-    const [activeTab, setActiveTab] = useState(initialTab);
+    const [activeTab, setActiveTab] = useState(0);
     const [policies, setPolicies] = useState([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -69,19 +78,27 @@ const AdminPoliciesPage = () => {
     const [policyToReplace, setPolicyToReplace] = useState(null);
     const [anonymousMessages, setAnonymousMessages] = useState([]);
     const [messagesLoading, setMessagesLoading] = useState(true);
-    const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
 
     useEffect(() => {
         loadPolicies();
         loadAnonymousMessages();
     }, []);
 
+    // Safe redirect: sections moved to Employees page keep working via old URLs
     useEffect(() => {
-        if (searchParams.get('tab') === 'employee-documents') {
-            setActiveTab(4);
+        const tab = searchParams.get('tab');
+        if (tab && LEGACY_EMPLOYEE_SECTION_TABS.has(tab)) {
+            navigate(legacyTabToEmployeesPath(tab), { replace: true });
+            return;
+        }
+        if (tab === 'anonymous-messages' || tab === '2') {
+            setActiveTab(2);
+            setSearchParams({}, { replace: true });
+        } else if (tab === 'hr-queries' || tab === '1') {
+            setActiveTab(1);
             setSearchParams({}, { replace: true });
         }
-    }, [searchParams, setSearchParams]);
+    }, [searchParams, setSearchParams, navigate]);
 
     const loadPolicies = async () => {
         setLoading(true);
@@ -209,9 +226,6 @@ const AdminPoliciesPage = () => {
                     <Tab icon={<DescriptionOutlinedIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Policies" />
                     <Tab icon={<QuestionAnswerIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="HR Queries" />
                     <Tab icon={<ForumOutlinedIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Anonymous Messages" />
-                    <Tab icon={<VerifiedUserOutlinedIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Onboarding Compliance" />
-                    <Tab icon={<FolderCopyOutlinedIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Employee Documents" />
-                    <Tab icon={<PolicyIcon sx={{ fontSize: 18 }} />} iconPosition="start" label="Consent Templates" />
                 </Tabs>
             </Box>
 
@@ -279,10 +293,14 @@ const AdminPoliciesPage = () => {
                             </Box>
                             <Box sx={{ mt: 3 }}>
                                 <Typography variant="body2" sx={{ color: MUTED, fontSize: '0.8rem' }}>
-                                    To configure the mandatory onboarding policy, go to the
-                                    <strong style={{ color: '#C62828', cursor: 'pointer' }} onClick={() => setActiveTab(3)}>
-                                        {' '}Onboarding Compliance
-                                    </strong>{' '}tab.
+                                    To configure the mandatory onboarding policy, go to
+                                    <strong
+                                        style={{ color: '#C62828', cursor: 'pointer' }}
+                                        onClick={() => navigate('/employees?tab=onboarding-compliance')}
+                                    >
+                                        {' '}Employees → Onboarding Compliance
+                                    </strong>
+                                    .
                                 </Typography>
                             </Box>
                         </Box>
@@ -309,48 +327,6 @@ const AdminPoliciesPage = () => {
                                 onDelete={handleDeleteMessage}
                             />
                         </Box>
-                    </Box>
-                )}
-
-                {/* ── Tab 3: Onboarding Compliance ─────────────────────────── */}
-                {activeTab === 3 && (
-                    <Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' }, mb: 2.5, gap: 2, flexWrap: 'wrap' }}>
-                            <Box>
-                                <Typography sx={{ fontWeight: 700, color: TEXT, fontSize: '1.05rem', letterSpacing: '-0.02em', fontFamily: FONT }}>
-                                    Onboarding Compliance
-                                </Typography>
-                                <Typography sx={{ fontSize: '0.8rem', color: MUTED, mt: 0.35 }}>
-                                    See who has finished notice, tour, and profile. Use the control panel to decide what people see on first login.
-                                </Typography>
-                            </Box>
-                            <Button
-                                variant="contained"
-                                onClick={() => setAssignmentModalOpen(true)}
-                                sx={primaryBtnSx}
-                            >
-                                Onboarding control panel
-                            </Button>
-                        </Box>
-                        <ComplianceDashboard
-                            policies={policies}
-                            onRefreshPolicies={loadPolicies}
-                            onOpenControl={() => setAssignmentModalOpen(true)}
-                        />
-                    </Box>
-                )}
-
-                {/* ── Tab 4: Employee Documents ─────────────────────────────── */}
-                {activeTab === 4 && (
-                    <Box sx={{ px: { xs: 0, sm: 0.5 } }}>
-                        <EmployeeDocumentsDashboard />
-                    </Box>
-                )}
-
-                {/* ── Tab 5: Consent Templates ──────────────────────────────── */}
-                {activeTab === 5 && (
-                    <Box sx={{ width: '100%' }}>
-                        <PolicyTemplateList />
                     </Box>
                 )}
             </Box>
@@ -395,19 +371,6 @@ const AdminPoliciesPage = () => {
                 </Alert>
             </Snackbar>
 
-            {/* Policy Assignment Modal */}
-            <OnboardingControlPanel
-                open={assignmentModalOpen}
-                onClose={() => setAssignmentModalOpen(false)}
-                onSaved={() => {
-                    loadPolicies();
-                    setSnackbar({
-                        open: true,
-                        message: 'Onboarding settings updated',
-                        severity: 'success',
-                    });
-                }}
-            />
         </Box>
     );
 };

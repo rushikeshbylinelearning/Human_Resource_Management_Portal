@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Autocomplete, Grid, TextField } from '@mui/material';
-import api from '../api/axios';
+import { useMemo } from 'react';
+import { Autocomplete, createFilterOptions, Grid, TextField } from '@mui/material';
 import {
     getDepartmentOptions,
     getDesignationOptions,
@@ -8,6 +7,7 @@ import {
 } from '../utils/orgFieldOptions';
 
 const defaultGrid = { xs: 12, md: 6 };
+const filter = createFilterOptions();
 
 const resolveGridSize = (gridProps = {}) => {
     if (gridProps.size) return gridProps.size;
@@ -19,6 +19,11 @@ const resolveGridSize = (gridProps = {}) => {
     return size;
 };
 
+/**
+ * Creatable department / designation fields.
+ * Catalog is fixed; freeSolo + "Add …" covers intentional new values.
+ * Does not pull historical org-options into the list (avoids redundant legacy depts).
+ */
 const OrgAssignmentFields = ({
     department,
     designation,
@@ -26,33 +31,16 @@ const OrgAssignmentFields = ({
     textFieldSx,
     gridProps = defaultGrid,
     disabled = false,
+    dense = false,
 }) => {
-    const [existing, setExisting] = useState({ departments: [], designations: [] });
-
-    useEffect(() => {
-        let cancelled = false;
-        api.get('/admin/employees/org-options')
-            .then(({ data }) => {
-                if (cancelled) return;
-                setExisting({
-                    departments: data?.departments || [],
-                    designations: data?.designations || [],
-                });
-            })
-            .catch(() => {
-                if (!cancelled) setExisting({ departments: [], designations: [] });
-            });
-        return () => { cancelled = true; };
-    }, []);
-
     const departmentOptions = useMemo(
-        () => getDepartmentOptions(existing.departments, department),
-        [existing.departments, department]
+        () => getDepartmentOptions([], department),
+        [department]
     );
 
     const designationOptions = useMemo(
-        () => getDesignationOptions(department, existing.designations, designation),
-        [department, existing.designations, designation]
+        () => getDesignationOptions(department, [], designation),
+        [department, designation]
     );
 
     const emit = (nextDepartment, nextDesignation) => {
@@ -63,17 +51,44 @@ const OrgAssignmentFields = ({
         onChange(resolved);
     };
 
+    const creatableFilter = (options, params) => {
+        const filtered = filter(options, params);
+        const input = (params.inputValue || '').trim();
+        if (!input) return filtered;
+        const exists = options.some((opt) => String(opt).toLowerCase() === input.toLowerCase());
+        if (!exists) {
+            filtered.push(`Add "${input}"`);
+        }
+        return filtered;
+    };
+
+    const resolveCreatableValue = (value) => {
+        if (value == null) return '';
+        const raw = String(value);
+        const match = raw.match(/^Add "(.+)"$/);
+        return match ? match[1] : raw;
+    };
+
     return (
         <>
             <Grid size={resolveGridSize(gridProps)}>
                 <Autocomplete
                     freeSolo
+                    selectOnFocus
+                    clearOnBlur
+                    handleHomeEndKeys
                     disabled={disabled}
                     options={departmentOptions}
                     value={department || ''}
-                    onChange={(_, value) => emit(value || '', designation)}
+                    filterOptions={creatableFilter}
+                    onChange={(_, value) => {
+                        const nextDept = resolveCreatableValue(value);
+                        const nextDesignation = nextDept === department ? designation : '';
+                        emit(nextDept, nextDesignation);
+                    }}
                     onInputChange={(_, value, reason) => {
                         if (reason === 'input' || reason === 'clear') {
+                            // Keep designation while typing; only clear on actual department change (onChange)
                             emit(value, designation);
                         }
                     }}
@@ -81,7 +96,8 @@ const OrgAssignmentFields = ({
                         <TextField
                             {...params}
                             label="Department"
-                            helperText="Team / org unit. Domain is kept in sync with this value."
+                            size={dense ? 'small' : 'medium'}
+                            helperText={dense ? undefined : 'Select or type to add a new department.'}
                             sx={textFieldSx}
                         />
                     )}
@@ -90,10 +106,14 @@ const OrgAssignmentFields = ({
             <Grid size={resolveGridSize(gridProps)}>
                 <Autocomplete
                     freeSolo
-                    disabled={disabled}
+                    selectOnFocus
+                    clearOnBlur
+                    handleHomeEndKeys
+                    disabled={disabled || !department}
                     options={designationOptions}
                     value={designation || ''}
-                    onChange={(_, value) => emit(department, value || '')}
+                    filterOptions={creatableFilter}
+                    onChange={(_, value) => emit(department, resolveCreatableValue(value))}
                     onInputChange={(_, value, reason) => {
                         if (reason === 'input' || reason === 'clear') {
                             emit(department, value);
@@ -103,9 +123,12 @@ const OrgAssignmentFields = ({
                         <TextField
                             {...params}
                             label="Designation"
-                            helperText={department
-                                ? `Job title suggestions for ${department}`
-                                : 'Job title. Pick a department to see relevant titles.'}
+                            size={dense ? 'small' : 'medium'}
+                            helperText={dense
+                                ? undefined
+                                : (department
+                                    ? `Titles for ${department}. Type to add a new one.`
+                                    : 'Select a department first.')}
                             sx={textFieldSx}
                         />
                     )}

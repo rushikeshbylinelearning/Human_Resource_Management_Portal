@@ -1,13 +1,13 @@
 // frontend/src/components/onboarding/ComplianceDashboard.jsx
-// Admin compliance dashboard embedded in AdminPoliciesPage.
-// Shows: compact policy banner, summary, searchable employee progress table, timeline.
+// Admin compliance dashboard embedded in EmployeesPage (Onboarding Compliance tab).
+// Shows: summary, searchable employee progress table, timeline.
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
     Box, Typography, Table, TableBody, TableCell, TableContainer, TableHead,
-    TableRow, Paper, Chip, Button, IconButton, Select, MenuItem, FormControl,
-    InputLabel, TextField, Tooltip, CircularProgress, Dialog, DialogTitle,
-    DialogContent, DialogActions, Alert, Collapse, InputAdornment,
+    TableRow, Paper, Chip, Button, IconButton, TextField, Tooltip, CircularProgress,
+    Dialog, DialogTitle, DialogContent, DialogActions, Alert, Collapse, InputAdornment,
+    TablePagination,
 } from '@mui/material';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -41,11 +41,12 @@ import {
     RED, RED_DARK, RED_BG, TEXT, MUTED, BORDER, SURFACE,
     FONT, SUCCESS_BG, SUCCESS_TEXT, WARN_BG, WARN_TEXT, INFO_BG, INFO_TEXT,
     SUCCESS_BORDER,
-    primaryBtnSx, outlineBtnSx, ghostBtnSx, fieldSx, tableHeadCellSx,
-    pageTitleSx, iconBoxSx, cardSx,
+    primaryBtnSx, ghostBtnSx, fieldSx, tableHeadCellSx,
+    pageTitleSx, cardSx,
 } from '../../theme/policiesPageTheme';
 
-const PAGE_SIZE = 25;
+const ROWS_PER_PAGE_OPTIONS = [10, 25, 50];
+const DEFAULT_ROWS_PER_PAGE = 10;
 
 const statusConfig = {
     completed:   { label: 'Completed',   color: SUCCESS_TEXT, bg: SUCCESS_BG, icon: <CheckCircleIcon sx={{ fontSize: 14 }} /> },
@@ -738,37 +739,6 @@ const TimelineDialog = ({ open, onClose, userId, userName, logId }) => {
     );
 };
 
-const OnboardingPolicySettings = ({ policies, onOpenControl }) => {
-    const mandatoryPolicy = (policies || []).find((p) => p.status === 'Active' && p.isMandatoryOnboarding);
-
-    return (
-        <Box sx={{ ...cardSx, mb: 2.5 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, minWidth: 0 }}>
-                    <Box sx={{ ...iconBoxSx, background: mandatoryPolicy ? SUCCESS_BG : SURFACE, color: mandatoryPolicy ? SUCCESS_TEXT : MUTED, border: `1px solid ${mandatoryPolicy ? SUCCESS_BORDER : BORDER}` }}>
-                        <CheckCircleIcon sx={{ fontSize: 18 }} />
-                    </Box>
-                    <Box sx={{ minWidth: 0 }}>
-                        <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: MUTED, fontFamily: FONT }}>
-                            First-login notice
-                        </Typography>
-                        <Typography sx={{ fontWeight: 700, color: TEXT, fontFamily: FONT, fontSize: '0.95rem', letterSpacing: '-0.01em' }}>
-                            {mandatoryPolicy
-                                ? `${mandatoryPolicy.name} · v${mandatoryPolicy.version}`
-                                : 'Not set — new hires will skip the notice unless you configure it'}
-                        </Typography>
-                    </Box>
-                </Box>
-                {onOpenControl && (
-                    <Button size="small" variant="outlined" onClick={onOpenControl} sx={outlineBtnSx}>
-                        Manage in control panel
-                    </Button>
-                )}
-            </Box>
-        </Box>
-    );
-};
-
 const SUMMARY_CARDS = [
     { key: '', label: 'All', color: TEXT, bg: SURFACE, border: BORDER },
     { key: 'completed', label: 'Completed', color: SUCCESS_TEXT, bg: SUCCESS_BG, border: SUCCESS_BORDER },
@@ -777,12 +747,13 @@ const SUMMARY_CARDS = [
     { key: 'overdue', label: 'Overdue', color: RED_DARK, bg: RED_BG, border: '#FBBCBC' },
 ];
 
-const ComplianceDashboard = ({ policies, onRefreshPolicies, onOpenControl }) => {
+const ComplianceDashboard = () => {
     const [logs, setLogs] = useState([]);
     const [total, setTotal] = useState(0);
     const [summary, setSummary] = useState({ total: 0, completed: 0, in_progress: 0, pending: 0, overdue: 0, expired: 0, incomplete: 0 });
     const [hasSummary, setHasSummary] = useState(false);
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(0); // 0-based for TablePagination
+    const [rowsPerPage, setRowsPerPage] = useState(DEFAULT_ROWS_PER_PAGE);
     const [loading, setLoading] = useState(false);
     const [filters, setFilters] = useState({ status: '', department: '', q: '' });
     const [searchInput, setSearchInput] = useState('');
@@ -794,7 +765,7 @@ const ComplianceDashboard = ({ policies, onRefreshPolicies, onOpenControl }) => 
             setFilters((f) => {
                 const q = searchInput.trim();
                 if (f.q === q) return f;
-                setPage(1);
+                setPage(0);
                 return { ...f, q };
             });
         }, 350);
@@ -804,7 +775,10 @@ const ComplianceDashboard = ({ policies, onRefreshPolicies, onOpenControl }) => 
     const loadLogs = useCallback(async () => {
         setLoading(true);
         try {
-            const params = new URLSearchParams({ page, limit: PAGE_SIZE });
+            const params = new URLSearchParams({
+                page: String(page + 1),
+                limit: String(rowsPerPage),
+            });
             if (filters.status) params.set('status', filters.status);
             if (filters.department) params.set('department', filters.department);
             if (filters.q) params.set('q', filters.q);
@@ -825,7 +799,7 @@ const ComplianceDashboard = ({ policies, onRefreshPolicies, onOpenControl }) => 
         } finally {
             setLoading(false);
         }
-    }, [page, filters]);
+    }, [page, rowsPerPage, filters]);
 
     useEffect(() => { loadLogs(); }, [loadLogs]);
 
@@ -872,12 +846,17 @@ const ComplianceDashboard = ({ policies, onRefreshPolicies, onOpenControl }) => 
 
     const setStatusFilter = (status) => {
         setFilters((f) => ({ ...f, status }));
-        setPage(1);
+        setPage(0);
     };
 
-    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-    const from = total === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-    const to = Math.min(page * PAGE_SIZE, total);
+    const handleChangePage = (_event, newPage) => {
+        setPage(newPage);
+    };
+
+    const handleChangeRowsPerPage = (event) => {
+        setRowsPerPage(parseInt(event.target.value, 10));
+        setPage(0);
+    };
 
     const summaryCounts = {
         '': summary.total,
@@ -888,127 +867,150 @@ const ComplianceDashboard = ({ policies, onRefreshPolicies, onOpenControl }) => 
     };
 
     return (
-        <Box>
-            <OnboardingPolicySettings policies={policies} onOpenControl={onOpenControl} />
-
-            <Box sx={cardSx}>
-                <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2, gap: 2, flexWrap: 'wrap' }}>
-                    <Box>
-                        <Typography sx={{ ...pageTitleSx, fontSize: '1rem' }}>
-                            Employee progress
-                        </Typography>
-                        <Typography sx={{ fontSize: '0.8rem', color: MUTED, mt: 0.35, fontFamily: FONT }}>
-                            Policy, tour, and profile at a glance. Open a row for the full journey.
-                        </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                        <Button
-                            size="small"
-                            variant="outlined"
-                            startIcon={<DownloadIcon />}
-                            onClick={handleExport}
-                            disabled={exporting}
-                            sx={ghostBtnSx}
-                        >
-                            Export CSV
-                        </Button>
-                        <IconButton
-                            size="small"
-                            onClick={loadLogs}
-                            disabled={loading}
-                            aria-label="Refresh"
-                            sx={{ border: `1px solid ${BORDER}`, borderRadius: '10px', color: MUTED }}
-                        >
-                            <RefreshIcon fontSize="small" />
-                        </IconButton>
-                    </Box>
-                </Box>
-
-                <Box sx={{
-                    display: 'grid',
-                    gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(5, minmax(0, 1fr))' },
-                    gap: 1,
-                    mb: 2,
-                }}>
-                    {SUMMARY_CARDS.map((card) => {
-                        const active = filters.status === card.key;
-                        const count = summaryCounts[card.key];
-                        return (
-                            <Box
-                                key={card.label}
-                                component="button"
-                                type="button"
-                                onClick={() => setStatusFilter(card.key)}
-                                sx={{
-                                    all: 'unset',
-                                    boxSizing: 'border-box',
-                                    display: 'block',
-                                    width: '100%',
-                                    textAlign: 'left',
-                                    cursor: 'pointer',
-                                    border: `1px solid ${active ? card.border : BORDER}`,
-                                    background: active ? card.bg : '#fff',
-                                    borderRadius: '12px',
-                                    px: 1.5,
-                                    py: 1.15,
-                                    fontFamily: FONT,
-                                    transition: 'border-color 0.15s ease, background 0.15s ease',
-                                    '&:hover': { borderColor: card.border, background: card.bg },
-                                    '&:focus-visible': { outline: `2px solid ${RED}`, outlineOffset: 2 },
-                                }}
+        <Box sx={{ height: '100%', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
+            <Box
+                sx={{
+                    ...cardSx,
+                    flex: 1,
+                    minHeight: 0,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
+                }}
+            >
+                {/* Sticky KPI / filters — only the table rows scroll below */}
+                <Box sx={{ flexShrink: 0 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', mb: 2, gap: 2, flexWrap: 'wrap' }}>
+                        <Box>
+                            <Typography sx={{ ...pageTitleSx, fontSize: '1rem' }}>
+                                Employee progress
+                            </Typography>
+                            <Typography sx={{ fontSize: '0.8rem', color: MUTED, mt: 0.35, fontFamily: FONT }}>
+                                Policy, tour, and profile at a glance. Open a row for the full journey.
+                            </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<DownloadIcon />}
+                                onClick={handleExport}
+                                disabled={exporting}
+                                sx={ghostBtnSx}
                             >
-                                <Typography sx={{ fontSize: '0.65rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: MUTED }}>
-                                    {card.label}
-                                </Typography>
-                                <Typography sx={{ mt: 0.2, fontWeight: 700, fontSize: '1.2rem', color: active ? card.color : TEXT, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
-                                    {hasSummary || card.key === '' ? (count ?? 0) : '–'}
-                                </Typography>
-                            </Box>
-                        );
-                    })}
-                </Box>
+                                Export CSV
+                            </Button>
+                            <IconButton
+                                size="small"
+                                onClick={loadLogs}
+                                disabled={loading}
+                                aria-label="Refresh"
+                                sx={{ border: `1px solid ${BORDER}`, borderRadius: '10px', color: MUTED }}
+                            >
+                                <RefreshIcon fontSize="small" />
+                            </IconButton>
+                        </Box>
+                    </Box>
 
-                <Box sx={{ display: 'flex', gap: 1.25, mb: 2, flexWrap: 'wrap' }}>
-                    <TextField
-                        size="small"
-                        placeholder="Search name or employee code"
-                        value={searchInput}
-                        onChange={(e) => setSearchInput(e.target.value)}
-                        sx={{ minWidth: 240, flex: 1, ...fieldSx }}
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <SearchOutlinedIcon sx={{ fontSize: 18, color: MUTED }} />
-                                </InputAdornment>
-                            ),
-                        }}
-                    />
-                    <TextField
-                        size="small"
-                        label="Department"
-                        value={filters.department}
-                        onChange={(e) => { setFilters((f) => ({ ...f, department: e.target.value })); setPage(1); }}
-                        sx={{ minWidth: 160, ...fieldSx }}
-                    />
+                    <Box sx={{
+                        display: 'grid',
+                        gridTemplateColumns: { xs: '1fr 1fr', sm: 'repeat(5, minmax(0, 1fr))' },
+                        gap: 0.65,
+                        mb: 1.35,
+                    }}>
+                        {SUMMARY_CARDS.map((card) => {
+                            const active = filters.status === card.key;
+                            const count = summaryCounts[card.key];
+                            return (
+                                <Box
+                                    key={card.label}
+                                    component="button"
+                                    type="button"
+                                    onClick={() => setStatusFilter(card.key)}
+                                    sx={{
+                                        all: 'unset',
+                                        boxSizing: 'border-box',
+                                        display: 'block',
+                                        width: '100%',
+                                        textAlign: 'left',
+                                        cursor: 'pointer',
+                                        border: `1px solid ${active ? card.border : BORDER}`,
+                                        background: active ? card.bg : '#fff',
+                                        borderRadius: '8px',
+                                        px: 1,
+                                        py: 0.75,
+                                        fontFamily: FONT,
+                                        transition: 'border-color 0.15s ease, background 0.15s ease',
+                                        '&:hover': { borderColor: card.border, background: card.bg },
+                                        '&:focus-visible': { outline: `2px solid ${RED}`, outlineOffset: 2 },
+                                    }}
+                                >
+                                    <Typography sx={{ fontSize: '0.55rem', fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: MUTED, lineHeight: 1.2 }}>
+                                        {card.label}
+                                    </Typography>
+                                    <Typography sx={{ mt: 0.1, fontWeight: 700, fontSize: '0.8rem', color: active ? card.color : TEXT, letterSpacing: '-0.03em', lineHeight: 1.2 }}>
+                                        {hasSummary || card.key === '' ? (count ?? 0) : '–'}
+                                    </Typography>
+                                </Box>
+                            );
+                        })}
+                    </Box>
+
+                    <Box sx={{ display: 'flex', gap: 1.25, mb: 2, flexWrap: 'wrap' }}>
+                        <TextField
+                            size="small"
+                            placeholder="Search name or employee code"
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            sx={{ minWidth: 240, flex: 1, ...fieldSx }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchOutlinedIcon sx={{ fontSize: 18, color: MUTED }} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                        <TextField
+                            size="small"
+                            label="Department"
+                            value={filters.department}
+                            onChange={(e) => { setFilters((f) => ({ ...f, department: e.target.value })); setPage(0); }}
+                            sx={{ minWidth: 160, ...fieldSx }}
+                        />
+                    </Box>
                 </Box>
 
                 <TableContainer
                     component={Paper}
                     variant="outlined"
                     sx={{
+                        flex: 1,
+                        minHeight: 0,
                         borderRadius: '12px',
                         borderColor: BORDER,
                         overflowX: 'auto',
-                        overflowY: 'hidden',
+                        overflowY: 'auto',
                         boxShadow: 'none',
                         WebkitOverflowScrolling: 'touch',
                     }}
                 >
-                    <Table size="small">
+                    <Table size="small" stickyHeader>
                         <TableHead>
                             <TableRow>
                                 {['Employee', 'Notice', 'Viewed', 'Read time', 'Outcome', 'Progress', 'Deadline', 'Status', ''].map((col) => (
-                                    <TableCell key={col || 'action'} sx={tableHeadCellSx}>{col}</TableCell>
+                                    <TableCell
+                                        key={col || 'action'}
+                                        sx={{
+                                            ...tableHeadCellSx,
+                                            position: 'sticky',
+                                            top: 0,
+                                            zIndex: 2,
+                                            background: SURFACE,
+                                        }}
+                                    >
+                                        {col}
+                                    </TableCell>
                                 ))}
                             </TableRow>
                         </TableHead>
@@ -1151,24 +1153,26 @@ const ComplianceDashboard = ({ policies, onRefreshPolicies, onOpenControl }) => 
                     </Table>
                 </TableContainer>
 
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2, mt: 2, flexWrap: 'wrap' }}>
-                    <Typography variant="body2" sx={{ color: MUTED, fontFamily: FONT }}>
-                        {total === 0 ? 'No records' : `${from}–${to} of ${total}`}
-                    </Typography>
-                    {totalPages > 1 && (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                            <Button size="small" disabled={page <= 1} onClick={() => setPage((p) => p - 1)} sx={{ textTransform: 'none', color: MUTED }}>
-                                Prev
-                            </Button>
-                            <Typography variant="body2" sx={{ color: MUTED }}>
-                                {page} / {totalPages}
-                            </Typography>
-                            <Button size="small" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)} sx={{ textTransform: 'none', color: MUTED }}>
-                                Next
-                            </Button>
-                        </Box>
-                    )}
-                </Box>
+                <TablePagination
+                    component="div"
+                    count={total}
+                    page={page}
+                    onPageChange={handleChangePage}
+                    rowsPerPage={rowsPerPage}
+                    onRowsPerPageChange={handleChangeRowsPerPage}
+                    rowsPerPageOptions={ROWS_PER_PAGE_OPTIONS}
+                    labelRowsPerPage="Rows per page"
+                    sx={{
+                        flexShrink: 0,
+                        mt: 1,
+                        borderTop: `1px solid ${BORDER}`,
+                        '.MuiTablePagination-toolbar': { fontFamily: FONT },
+                        '.MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows': {
+                            fontFamily: FONT,
+                            color: MUTED,
+                        },
+                    }}
+                />
             </Box>
 
             <TimelineDialog

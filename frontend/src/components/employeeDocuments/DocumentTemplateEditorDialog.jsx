@@ -6,14 +6,20 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Button, TextField, Typography, Box, Stack, Chip,
     Select, MenuItem, FormControl, InputLabel, Switch, FormControlLabel,
-    IconButton, Alert, CircularProgress, Tooltip, Divider,
+    IconButton, Alert, CircularProgress, Tooltip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import api from '../../api/axios';
+import {
+    RED, RED_DARK, RED_BG, RED_LIGHT, TEXT, MUTED, BORDER, SURFACE, FONT,
+    INFO_BG, INFO_TEXT,
+    primaryBtnSx, outlineBtnSx, ghostBtnSx, fieldSx, iconBoxSx,
+} from '../../theme/policiesPageTheme';
 
 // Available tokens that can be inserted into the boilerplate
 const TOKENS = [
@@ -46,20 +52,27 @@ const AUTO_FILL_OPTIONS = [
     { value: 'manager_name', label: 'Manager Name' },
 ];
 
-const primaryBtnSx = {
-    background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
-    textTransform: 'none',
-    fontWeight: 600,
-    borderRadius: '10px',
-    boxShadow: 'none',
-    '&:hover': { background: 'linear-gradient(135deg, #C62828 0%, #B71C1C 100%)', boxShadow: 'none' },
-};
-
 const TYPE_LABELS = {
     joining_letter: 'Joining Letter',
     kra: 'KRA Letter',
     probation_confirmation: 'Probation Confirmation',
     probation_extension: 'Probation Extension',
+};
+
+const sectionLabelSx = {
+    fontWeight: 700,
+    fontSize: '0.9rem',
+    color: TEXT,
+    fontFamily: FONT,
+    letterSpacing: '-0.01em',
+};
+
+const sectionHintSx = {
+    fontSize: '0.78rem',
+    color: MUTED,
+    fontFamily: FONT,
+    display: 'block',
+    lineHeight: 1.5,
 };
 
 export default function DocumentTemplateEditorDialog({ open, onClose, documentType, onSaved }) {
@@ -212,49 +225,92 @@ export default function DocumentTemplateEditorDialog({ open, onClose, documentTy
             onClose={onClose}
             maxWidth="md"
             fullWidth
-            PaperProps={{ sx: { height: '90vh', borderRadius: 3, display: 'flex', flexDirection: 'column' } }}
+            PaperProps={{
+                sx: {
+                    height: '88vh',
+                    maxHeight: '88vh',
+                    borderRadius: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    fontFamily: FONT,
+                    overflow: 'hidden',
+                },
+            }}
         >
-            <DialogTitle sx={{ fontWeight: 700, pb: 1, borderBottom: '1px solid #e2e8f0' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <Box>
-                        <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+            <DialogTitle sx={{ px: 3, pt: 2.5, pb: 2, borderBottom: `1px solid ${BORDER}` }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                    <Box sx={iconBoxSx}>
+                        <DescriptionOutlinedIcon sx={{ fontSize: 18 }} />
+                    </Box>
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography sx={{ fontWeight: 700, fontSize: '1.1rem', color: TEXT, letterSpacing: '-0.02em', fontFamily: FONT, lineHeight: 1.25 }}>
                             Manage Template — {typeLabel}
                         </Typography>
-                        {currentVersion && (
-                            <Typography variant="caption" sx={{ color: '#C62828' }}>
-                                Current: v{currentVersion} (active) · Saving creates a new version
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.6, flexWrap: 'wrap' }}>
+                            {currentVersion ? (
+                                <Chip
+                                    size="small"
+                                    label={`v${currentVersion} active`}
+                                    sx={{
+                                        height: 22,
+                                        fontSize: '0.7rem',
+                                        fontWeight: 700,
+                                        background: RED_BG,
+                                        color: RED_DARK,
+                                        border: 'none',
+                                        fontFamily: FONT,
+                                    }}
+                                />
+                            ) : !loading ? (
+                                <Chip
+                                    size="small"
+                                    label="Not configured"
+                                    sx={{
+                                        height: 22,
+                                        fontSize: '0.7rem',
+                                        fontWeight: 600,
+                                        background: SURFACE,
+                                        color: MUTED,
+                                        border: `1px solid ${BORDER}`,
+                                        fontFamily: FONT,
+                                    }}
+                                />
+                            ) : null}
+                            <Typography sx={{ fontSize: '0.75rem', color: MUTED, fontFamily: FONT }}>
+                                Saving creates a new version · issued letters stay unchanged
                             </Typography>
-                        )}
-                        {!currentVersion && !loading && (
-                            <Typography variant="caption" sx={{ color: '#94a3b8' }}>
-                                No template configured yet
-                            </Typography>
-                        )}
+                        </Box>
                     </Box>
                 </Box>
             </DialogTitle>
 
-            <DialogContent sx={{ flex: 1, overflowY: 'auto', py: 2.5 }}>
+            <DialogContent sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2.5 }}>
                 {loading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-                        <CircularProgress size={28} sx={{ color: '#E53935' }} />
+                    <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                        <CircularProgress size={28} sx={{ color: RED }} />
                     </Box>
                 ) : (
-                    <Stack spacing={3}>
-                        {error && <Alert severity="error" onClose={() => setError('')}>{error}</Alert>}
-                        {success && <Alert severity="success" onClose={() => setSuccess('')}>{success}</Alert>}
+                    <Stack spacing={2.5}>
+                        {error && <Alert severity="error" onClose={() => setError('')} sx={{ borderRadius: '10px' }}>{error}</Alert>}
+                        {success && <Alert severity="success" onClose={() => setSuccess('')} sx={{ borderRadius: '10px' }}>{success}</Alert>}
 
-                        {/* ── Section 1: Boilerplate body ──────────────────── */}
-                        <Box>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b', mb: 0.5 }}>
-                                Letter Body (Boilerplate)
-                            </Typography>
-                            <Typography variant="caption" sx={{ color: '#64748b', display: 'block', mb: 1 }}>
-                                Write the fixed letter text. Click a token button to insert a merge field at cursor position.
+                        {/* ── Letter body ──────────────────── */}
+                        <Box sx={{ border: `1px solid ${BORDER}`, borderRadius: '14px', p: 2, background: '#fff' }}>
+                            <Typography sx={{ ...sectionLabelSx, mb: 0.35 }}>Letter Body</Typography>
+                            <Typography sx={{ ...sectionHintSx, mb: 1.5 }}>
+                                Write the fixed letter text. Click a token to insert a merge field at the cursor.
                             </Typography>
 
-                            {/* Token inserter */}
-                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mb: 1.5 }}>
+                            <Box sx={{
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: 0.6,
+                                mb: 1.5,
+                                p: 1.25,
+                                borderRadius: '10px',
+                                background: SURFACE,
+                                border: `1px solid ${BORDER}`,
+                            }}>
                                 {TOKENS.map((t) => (
                                     <Chip
                                         key={t.key}
@@ -263,12 +319,14 @@ export default function DocumentTemplateEditorDialog({ open, onClose, documentTy
                                         onClick={() => insertToken(t.key)}
                                         sx={{
                                             fontSize: '0.72rem',
+                                            height: 26,
                                             cursor: 'pointer',
-                                            borderColor: '#c7d2fe',
-                                            background: '#eef2ff',
-                                            color: '#4338ca',
-                                            fontWeight: 500,
-                                            '&:hover': { background: '#e0e7ff' },
+                                            borderColor: 'rgba(198, 40, 40, 0.22)',
+                                            background: '#fff',
+                                            color: RED_DARK,
+                                            fontWeight: 600,
+                                            fontFamily: FONT,
+                                            '&:hover': { background: RED_LIGHT, borderColor: RED },
                                         }}
                                         variant="outlined"
                                     />
@@ -278,29 +336,32 @@ export default function DocumentTemplateEditorDialog({ open, onClose, documentTy
                             <TextField
                                 inputRef={bodyRef}
                                 multiline
-                                minRows={8}
-                                maxRows={18}
+                                minRows={9}
+                                maxRows={16}
                                 fullWidth
                                 value={boilerplateHtml}
                                 onChange={(e) => setBoilerplateHtml(e.target.value)}
-                                placeholder="Dear {{employee_name}},&#10;&#10;We are pleased to confirm your joining at [Company Name] as {{designation}} in the {{department}} department, effective {{join_date}}.&#10;&#10;..."
+                                placeholder={`Dear {{employee_name}},\n\nWe are pleased to confirm your joining as {{designation}} in {{department}}, effective {{join_date}}.\n\n...`}
                                 sx={{
-                                    '& .MuiInputBase-root': { fontFamily: 'monospace', fontSize: '0.875rem' },
+                                    ...fieldSx,
+                                    '& .MuiInputBase-root': {
+                                        fontFamily: "'IBM Plex Mono', 'Consolas', monospace",
+                                        fontSize: '0.84rem',
+                                        lineHeight: 1.55,
+                                        background: '#fff',
+                                        borderRadius: '10px',
+                                    },
                                 }}
                             />
                         </Box>
 
-                        <Divider />
-
-                        {/* ── Section 2: Structured fields ─────────────────── */}
-                        <Box>
-                            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+                        {/* ── Variable fields ─────────────────── */}
+                        <Box sx={{ border: `1px solid ${BORDER}`, borderRadius: '14px', p: 2, background: '#fff' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 1.5, mb: 1.5, flexWrap: 'wrap' }}>
                                 <Box>
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                                        Variable Fields
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ color: '#64748b' }}>
-                                        Fields the admin fills in at assignment time. Auto-fill maps to the employee profile.
+                                    <Typography sx={sectionLabelSx}>Variable Fields</Typography>
+                                    <Typography sx={sectionHintSx}>
+                                        Inputs filled at assignment. Auto-fill can map to the employee profile.
                                     </Typography>
                                 </Box>
                                 <Button
@@ -308,41 +369,47 @@ export default function DocumentTemplateEditorDialog({ open, onClose, documentTy
                                     startIcon={<AddIcon />}
                                     onClick={addField}
                                     variant="outlined"
-                                    sx={{ textTransform: 'none', borderColor: '#c7d2fe', color: '#4338ca', whiteSpace: 'nowrap' }}
+                                    sx={{ ...outlineBtnSx, whiteSpace: 'nowrap' }}
                                 >
                                     Add Field
                                 </Button>
                             </Box>
 
                             {fields.length === 0 && (
-                                <Box sx={{ p: 2, background: '#f8fafc', borderRadius: 2, textAlign: 'center' }}>
-                                    <Typography variant="body2" sx={{ color: '#94a3b8' }}>
-                                        No variable fields. Click "Add Field" to add inputs the admin fills per employee.
+                                <Box sx={{
+                                    p: 2.25,
+                                    background: SURFACE,
+                                    borderRadius: '12px',
+                                    textAlign: 'center',
+                                    border: `1px dashed ${BORDER}`,
+                                }}>
+                                    <Typography sx={{ fontSize: '0.85rem', color: MUTED, fontFamily: FONT }}>
+                                        No variable fields yet. Add fields the admin fills per employee.
                                     </Typography>
                                 </Box>
                             )}
 
-                            <Stack spacing={1.5}>
+                            <Stack spacing={1.25}>
                                 {fields.map((field, idx) => (
                                     <Box
                                         key={field._id}
                                         sx={{
                                             p: 1.5,
-                                            border: '1px solid #e2e8f0',
-                                            borderRadius: 2,
-                                            background: '#fafafa',
+                                            border: `1px solid ${BORDER}`,
+                                            borderRadius: '12px',
+                                            background: SURFACE,
                                         }}
                                     >
                                         <Box
                                             sx={{
                                                 display: 'grid',
                                                 gridTemplateColumns: {
-                                                    xs: 'minmax(0, 1fr)',
-                                                    sm: 'repeat(2, minmax(0, 1fr))',
-                                                    lg: 'minmax(0, 1fr) minmax(0, 1fr) 140px 140px auto auto auto',
+                                                    xs: '1fr',
+                                                    sm: '1fr 1fr',
+                                                    md: '1.2fr 1fr 120px 150px auto',
                                                 },
-                                                gap: 1,
-                                                alignItems: 'flex-start',
+                                                gap: 1.25,
+                                                alignItems: 'center',
                                             }}
                                         >
                                             <TextField
@@ -351,6 +418,7 @@ export default function DocumentTemplateEditorDialog({ open, onClose, documentTy
                                                 value={field.label}
                                                 onChange={(e) => updateField(field._id, 'label', e.target.value)}
                                                 required
+                                                sx={fieldSx}
                                             />
                                             <TextField
                                                 size="small"
@@ -359,8 +427,9 @@ export default function DocumentTemplateEditorDialog({ open, onClose, documentTy
                                                 onChange={(e) => updateField(field._id, 'key', e.target.value.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, ''))}
                                                 placeholder="e.g. salary_amount"
                                                 required
+                                                sx={fieldSx}
                                             />
-                                            <FormControl size="small">
+                                            <FormControl size="small" sx={fieldSx}>
                                                 <InputLabel>Type</InputLabel>
                                                 <Select
                                                     value={field.type}
@@ -372,11 +441,11 @@ export default function DocumentTemplateEditorDialog({ open, onClose, documentTy
                                                     <MenuItem value="textarea">Textarea</MenuItem>
                                                 </Select>
                                             </FormControl>
-                                            <FormControl size="small">
-                                                <InputLabel>Auto-fill From</InputLabel>
+                                            <FormControl size="small" sx={fieldSx}>
+                                                <InputLabel>Auto-fill</InputLabel>
                                                 <Select
                                                     value={field.autoFillFrom || ''}
-                                                    label="Auto-fill From"
+                                                    label="Auto-fill"
                                                     onChange={(e) => updateField(field._id, 'autoFillFrom', e.target.value)}
                                                 >
                                                     {AUTO_FILL_OPTIONS.map((o) => (
@@ -384,63 +453,68 @@ export default function DocumentTemplateEditorDialog({ open, onClose, documentTy
                                                     ))}
                                                 </Select>
                                             </FormControl>
-                                            <FormControlLabel
-                                                sx={{ m: 0, whiteSpace: 'nowrap' }}
-                                                control={
-                                                    <Switch
-                                                        size="small"
-                                                        checked={!!field.required}
-                                                        onChange={(e) => updateField(field._id, 'required', e.target.checked)}
-                                                    />
-                                                }
-                                                label={<Typography variant="caption">Required</Typography>}
-                                            />
-                                            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.25 }}>
+                                                <FormControlLabel
+                                                    sx={{ m: 0, mr: 0.5 }}
+                                                    control={
+                                                        <Switch
+                                                            size="small"
+                                                            checked={!!field.required}
+                                                            onChange={(e) => updateField(field._id, 'required', e.target.checked)}
+                                                            sx={{
+                                                                '& .MuiSwitch-switchBase.Mui-checked': { color: RED },
+                                                                '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: RED },
+                                                            }}
+                                                        />
+                                                    }
+                                                    label={<Typography sx={{ fontSize: '0.72rem', color: MUTED, fontFamily: FONT }}>Req.</Typography>}
+                                                />
                                                 <Tooltip title="Move up">
                                                     <span>
-                                                        <IconButton size="small" onClick={() => moveField(field._id, -1)} disabled={idx === 0}>
+                                                        <IconButton size="small" onClick={() => moveField(field._id, -1)} disabled={idx === 0} sx={{ color: MUTED }}>
                                                             <ArrowUpwardIcon fontSize="small" />
                                                         </IconButton>
                                                     </span>
                                                 </Tooltip>
                                                 <Tooltip title="Move down">
                                                     <span>
-                                                        <IconButton size="small" onClick={() => moveField(field._id, 1)} disabled={idx === fields.length - 1}>
+                                                        <IconButton size="small" onClick={() => moveField(field._id, 1)} disabled={idx === fields.length - 1} sx={{ color: MUTED }}>
                                                             <ArrowDownwardIcon fontSize="small" />
                                                         </IconButton>
                                                     </span>
                                                 </Tooltip>
+                                                <Tooltip title="Remove field">
+                                                    <IconButton size="small" onClick={() => removeField(field._id)} sx={{ color: RED_DARK }}>
+                                                        <DeleteOutlineIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Tooltip>
                                             </Box>
-                                            <Tooltip title="Remove field">
-                                                <IconButton size="small" onClick={() => removeField(field._id)} sx={{ color: '#ef4444' }}>
-                                                    <DeleteOutlineIcon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
                                         </Box>
                                     </Box>
                                 ))}
                             </Stack>
                         </Box>
 
-                        <Divider />
-
-                        {/* ── Section 3: Notes section toggle ──────────────── */}
-                        <Box>
+                        {/* ── Notes + version notice ──────────────── */}
+                        <Box sx={{ border: `1px solid ${BORDER}`, borderRadius: '14px', p: 2, background: '#fff' }}>
                             <FormControlLabel
-                                sx={{ ml: 0 }}
+                                sx={{ ml: 0, alignItems: 'flex-start' }}
                                 control={
                                     <Switch
                                         checked={includeNotes}
                                         onChange={(e) => setIncludeNotes(e.target.checked)}
+                                        sx={{
+                                            mt: 0.25,
+                                            '& .MuiSwitch-switchBase.Mui-checked': { color: RED },
+                                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: RED },
+                                        }}
                                     />
                                 }
                                 label={
-                                    <Box>
-                                        <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b' }}>
-                                            Include Notes Section
-                                        </Typography>
-                                        <Typography variant="caption" sx={{ color: '#64748b' }}>
-                                            Shows a single free-text area for additional content at assignment time.
+                                    <Box sx={{ ml: 0.5 }}>
+                                        <Typography sx={sectionLabelSx}>Include Notes Section</Typography>
+                                        <Typography sx={sectionHintSx}>
+                                            Adds a free-text area for extra letter content at assignment time.
                                         </Typography>
                                     </Box>
                                 }
@@ -452,23 +526,32 @@ export default function DocumentTemplateEditorDialog({ open, onClose, documentTy
                                     value={notesFieldLabel}
                                     onChange={(e) => setNotesFieldLabel(e.target.value)}
                                     placeholder="Additional Notes"
-                                    sx={{ mt: 1.5, maxWidth: 360 }}
-                                    helperText="This label appears above the free-text notes box at assignment time."
+                                    sx={{ mt: 1.75, maxWidth: 360, ...fieldSx }}
+                                    helperText="Shown above the notes box when assigning."
                                 />
                             )}
                         </Box>
 
-                        {/* Version info notice */}
-                        <Alert severity="info" icon={<InfoOutlinedIcon fontSize="small" />} sx={{ fontSize: '0.8rem' }}>
-                            Saving creates a <strong>new version</strong> — it does not modify any previously issued documents.
-                            Old versions are kept for audit.
+                        <Alert
+                            severity="info"
+                            icon={<InfoOutlinedIcon fontSize="small" />}
+                            sx={{
+                                fontSize: '0.8rem',
+                                borderRadius: '10px',
+                                background: INFO_BG,
+                                color: INFO_TEXT,
+                                border: '1px solid #BFDBFE',
+                                fontFamily: FONT,
+                            }}
+                        >
+                            Saving creates a <strong>new version</strong>. Previously issued documents are never modified.
                         </Alert>
                     </Stack>
                 )}
             </DialogContent>
 
-            <DialogActions sx={{ px: 3, pb: 2, borderTop: '1px solid #e2e8f0', gap: 1 }}>
-                <Button onClick={onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+            <DialogActions sx={{ px: 3, py: 1.75, borderTop: `1px solid ${BORDER}`, gap: 1 }}>
+                <Button onClick={onClose} sx={ghostBtnSx}>Cancel</Button>
                 <Button
                     variant="contained"
                     onClick={handleSave}

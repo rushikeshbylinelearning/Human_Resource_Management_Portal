@@ -15,16 +15,11 @@ import {
   Add as AddIcon,
   Delete as DeleteIcon,
   Group as GroupIcon,
-  Groups as GroupsIcon,
   Inventory2 as Inventory2Icon,
   Search as SearchIcon,
-  RestartAlt as RestartAltIcon,
-  PeopleAlt as PeopleAltIcon,
-  Insights as InsightsIcon,
   MoreVert as MoreVertIcon,
   Schedule as ScheduleIcon,
   NotificationsActive as NotificationsActiveIcon,
-  SupportAgent as SupportAgentIcon,
   EventNote as EventNoteIcon,
   Dashboard as DashboardIcon
 } from '@mui/icons-material';
@@ -283,10 +278,6 @@ const ManageSectionPage = () => {
     return JSON.stringify(currentUser.featurePermissions) !== JSON.stringify(originalUser.featurePermissions);
   }, [users, originalUsers]);
 
-  const unsavedCount = useMemo(() => (
-    users.reduce((count, user) => count + (hasUnsavedChanges(user._id) ? 1 : 0), 0)
-  ), [users, hasUnsavedChanges]);
-
   const roleOptions = useMemo(() => {
     const uniqueRoles = new Set();
     users.forEach(user => uniqueRoles.add(normalizeRole(user.role)));
@@ -313,53 +304,6 @@ const privilegeOptions = useMemo(() => {
       return roleMatches && privilegeMatches && searchMatches && unsavedMatches;
     });
   }, [users, selectedRole, selectedPrivilege, searchTerm, showUnsavedOnly, hasUnsavedChanges]);
-
-  const analyticsEnabledCount = useMemo(
-    () => users.filter((user) => user.featurePermissions?.canViewAnalytics).length,
-    [users]
-  );
-
-  const liveAttendanceEnabledCount = useMemo(
-    () => users.filter((user) => user.featurePermissions?.canViewLiveAttendance).length,
-    [users]
-  );
-
-  const hrQueryEnabledCount = useMemo(
-    () => users.filter((user) => user.featurePermissions?.canManageHRQueries).length,
-    [users]
-  );
-
-  const itTicketViewEnabledCount = useMemo(
-    () => users.filter((user) =>
-      user.featurePermissions?.canViewITSupport
-      || user.featurePermissions?.canManageITSupport
-      || user.featurePermissions?.canAssignITSupport
-    ).length,
-    [users]
-  );
-
-  const itTicketWriteEnabledCount = useMemo(
-    () => users.filter((user) =>
-      user.featurePermissions?.canManageITSupport
-      || user.featurePermissions?.canAssignITSupport
-    ).length,
-    [users]
-  );
-
-  const itTicketAssignEnabledCount = useMemo(
-    () => users.filter((user) => user.featurePermissions?.canAssignITSupport).length,
-    [users]
-  );
-
-  const bulkAttendanceActionsEnabledCount = useMemo(
-    () => users.filter((user) => user.featurePermissions?.canManageBulkAttendanceActions).length,
-    [users]
-  );
-
-  const advancedPrivilegeCount = useMemo(
-    () => users.filter((user) => getPrivilegeLevel(user) === 'advanced').length,
-    [users]
-  );
 
   // Save user permissions
   const saveUserPermissions = useCallback(async (userId) => {
@@ -2253,86 +2197,6 @@ const privilegeOptions = useMemo(() => {
 
       {error && <Alert severity="error" className="error-alert">{error}</Alert>}
       {success && <Alert severity="success" className="error-alert">{success}</Alert>}
-
-      <Box className="manage-section-overview">
-        {[
-          {
-            label: 'Total Users',
-            value: users.length,
-            helper: 'Team members',
-            icon: <PeopleAltIcon />,
-          },
-          {
-            label: 'Advanced Privileges',
-            value: advancedPrivilegeCount,
-            helper: 'High-trust users',
-            icon: <SecurityIcon />,
-          },
-          {
-            label: 'Analytics Access',
-            value: analyticsEnabledCount,
-            helper: 'Can view dashboards',
-            icon: <InsightsIcon />,
-          },
-          {
-            label: 'Live Attendance',
-            value: liveAttendanceEnabledCount,
-            helper: 'Real-time board access',
-            icon: <GroupsIcon />,
-          },
-          {
-            label: 'HR Queries',
-            value: hrQueryEnabledCount,
-            helper: 'Delegated HR query managers',
-            icon: <SupportAgentIcon />,
-          },
-          {
-            label: 'IT View',
-            value: itTicketViewEnabledCount,
-            helper: 'Any IT ticket access',
-            icon: <SupportAgentIcon />,
-          },
-          {
-            label: 'IT Write',
-            value: itTicketWriteEnabledCount,
-            helper: 'Can update tickets',
-            icon: <SupportAgentIcon />,
-          },
-          {
-            label: 'IT Assign',
-            value: itTicketAssignEnabledCount,
-            helper: 'Can assign tickets',
-            icon: <SupportAgentIcon />,
-          },
-          {
-            label: 'Bulk Attendance',
-            value: bulkAttendanceActionsEnabledCount,
-            helper: 'Admin summary assistant',
-            icon: <SettingsIcon />,
-          },
-          {
-            label: 'Unsaved Changes',
-            value: unsavedCount,
-            helper: unsavedCount ? 'Review & save' : 'All synced',
-            icon: <RestartAltIcon />,
-          },
-        ].map((stat) => (
-          <Card key={stat.label} className="overview-card">
-            <CardContent>
-              <Box className="overview-card__icon">{stat.icon}</Box>
-              <Typography className="overview-card__label" variant="body2">
-                {stat.label}
-              </Typography>
-              <Typography className="overview-card__value" variant="h4">
-                {stat.value}
-              </Typography>
-              <Typography className="overview-card__helper" variant="caption">
-                {stat.helper}
-              </Typography>
-            </CardContent>
-          </Card>
-        ))}
-      </Box>
 
       <Box className="manage-section-toolbar">
         <TextField

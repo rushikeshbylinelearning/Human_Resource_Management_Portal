@@ -9,50 +9,6 @@
   background-color: #f8f9fa;
 }
 
-.manage-section-overview {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 16px;
-}
-
-.overview-card {
-  border-radius: 20px !important;
-  background: #fff;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 15px 30px rgba(15, 23, 42, 0.08) !important;
-  position: relative;
-  overflow: hidden;
-}
-
-.overview-card__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: rgba(229, 57, 53, 0.1);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: #e53935;
-  margin-bottom: 12px;
-}
-
-.overview-card__label {
-  font-weight: 600 !important;
-  color: #6b7280 !important;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.overview-card__value {
-  font-weight: 700 !important;
-  color: #111827 !important;
-  margin-top: 4px !important;
-}
-
-.overview-card__helper {
-  color: #6b7280 !important;
-}
-
 .manage-section-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -296,9 +252,6 @@
 @media (max-width: 768px) {
   .manage-section-page {
     padding: 16px;
-  }
-  .manage-section-overview {
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   }
   .manage-section-toolbar {
     flex-direction: column;

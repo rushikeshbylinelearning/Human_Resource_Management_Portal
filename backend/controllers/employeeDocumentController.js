@@ -296,6 +296,20 @@ exports.getAdminCompliance = async (req, res) => {
         if (req.query.documentType) filter.documentType = req.query.documentType;
         if (req.query.employeeId) filter.employeeId = req.query.employeeId;
 
+        const q = String(req.query.q || '').trim();
+        if (q) {
+            const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const rx = new RegExp(escaped, 'i');
+            filter.$or = [
+                { employeeName: rx },
+                { employeeCode: rx },
+                { department: rx },
+                { documentTypeLabel: rx },
+                { documentType: rx },
+                { assignedByName: rx },
+            ];
+        }
+
         const [records, total] = await Promise.all([
             EmployeeDocument.find(filter)
                 .sort({ assignedAt: -1 })

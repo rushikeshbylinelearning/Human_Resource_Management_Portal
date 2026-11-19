@@ -8,7 +8,7 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     Button, Typography, Box, Stack, Alert, CircularProgress,
     TextField, Switch, FormControlLabel, Autocomplete,
-    Divider,
+    Divider, Chip,
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PreviewOutlinedIcon from '@mui/icons-material/PreviewOutlined';
@@ -16,21 +16,26 @@ import AssignmentOutlinedIcon from '@mui/icons-material/AssignmentOutlined';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import api from '../../api/axios';
 import { PdfDocument, PdfPage } from '../lazy/LazyPdfComponents';
-
-const primaryBtnSx = {
-    background: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
-    textTransform: 'none',
-    fontWeight: 600,
-    borderRadius: '10px',
-    boxShadow: 'none',
-    '&:hover': { background: 'linear-gradient(135deg, #C62828 0%, #B71C1C 100%)', boxShadow: 'none' },
-};
+import {
+    RED, RED_DARK, RED_BG, TEXT, MUTED, BORDER, SURFACE, FONT,
+    INFO_BG, INFO_TEXT,
+    primaryBtnSx, ghostBtnSx, fieldSx, iconBoxSx,
+} from '../../theme/policiesPageTheme';
 
 const TYPE_LABELS = {
     joining_letter: 'Joining Letter',
     kra: 'KRA Letter',
     probation_confirmation: 'Probation Confirmation',
     probation_extension: 'Probation Extension',
+};
+
+const sectionLabelSx = {
+    fontWeight: 700,
+    fontSize: '0.88rem',
+    color: TEXT,
+    fontFamily: FONT,
+    letterSpacing: '-0.01em',
+    mb: 1,
 };
 
 // Step enum
@@ -245,41 +250,68 @@ export default function TemplateAssignDialog({
             onClose={onClose}
             maxWidth={step === STEP.PREVIEW ? 'lg' : 'sm'}
             fullWidth
-            PaperProps={{ sx: { height: step === STEP.PREVIEW ? '90vh' : 'auto', borderRadius: 3, display: 'flex', flexDirection: 'column' } }}
+            PaperProps={{
+                sx: {
+                    height: step === STEP.PREVIEW ? '88vh' : 'auto',
+                    maxHeight: '88vh',
+                    borderRadius: '16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    fontFamily: FONT,
+                    overflow: 'hidden',
+                },
+            }}
         >
-            <DialogTitle sx={{ fontWeight: 700, pb: 1, borderBottom: '1px solid #e2e8f0' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <AssignmentOutlinedIcon sx={{ color: '#C62828' }} />
-                    <Box>
-                        <Typography variant="h6" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+            <DialogTitle sx={{ px: 3, pt: 2.5, pb: 2, borderBottom: `1px solid ${BORDER}` }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                    <Box sx={iconBoxSx}>
+                        <AssignmentOutlinedIcon sx={{ fontSize: 18 }} />
+                    </Box>
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography sx={{ fontWeight: 700, fontSize: '1.1rem', color: TEXT, letterSpacing: '-0.02em', fontFamily: FONT, lineHeight: 1.25 }}>
                             Assign {typeLabel}
                         </Typography>
-                        {template && (
-                            <Typography variant="caption" sx={{ color: '#94a3b8' }}>
-                                Template v{template.version} · Fields auto-filled from employee profile
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.55, flexWrap: 'wrap' }}>
+                            {template && (
+                                <Chip
+                                    size="small"
+                                    label={`Template v${template.version}`}
+                                    sx={{
+                                        height: 22,
+                                        fontSize: '0.7rem',
+                                        fontWeight: 700,
+                                        background: RED_BG,
+                                        color: RED_DARK,
+                                        border: 'none',
+                                        fontFamily: FONT,
+                                    }}
+                                />
+                            )}
+                            <Typography sx={{ fontSize: '0.75rem', color: MUTED, fontFamily: FONT }}>
+                                Fields auto-fill from the employee profile
                             </Typography>
-                        )}
+                        </Box>
                     </Box>
                 </Box>
             </DialogTitle>
 
-            <DialogContent sx={{ flex: 1, overflowY: 'auto', py: 2.5 }}>
+            <DialogContent sx={{ flex: 1, overflowY: 'auto', px: 3, py: 2.5 }}>
                 {loadingTemplate ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', py: 6 }}>
-                        <CircularProgress size={28} sx={{ color: '#E53935' }} />
+                        <CircularProgress size={28} sx={{ color: RED }} />
                     </Box>
                 ) : templateError ? (
                     <Alert
                         severity="warning"
                         icon={<WarningAmberOutlinedIcon />}
-                        sx={{ borderRadius: 2 }}
+                        sx={{ borderRadius: '10px' }}
                     >
                         {templateError}
                     </Alert>
                 ) : step === STEP.FORM ? (
-                    <Stack spacing={2.5}>
-                        {/* Employee selector */}
+                    <Stack spacing={2.25}>
                         <Box>
+                            <Typography sx={sectionLabelSx}>Employees</Typography>
                             <Autocomplete
                                 multiple
                                 options={employees}
@@ -292,69 +324,65 @@ export default function TemplateAssignDialog({
                                 renderInput={(params) => (
                                     <TextField
                                         {...params}
-                                        label="Employees"
+                                        label="Select employees"
                                         size="small"
                                         placeholder="Search by name or code"
                                         error={!!formErrors._employees}
                                         helperText={formErrors._employees}
+                                        sx={fieldSx}
                                     />
                                 )}
                             />
                             {selectedEmployees.length > 1 && (
-                                <Alert severity="info" sx={{ mt: 1, fontSize: '0.8rem', py: 0.5 }}>
-                                    Fields are auto-filled from the <strong>first selected employee</strong>.
-                                    The same field values will be used for all {selectedEmployees.length} employees —
-                                    review carefully before generating.
+                                <Alert severity="info" sx={{ mt: 1.25, fontSize: '0.8rem', py: 0.75, borderRadius: '10px', background: INFO_BG, color: INFO_TEXT, border: '1px solid #BFDBFE' }}>
+                                    Auto-fill uses the <strong>first selected employee</strong>. The same values apply to all {selectedEmployees.length} employees.
                                 </Alert>
                             )}
                         </Box>
 
-                        {/* Auto-filled profile fields — read-only summary */}
                         {selectedEmployees.length > 0 && Object.keys(autoFilledValues).length > 0 && (
-                            <Box>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b', mb: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                    <LockOutlinedIcon sx={{ fontSize: 15, color: '#C62828' }} />
-                                    Auto-Filled from Employee Profile
+                            <Box sx={{ border: `1px solid ${BORDER}`, borderRadius: '12px', p: 1.75, background: SURFACE }}>
+                                <Typography sx={{ ...sectionLabelSx, display: 'flex', alignItems: 'center', gap: 0.6, mb: 1.25 }}>
+                                    <LockOutlinedIcon sx={{ fontSize: 15, color: RED_DARK }} />
+                                    Auto-filled from profile
                                     {loadingContext && (
-                                        <CircularProgress size={12} sx={{ ml: 1, color: '#E53935' }} />
+                                        <CircularProgress size={12} sx={{ ml: 0.5, color: RED }} />
                                     )}
                                 </Typography>
                                 <Box sx={{
-                                    background: '#f8fafc',
-                                    border: '1px solid #e2e8f0',
-                                    borderRadius: 2,
-                                    p: 1.5,
                                     display: 'grid',
                                     gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' },
-                                    gap: 0.75,
+                                    gap: 1,
                                 }}>
                                     {(template?.fieldsSchema || [])
                                         .filter((f) => f.autoFillFrom && autoFilledValues[f.key] !== undefined && autoFilledValues[f.key] !== '')
                                         .map((f) => (
-                                            <Box key={f.key} sx={{ display: 'flex', gap: 0.75 }}>
-                                                <Typography variant="caption" sx={{ color: '#64748b', minWidth: 120, fontWeight: 600 }}>
-                                                    {f.label}:
+                                            <Box key={f.key} sx={{
+                                                px: 1.25,
+                                                py: 1,
+                                                borderRadius: '8px',
+                                                background: '#fff',
+                                                border: `1px solid ${BORDER}`,
+                                            }}>
+                                                <Typography sx={{ fontSize: '0.68rem', fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.04em', fontFamily: FONT }}>
+                                                    {f.label}
                                                 </Typography>
-                                                <Typography variant="caption" sx={{ color: '#1e293b' }}>
+                                                <Typography sx={{ fontSize: '0.84rem', fontWeight: 600, color: TEXT, mt: 0.25, fontFamily: FONT }}>
                                                     {autoFilledValues[f.key] || '—'}
                                                 </Typography>
                                             </Box>
                                         ))
                                     }
                                 </Box>
-                                <Typography variant="caption" sx={{ color: '#94a3b8', mt: 0.5, display: 'block' }}>
-                                    These values are pulled directly from the employee's profile and cannot be changed here.
-                                </Typography>
                             </Box>
                         )}
 
-                        {/* Manual fields — only fields with no autoFillFrom */}
                         {selectedEmployees.length > 0 && manualFields.length > 0 && (
                             <Box>
-                                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
+                                <Typography sx={sectionLabelSx}>
                                     Additional Fields
                                     {loadingContext && (
-                                        <CircularProgress size={14} sx={{ ml: 1, color: '#E53935', verticalAlign: 'middle' }} />
+                                        <CircularProgress size={14} sx={{ ml: 1, color: RED, verticalAlign: 'middle' }} />
                                     )}
                                 </Typography>
                                 <Stack spacing={1.5}>
@@ -372,6 +400,7 @@ export default function TemplateAssignDialog({
                                                     required={field.required}
                                                     error={!!formErrors[field.key]}
                                                     helperText={formErrors[field.key]}
+                                                    sx={fieldSx}
                                                 />
                                             ) : field.type === 'date' ? (
                                                 <TextField
@@ -385,6 +414,7 @@ export default function TemplateAssignDialog({
                                                     required={field.required}
                                                     error={!!formErrors[field.key]}
                                                     helperText={formErrors[field.key]}
+                                                    sx={fieldSx}
                                                 />
                                             ) : (
                                                 <TextField
@@ -396,6 +426,7 @@ export default function TemplateAssignDialog({
                                                     required={field.required}
                                                     error={!!formErrors[field.key]}
                                                     helperText={formErrors[field.key]}
+                                                    sx={fieldSx}
                                                 />
                                             )}
                                         </Box>
@@ -404,71 +435,68 @@ export default function TemplateAssignDialog({
                             </Box>
                         )}
 
-                        {/* Notes section */}
                         {template?.notesFieldLabel && (
-                            <>
-                                <Divider />
-                                <Box>
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b', mb: 1 }}>
-                                        {template.notesFieldLabel}
-                                    </Typography>
-                                    <TextField
-                                        fullWidth
-                                        multiline
-                                        minRows={4}
-                                        size="small"
-                                        placeholder="Enter any additional notes to include in this letter…"
-                                        value={notesContent}
-                                        onChange={(e) => setNotesContent(e.target.value)}
-                                    />
-                                </Box>
-                            </>
+                            <Box>
+                                <Divider sx={{ mb: 2 }} />
+                                <Typography sx={sectionLabelSx}>{template.notesFieldLabel}</Typography>
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    minRows={3}
+                                    size="small"
+                                    placeholder="Enter any additional notes to include in this letter…"
+                                    value={notesContent}
+                                    onChange={(e) => setNotesContent(e.target.value)}
+                                    sx={fieldSx}
+                                />
+                            </Box>
                         )}
 
-                        <Divider />
-
-                        {/* Options */}
-                        <Stack spacing={1}>
+                        <Box sx={{ border: `1px solid ${BORDER}`, borderRadius: '12px', p: 1.75, background: SURFACE }}>
                             <FormControlLabel
-                                sx={{ ml: 0 }}
+                                sx={{ ml: 0, mb: 1.25 }}
                                 control={
                                     <Switch
                                         size="small"
                                         checked={requiresAck}
                                         onChange={(e) => setRequiresAck(e.target.checked)}
+                                        sx={{
+                                            '& .MuiSwitch-switchBase.Mui-checked': { color: RED },
+                                            '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: RED },
+                                        }}
                                     />
                                 }
                                 label={
-                                    <Typography variant="body2" sx={{ color: '#475569' }}>
+                                    <Typography sx={{ fontSize: '0.85rem', color: TEXT, fontFamily: FONT, fontWeight: 500 }}>
                                         Require employee acknowledgment
                                     </Typography>
                                 }
                             />
                             <TextField
                                 size="small"
-                                label="Internal Note (optional)"
+                                label="Internal note (optional)"
                                 value={note}
                                 onChange={(e) => setNote(e.target.value)}
                                 fullWidth
+                                sx={fieldSx}
                             />
-                        </Stack>
+                        </Box>
 
                         {Object.keys(formErrors).filter((k) => k !== '_employees').length > 0 && (
-                            <Alert severity="error" sx={{ borderRadius: 2 }}>
+                            <Alert severity="error" sx={{ borderRadius: '10px' }}>
                                 Please fill all required fields before generating the preview.
                             </Alert>
                         )}
                     </Stack>
                 ) : (
-                    /* ── Preview step ─────────────────────────────────── */
-                    <Box sx={{ height: '100%' }}>
-                        <Box sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <PreviewOutlinedIcon sx={{ color: '#C62828', fontSize: 18 }} />
-                            <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#1e293b' }}>
+                    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+                        <Box sx={{ mb: 1.5, display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0 }}>
+                            <PreviewOutlinedIcon sx={{ color: RED_DARK, fontSize: 18 }} />
+                            <Typography sx={{ fontWeight: 700, fontSize: '0.9rem', color: TEXT, fontFamily: FONT }}>
                                 Preview — {typeLabel}
                                 {selectedEmployees.length > 0 && (
-                                    <Typography component="span" variant="caption" sx={{ color: '#94a3b8', ml: 1 }}>
-                                        showing first employee: {selectedEmployees[0].fullName}
+                                    <Typography component="span" sx={{ fontSize: '0.75rem', color: MUTED, ml: 1, fontWeight: 500 }}>
+                                        {selectedEmployees[0].fullName}
                                     </Typography>
                                 )}
                             </Typography>
@@ -476,27 +504,28 @@ export default function TemplateAssignDialog({
 
                         {previewLoading && (
                             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 8, gap: 2 }}>
-                                <CircularProgress size={32} sx={{ color: '#E53935' }} />
-                                <Typography variant="body2" sx={{ color: '#64748b' }}>
+                                <CircularProgress size={32} sx={{ color: RED }} />
+                                <Typography sx={{ fontSize: '0.85rem', color: MUTED, fontFamily: FONT }}>
                                     Generating preview…
                                 </Typography>
                             </Box>
                         )}
                         {previewError && (
-                            <Alert severity="error" sx={{ borderRadius: 2 }}>{previewError}</Alert>
+                            <Alert severity="error" sx={{ borderRadius: '10px' }}>{previewError}</Alert>
                         )}
                         {!previewLoading && !previewError && previewBlob && (
                             <Box sx={{
-                                background: '#525659',
-                                borderRadius: 2,
+                                flex: 1,
+                                minHeight: 0,
+                                background: '#3f4450',
+                                borderRadius: '12px',
                                 p: 2,
                                 overflowY: 'auto',
-                                maxHeight: 'calc(90vh - 220px)',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 alignItems: 'center',
                             }}>
-                                <Suspense fallback={<CircularProgress />}>
+                                <Suspense fallback={<CircularProgress sx={{ color: '#fff' }} />}>
                                 <PdfDocument
                                     file={previewBlob}
                                     onLoadSuccess={({ numPages }) => setPreviewNumPages(numPages)}
@@ -519,25 +548,24 @@ export default function TemplateAssignDialog({
                         )}
 
                         {assignError && (
-                            <Alert severity="error" sx={{ mt: 2, borderRadius: 2, whiteSpace: 'pre-line' }}>
+                            <Alert severity="error" sx={{ mt: 2, borderRadius: '10px', whiteSpace: 'pre-line' }}>
                                 {assignError}
                             </Alert>
                         )}
 
                         {selectedEmployees.length > 1 && (
-                            <Alert severity="info" sx={{ mt: 1.5, fontSize: '0.8rem' }}>
-                                The preview shows the document for <strong>{selectedEmployees[0].fullName}</strong>.
-                                Confirming will generate and assign documents for all {selectedEmployees.length} selected employees.
+                            <Alert severity="info" sx={{ mt: 1.5, fontSize: '0.8rem', borderRadius: '10px', background: INFO_BG, color: INFO_TEXT, border: '1px solid #BFDBFE' }}>
+                                Preview shows <strong>{selectedEmployees[0].fullName}</strong>. Confirming assigns to all {selectedEmployees.length} employees.
                             </Alert>
                         )}
                     </Box>
                 )}
             </DialogContent>
 
-            <DialogActions sx={{ px: 3, pb: 2, borderTop: '1px solid #e2e8f0', gap: 1, flexWrap: 'wrap' }}>
+            <DialogActions sx={{ px: 3, py: 1.75, borderTop: `1px solid ${BORDER}`, gap: 1, flexWrap: 'wrap' }}>
                 {step === STEP.FORM && (
                     <>
-                        <Button onClick={onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+                        <Button onClick={onClose} sx={ghostBtnSx}>Cancel</Button>
                         <Button
                             variant="contained"
                             onClick={handlePreview}
@@ -551,11 +579,11 @@ export default function TemplateAssignDialog({
                 )}
                 {step === STEP.PREVIEW && (
                     <>
-                        <Button onClick={() => { setStep(STEP.FORM); setPreviewBlob(null); setAssignError(''); }} sx={{ textTransform: 'none' }}>
-                            ← Back to Form
+                        <Button onClick={() => { setStep(STEP.FORM); setPreviewBlob(null); setAssignError(''); }} sx={ghostBtnSx}>
+                            ← Back
                         </Button>
                         <Box sx={{ flex: 1 }} />
-                        <Button onClick={onClose} sx={{ textTransform: 'none' }}>Cancel</Button>
+                        <Button onClick={onClose} sx={ghostBtnSx}>Cancel</Button>
                         <Button
                             variant="contained"
                             onClick={handleConfirmAssign}
@@ -563,7 +591,7 @@ export default function TemplateAssignDialog({
                             startIcon={assigning ? <CircularProgress size={16} sx={{ color: '#fff' }} /> : <AssignmentOutlinedIcon />}
                             sx={primaryBtnSx}
                         >
-                            {assigning ? 'Assigning…' : `Confirm & Assign to ${selectedEmployees.length} Employee${selectedEmployees.length !== 1 ? 's' : ''}`}
+                            {assigning ? 'Assigning…' : `Confirm & Assign (${selectedEmployees.length})`}
                         </Button>
                     </>
                 )}

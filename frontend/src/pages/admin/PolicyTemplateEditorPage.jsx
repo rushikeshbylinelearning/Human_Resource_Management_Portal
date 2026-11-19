@@ -303,7 +303,7 @@ const PolicyTemplateEditorPage = () => {
 
     try {
       await api.post(`/policy-templates/${id}/publish`);
-      navigate('/admin/policies?tab=5');
+      navigate('/employees?tab=consent-templates');
     } catch (error) {
       console.error('Failed to publish:', error);
       setSaveStatus('Error publishing template');
@@ -312,7 +312,7 @@ const PolicyTemplateEditorPage = () => {
   };
 
   const handleBack = () => {
-    navigate('/admin/policies?tab=5');
+    navigate('/employees?tab=consent-templates');
   };
 
   const currentStep = template?.steps?.find((s) => s.key === STEPS[activeStepIndex]?.key);

@@ -5,6 +5,7 @@ import {
     TableRow, Paper, Chip, Button, IconButton, Select, MenuItem, FormControl,
     InputLabel, TextField, CircularProgress, Dialog, DialogTitle, DialogContent,
     DialogActions, Alert, Switch, FormControlLabel, Autocomplete, Stack, Tooltip,
+    InputAdornment,
 } from '@mui/material';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
@@ -18,14 +19,15 @@ import FactCheckOutlinedIcon from '@mui/icons-material/FactCheckOutlined';
 import TuneOutlinedIcon from '@mui/icons-material/TuneOutlined';
 import AddIcon from '@mui/icons-material/Add';
 import InsertDriveFileOutlinedIcon from '@mui/icons-material/InsertDriveFileOutlined';
+import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
 import api from '../../api/axios';
 import DocumentTemplateEditorDialog from './DocumentTemplateEditorDialog';
 import TemplateAssignDialog from './TemplateAssignDialog';
 import {
     RED, RED_DARK, RED_BG, RED_LIGHT, TEXT, MUTED, BORDER, SURFACE,
     FONT, SUCCESS_BG, SUCCESS_TEXT, WARN_BG, WARN_TEXT, INFO_BG, INFO_TEXT,
-    cardSx, sectionTitleSx, sectionDescSx, primaryBtnSx, outlineBtnSx,
-    fieldSx, tableHeadCellSx, iconBoxSx, pageTitleSx, pageDescSx,
+    cardSx, sectionTitleSx, sectionDescSx, primaryBtnSx, outlineBtnSx, ghostBtnSx,
+    fieldSx, tableHeadCellSx, iconBoxSx, pageDescSx,
 } from '../../theme/policiesPageTheme';
 
 const BUILT_IN_KEYS = ['joining_letter', 'kra', 'probation_confirmation', 'probation_extension'];
@@ -178,13 +180,14 @@ const ChangeStatusDialog = ({ open, onClose, employee, onSuccess }) => {
     );
 };
 
-const EmployeeDocumentsDashboard = () => {
+const EmployeeDocumentsDashboard = ({ manageOpen = false, onManageOpenChange }) => {
     const [types, setTypes] = useState([]);
     const [records, setRecords] = useState([]);
     const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
     const [loading, setLoading] = useState(false);
-    const [filters, setFilters] = useState({ status: '', department: '', documentType: '' });
+    const [searchInput, setSearchInput] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
     const [snack, setSnack] = useState('');
 
     // Template editor / assign dialogs for built-in types
@@ -208,6 +211,10 @@ const EmployeeDocumentsDashboard = () => {
 
     const [statusDialog, setStatusDialog] = useState({ open: false, employee: null });
 
+    const closeManageModal = useCallback(() => {
+        onManageOpenChange?.(false);
+    }, [onManageOpenChange]);
+
     const loadTypes = useCallback(async () => {
         try {
             const { data } = await api.get('/employee-documents/types');
@@ -221,9 +228,7 @@ const EmployeeDocumentsDashboard = () => {
         setLoading(true);
         try {
             const params = new URLSearchParams({ page, limit: 25 });
-            if (filters.status) params.set('status', filters.status);
-            if (filters.department) params.set('department', filters.department);
-            if (filters.documentType) params.set('documentType', filters.documentType);
+            if (searchQuery) params.set('q', searchQuery);
             const { data } = await api.get(`/employee-documents/admin/compliance?${params}`);
             setRecords(data.records || []);
             setTotal(data.total || 0);
@@ -232,7 +237,7 @@ const EmployeeDocumentsDashboard = () => {
         } finally {
             setLoading(false);
         }
-    }, [page, filters]);
+    }, [page, searchQuery]);
 
     const loadEmployees = useCallback(async () => {
         try {
@@ -245,8 +250,25 @@ const EmployeeDocumentsDashboard = () => {
 
     useEffect(() => {
         loadTypes();
-        loadEmployees();
-    }, [loadTypes, loadEmployees]);
+    }, [loadTypes]);
+
+    // Load employee list only when manage modal opens (avoids heavy fetch on tab view)
+    useEffect(() => {
+        if (manageOpen) loadEmployees();
+    }, [manageOpen, loadEmployees]);
+
+    // Debounce search input → query
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const next = searchInput.trim();
+            setSearchQuery((prev) => {
+                if (prev === next) return prev;
+                setPage(1);
+                return next;
+            });
+        }, 350);
+        return () => clearTimeout(timer);
+    }, [searchInput]);
 
     useEffect(() => { loadRecords(); }, [loadRecords]);
 
@@ -308,316 +330,387 @@ const EmployeeDocumentsDashboard = () => {
     const totalPages = Math.ceil(total / 25);
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, fontFamily: FONT }}>
-            <Box>
-                <Typography sx={pageTitleSx}>
-                    Employee Documents
-                </Typography>
-                <Typography sx={{ ...pageDescSx, mt: 0.4, maxWidth: 640 }}>
-                    Manage document types, assign letters from templates, and track employee compliance.
-                </Typography>
-            </Box>
-
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, fontFamily: FONT, height: '100%', minHeight: 0 }}>
             {snack && (
-                <Alert severity="info" onClose={() => setSnack('')} sx={{ borderRadius: 2 }}>
+                <Alert severity="info" onClose={() => setSnack('')} sx={{ borderRadius: 2, flexShrink: 0 }}>
                     {snack}
                 </Alert>
             )}
 
-            <Box sx={{
-                display: 'grid',
-                gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' },
-                gap: 2.5,
-                alignItems: 'stretch',
-            }}>
-            {/* ── Document Types card ─────────────────────────────────── */}
-            <Box sx={{ ...cardSx, height: '100%' }}>
-                <SectionHeader
-                    icon={<CategoryOutlinedIcon sx={{ fontSize: 18 }} />}
-                    title="Document Types"
-                    description="Built-in types use templates. Click the gear to configure. Custom types use direct PDF upload."
-                />
-                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2, minHeight: 32 }}>
-                    {types.length === 0 ? (
-                        <Typography variant="body2" sx={{ color: MUTED, fontStyle: 'italic' }}>
-                            No document types configured.
-                        </Typography>
-                    ) : types.map((t) => (
-                        <Box
-                            key={t.key}
-                            sx={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 0.25,
-                                pl: 1.25,
-                                pr: t.isBuiltIn ? 0.4 : 1.25,
-                                py: 0.35,
-                                borderRadius: '999px',
-                                border: `1px solid ${t.isBuiltIn ? 'rgba(198, 40, 40, 0.22)' : BORDER}`,
-                                background: t.isBuiltIn ? RED_LIGHT : SURFACE,
-                            }}
-                        >
-                            <Typography sx={{
-                                fontSize: '0.78rem',
-                                fontWeight: 600,
-                                color: t.isBuiltIn ? RED_DARK : TEXT,
-                                fontFamily: FONT,
-                            }}>
-                                {t.label}
-                            </Typography>
-                            {t.isBuiltIn && BUILT_IN_KEYS.includes(t.key) && (
-                                <Tooltip title={`Manage template for ${t.label}`}>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() => { setTemplateEditorType(t.key); setTemplateEditorOpen(true); }}
-                                        sx={{ p: 0.4, color: RED_DARK, '&:hover': { background: RED_BG } }}
-                                        aria-label={`Manage template for ${t.label}`}
-                                    >
-                                        <TuneOutlinedIcon sx={{ fontSize: 15 }} />
-                                    </IconButton>
-                                </Tooltip>
-                            )}
+            {/* ── Manage Documents modal (types + assign) ─────────────── */}
+            <Dialog
+                open={!!manageOpen}
+                onClose={closeManageModal}
+                maxWidth="md"
+                fullWidth
+                scroll="paper"
+                PaperProps={{
+                    sx: {
+                        borderRadius: '16px',
+                        maxHeight: '88vh',
+                        fontFamily: FONT,
+                        overflow: 'hidden',
+                    },
+                }}
+            >
+                <DialogTitle sx={{ px: 3, pt: 2.5, pb: 2, borderBottom: `1px solid ${BORDER}` }}>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5, minWidth: 0 }}>
+                            <Box sx={iconBoxSx}>
+                                <AssignmentOutlinedIcon sx={{ fontSize: 18 }} />
+                            </Box>
+                            <Box sx={{ minWidth: 0 }}>
+                                <Typography sx={{ fontWeight: 700, fontSize: '1.1rem', color: TEXT, letterSpacing: '-0.02em', fontFamily: FONT, lineHeight: 1.25 }}>
+                                    Manage Documents
+                                </Typography>
+                                <Typography sx={{ ...pageDescSx, mt: 0.4 }}>
+                                    Edit templates, add custom types, and assign letters to employees.
+                                </Typography>
+                            </Box>
                         </Box>
-                    ))}
-                </Box>
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
-                    <TextField
-                        size="small"
-                        placeholder="New custom type name"
-                        value={newTypeLabel}
-                        onChange={(e) => setNewTypeLabel(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleAddCustomType()}
-                        sx={{ flex: 1, ...fieldSx }}
-                    />
-                    <Button
-                        variant="outlined"
-                        startIcon={savingTypes ? <CircularProgress size={16} /> : <AddIcon />}
-                        onClick={handleAddCustomType}
-                        disabled={savingTypes || !newTypeLabel.trim()}
-                        sx={{ ...outlineBtnSx, whiteSpace: 'nowrap' }}
-                    >
-                        Add Custom Type
-                    </Button>
-                </Stack>
-            </Box>
-
-            {/* ── Assign Document card ─────────────────────────────────── */}
-            <Box sx={{ ...cardSx, height: '100%' }}>
-                <SectionHeader
-                    icon={<AssignmentOutlinedIcon sx={{ fontSize: 18 }} />}
-                    title="Assign Document"
-                    description="Select a document type. Built-in types generate from a template; custom types require a PDF upload."
-                />
-
-                {/* Step 1: pick type */}
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, mb: 2 }}>
-                    <FormControl size="small" sx={fieldSx}>
-                        <InputLabel>Document Type</InputLabel>
-                        <Select
-                            value={assignType}
-                            label="Document Type"
-                            onChange={(e) => {
-                                setAssignType(e.target.value);
-                                setSelectedEmployees([]);
-                                setAssignFile(null);
-                                setCustomTypeLabel('');
-                            }}
-                        >
-                            {types.map((t) => (
-                                <MenuItem key={t.key} value={t.key}>
-                                    {t.label}
-                                    {t.isBuiltIn && (
-                                        <Typography component="span" variant="caption" sx={{ ml: 1, color: RED_DARK }}>
-                                            (template)
-                                        </Typography>
-                                    )}
-                                </MenuItem>
-                            ))}
-                            <MenuItem value="custom">Custom (manual label)</MenuItem>
-                        </Select>
-                    </FormControl>
-                    {assignType === 'custom' && (
-                        <TextField
-                            size="small"
-                            label="Custom Type Label"
-                            value={customTypeLabel}
-                            onChange={(e) => setCustomTypeLabel(e.target.value)}
-                        />
-                    )}
-                </Box>
-
-                {/* Built-in type → open template assign dialog */}
-                {isBuiltInAssignType && (
-                    <Box>
-                        <Alert severity="info" sx={{ mb: 2, borderRadius: 2, fontSize: '0.8rem' }}>
-                            This is a <strong>templated document type</strong>. Fields will be auto-filled from the
-                            employee profile. You can override any field and optionally add notes before the PDF is generated.
-                        </Alert>
-                        <Button
-                            variant="contained"
-                            startIcon={<AssignmentOutlinedIcon />}
-                            onClick={() => { setTemplateAssignType(assignType); setTemplateAssignOpen(true); }}
-                            sx={primaryBtnSx}
-                        >
-                            Open Assign Form
+                        <Button onClick={closeManageModal} sx={{ ...ghostBtnSx, minWidth: 0, px: 1.5, py: 0.5 }}>
+                            Close
                         </Button>
                     </Box>
-                )}
+                </DialogTitle>
+                <DialogContent sx={{ px: 3, py: 2.5, background: '#fff' }}>
+                    <Box sx={{
+                        display: 'grid',
+                        gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' },
+                        gap: 2,
+                        alignItems: 'start',
+                    }}>
+                        {/* ── Document Types ─────────────────────────────────── */}
+                        <Box sx={{
+                            border: `1px solid ${BORDER}`,
+                            borderRadius: '14px',
+                            p: 2,
+                            background: '#fff',
+                            minHeight: 320,
+                            display: 'flex',
+                            flexDirection: 'column',
+                        }}>
+                            <Typography sx={{ ...sectionTitleSx, mb: 0.35 }}>
+                                <Box sx={{ ...iconBoxSx, width: 32, height: 32 }}>
+                                    <CategoryOutlinedIcon sx={{ fontSize: 16 }} />
+                                </Box>
+                                Document Types
+                            </Typography>
+                            <Typography sx={{ ...sectionDescSx, mb: 1.75, pl: 0 }}>
+                                Built-in types use templates. Custom types use a PDF upload.
+                            </Typography>
 
-                {/* Custom / non-built-in → direct PDF upload (unchanged) */}
-                {assignType && !isBuiltInAssignType && (
-                    <Stack spacing={2}>
-                        <Autocomplete
-                            multiple
-                            options={employees}
-                            getOptionLabel={(o) => `${o.fullName} (${o.employeeCode})`}
-                            value={selectedEmployees}
-                            onChange={(_, v) => setSelectedEmployees(v)}
-                            renderInput={(params) => (
-                                <TextField {...params} label="Employees" size="small" placeholder="Search by name or code" />
-                            )}
-                        />
-                        <TextField
-                            size="small"
-                            label="Note"
-                            placeholder="Optional internal note"
-                            value={assignNote}
-                            onChange={(e) => setAssignNote(e.target.value)}
-                        />
-                        <Button
-                            variant="outlined"
-                            component="label"
-                            fullWidth
-                            startIcon={assignFile ? <InsertDriveFileOutlinedIcon /> : <CloudUploadOutlinedIcon />}
-                            sx={{
-                                py: 1.5,
-                                textTransform: 'none',
-                                fontWeight: 600,
-                                borderRadius: '10px',
-                                borderStyle: 'dashed',
-                                borderColor: assignFile ? RED : BORDER,
-                                color: assignFile ? RED_DARK : MUTED,
-                                background: assignFile ? RED_LIGHT : SURFACE,
-                                '&:hover': { borderStyle: 'dashed', borderColor: RED, background: RED_LIGHT },
-                            }}
-                        >
-                            {assignFile ? assignFile.name : 'Choose PDF file to upload'}
-                            <input
-                                type="file"
-                                hidden
-                                accept="application/pdf"
-                                onChange={(e) => setAssignFile(e.target.files?.[0] || null)}
-                            />
-                        </Button>
-                        <FormControlLabel
-                            sx={{ ml: 0 }}
-                            control={
-                                <Switch
-                                    checked={requiresAck}
-                                    onChange={(e) => setRequiresAck(e.target.checked)}
+                            <Box sx={{
+                                flex: 1,
+                                border: `1px solid ${BORDER}`,
+                                borderRadius: '12px',
+                                overflow: 'hidden',
+                                mb: 1.75,
+                                background: SURFACE,
+                            }}>
+                                {types.length === 0 ? (
+                                    <Box sx={{ p: 2.5, textAlign: 'center' }}>
+                                        <Typography sx={{ fontSize: '0.85rem', color: MUTED }}>
+                                            No document types configured.
+                                        </Typography>
+                                    </Box>
+                                ) : types.map((t, idx) => (
+                                    <Box
+                                        key={t.key}
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 1,
+                                            px: 1.5,
+                                            py: 1.1,
+                                            borderBottom: idx < types.length - 1 ? `1px solid ${BORDER}` : 'none',
+                                            background: '#fff',
+                                            '&:hover': { background: SURFACE },
+                                        }}
+                                    >
+                                        <Box sx={{ flex: 1, minWidth: 0 }}>
+                                            <Typography sx={{ fontSize: '0.875rem', fontWeight: 600, color: TEXT, fontFamily: FONT }}>
+                                                {t.label}
+                                            </Typography>
+                                            <Typography sx={{ fontSize: '0.7rem', color: MUTED, fontFamily: FONT }}>
+                                                {t.isBuiltIn ? 'Template-based' : 'Custom · PDF upload'}
+                                            </Typography>
+                                        </Box>
+                                        {t.isBuiltIn && BUILT_IN_KEYS.includes(t.key) && (
+                                            <Button
+                                                size="small"
+                                                startIcon={<TuneOutlinedIcon sx={{ fontSize: 15 }} />}
+                                                onClick={() => { setTemplateEditorType(t.key); setTemplateEditorOpen(true); }}
+                                                sx={{ ...outlineBtnSx, py: 0.4, px: 1.25, fontSize: '0.75rem' }}
+                                            >
+                                                Edit template
+                                            </Button>
+                                        )}
+                                    </Box>
+                                ))}
+                            </Box>
+
+                            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                                <TextField
                                     size="small"
-                                    sx={{
-                                        '& .MuiSwitch-switchBase.Mui-checked': { color: RED },
-                                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: RED },
-                                    }}
+                                    placeholder="New custom type name"
+                                    value={newTypeLabel}
+                                    onChange={(e) => setNewTypeLabel(e.target.value)}
+                                    onKeyDown={(e) => e.key === 'Enter' && handleAddCustomType()}
+                                    sx={{ flex: 1, ...fieldSx }}
                                 />
-                            }
-                            label={
-                                <Typography variant="body2" sx={{ color: MUTED }}>
-                                    Require employee acknowledgment
-                                </Typography>
-                            }
-                        />
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <Button
-                                variant="contained"
-                                onClick={handleAssignCustom}
-                                disabled={assigning || !selectedEmployees.length || !assignType || !assignFile}
-                                sx={primaryBtnSx}
-                            >
-                                {assigning ? 'Assigning…' : 'Assign Document'}
-                            </Button>
+                                <Button
+                                    variant="outlined"
+                                    startIcon={savingTypes ? <CircularProgress size={16} /> : <AddIcon />}
+                                    onClick={handleAddCustomType}
+                                    disabled={savingTypes || !newTypeLabel.trim()}
+                                    sx={{ ...outlineBtnSx, whiteSpace: 'nowrap' }}
+                                >
+                                    Add type
+                                </Button>
+                            </Stack>
                         </Box>
-                    </Stack>
-                )}
-            </Box>
-            </Box>
+
+                        {/* ── Assign Document ─────────────────────────────────── */}
+                        <Box sx={{
+                            border: `1px solid ${BORDER}`,
+                            borderRadius: '14px',
+                            p: 2,
+                            background: '#fff',
+                            minHeight: 320,
+                            display: 'flex',
+                            flexDirection: 'column',
+                        }}>
+                            <Typography sx={{ ...sectionTitleSx, mb: 0.35 }}>
+                                <Box sx={{ ...iconBoxSx, width: 32, height: 32 }}>
+                                    <AssignmentOutlinedIcon sx={{ fontSize: 16 }} />
+                                </Box>
+                                Assign Document
+                            </Typography>
+                            <Typography sx={{ ...sectionDescSx, mb: 1.75, pl: 0 }}>
+                                Choose a type, then generate from a template or upload a PDF.
+                            </Typography>
+
+                            <FormControl size="small" fullWidth sx={{ ...fieldSx, mb: 1.75 }}>
+                                <InputLabel>Document Type</InputLabel>
+                                <Select
+                                    value={assignType}
+                                    label="Document Type"
+                                    onChange={(e) => {
+                                        setAssignType(e.target.value);
+                                        setSelectedEmployees([]);
+                                        setAssignFile(null);
+                                        setCustomTypeLabel('');
+                                    }}
+                                >
+                                    {types.map((t) => (
+                                        <MenuItem key={t.key} value={t.key}>
+                                            {t.label}
+                                            {t.isBuiltIn ? ' · Template' : ' · Custom'}
+                                        </MenuItem>
+                                    ))}
+                                    <MenuItem value="custom">Custom (manual label)</MenuItem>
+                                </Select>
+                            </FormControl>
+
+                            {!assignType && (
+                                <Box sx={{
+                                    flex: 1,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    borderRadius: '12px',
+                                    border: `1px dashed ${BORDER}`,
+                                    background: SURFACE,
+                                    px: 2,
+                                    py: 3,
+                                }}>
+                                    <Typography sx={{ fontSize: '0.85rem', color: MUTED, textAlign: 'center', maxWidth: 260 }}>
+                                        Select a document type to continue with assignment.
+                                    </Typography>
+                                </Box>
+                            )}
+
+                            {assignType === 'custom' && (
+                                <TextField
+                                    size="small"
+                                    label="Custom Type Label"
+                                    value={customTypeLabel}
+                                    onChange={(e) => setCustomTypeLabel(e.target.value)}
+                                    sx={{ mb: 1.75, ...fieldSx }}
+                                />
+                            )}
+
+                            {isBuiltInAssignType && (
+                                <Box sx={{
+                                    flex: 1,
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    gap: 1.75,
+                                    p: 1.75,
+                                    borderRadius: '12px',
+                                    background: INFO_BG,
+                                    border: '1px solid #BFDBFE',
+                                }}>
+                                    <Typography sx={{ fontSize: '0.8rem', color: INFO_TEXT, lineHeight: 1.55, fontFamily: FONT }}>
+                                        Templated letter — fields auto-fill from the employee profile. You can override values and preview the PDF before assigning.
+                                    </Typography>
+                                    <Box sx={{ mt: 'auto' }}>
+                                        <Button
+                                            variant="contained"
+                                            startIcon={<AssignmentOutlinedIcon />}
+                                            onClick={() => { setTemplateAssignType(assignType); setTemplateAssignOpen(true); }}
+                                            sx={primaryBtnSx}
+                                        >
+                                            Continue to assign
+                                        </Button>
+                                    </Box>
+                                </Box>
+                            )}
+
+                            {assignType && !isBuiltInAssignType && (
+                                <Stack spacing={1.75} sx={{ flex: 1 }}>
+                                    <Autocomplete
+                                        multiple
+                                        options={employees}
+                                        getOptionLabel={(o) => `${o.fullName} (${o.employeeCode})`}
+                                        value={selectedEmployees}
+                                        onChange={(_, v) => setSelectedEmployees(v)}
+                                        renderInput={(params) => (
+                                            <TextField {...params} label="Employees" size="small" placeholder="Search by name or code" sx={fieldSx} />
+                                        )}
+                                    />
+                                    <TextField
+                                        size="small"
+                                        label="Internal note"
+                                        placeholder="Optional"
+                                        value={assignNote}
+                                        onChange={(e) => setAssignNote(e.target.value)}
+                                        sx={fieldSx}
+                                    />
+                                    <Button
+                                        variant="outlined"
+                                        component="label"
+                                        fullWidth
+                                        startIcon={assignFile ? <InsertDriveFileOutlinedIcon /> : <CloudUploadOutlinedIcon />}
+                                        sx={{
+                                            py: 1.35,
+                                            textTransform: 'none',
+                                            fontWeight: 600,
+                                            borderRadius: '10px',
+                                            borderStyle: 'dashed',
+                                            borderColor: assignFile ? RED : BORDER,
+                                            color: assignFile ? RED_DARK : MUTED,
+                                            background: assignFile ? RED_LIGHT : SURFACE,
+                                            fontFamily: FONT,
+                                            '&:hover': { borderStyle: 'dashed', borderColor: RED, background: RED_LIGHT },
+                                        }}
+                                    >
+                                        {assignFile ? assignFile.name : 'Upload PDF'}
+                                        <input
+                                            type="file"
+                                            hidden
+                                            accept="application/pdf"
+                                            onChange={(e) => setAssignFile(e.target.files?.[0] || null)}
+                                        />
+                                    </Button>
+                                    <FormControlLabel
+                                        sx={{ ml: 0 }}
+                                        control={
+                                            <Switch
+                                                checked={requiresAck}
+                                                onChange={(e) => setRequiresAck(e.target.checked)}
+                                                size="small"
+                                                sx={{
+                                                    '& .MuiSwitch-switchBase.Mui-checked': { color: RED },
+                                                    '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': { backgroundColor: RED },
+                                                }}
+                                            />
+                                        }
+                                        label={
+                                            <Typography variant="body2" sx={{ color: MUTED, fontFamily: FONT }}>
+                                                Require employee acknowledgment
+                                            </Typography>
+                                        }
+                                    />
+                                    <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'flex-end' }}>
+                                        <Button
+                                            variant="contained"
+                                            onClick={handleAssignCustom}
+                                            disabled={assigning || !selectedEmployees.length || !assignType || !assignFile}
+                                            sx={primaryBtnSx}
+                                        >
+                                            {assigning ? 'Assigning…' : 'Assign Document'}
+                                        </Button>
+                                    </Box>
+                                </Stack>
+                            )}
+                        </Box>
+                    </Box>
+                </DialogContent>
+            </Dialog>
 
             {/* ── Compliance Table ─────────────────────────────────────── */}
-            <Box sx={cardSx}>
+            <Box sx={{ ...cardSx, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                 <Box sx={{
                     display: 'flex',
-                    alignItems: 'flex-start',
+                    alignItems: 'center',
                     justifyContent: 'space-between',
                     gap: 2,
-                    mb: 1,
+                    mb: 2,
                     flexWrap: 'wrap',
+                    flexShrink: 0,
                 }}>
-                    <Box>
+                    <Box sx={{ minWidth: 0, flex: '1 1 auto', '& > .MuiBox-root': { mb: 0 } }}>
                         <SectionHeader
                             icon={<FactCheckOutlinedIcon sx={{ fontSize: 18 }} />}
                             title="Compliance Records"
-                            description={`${total} assignment${total === 1 ? '' : 's'} tracked across employees.`}
                         />
                     </Box>
-                    <Tooltip title="Refresh records">
-                        <IconButton
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexShrink: 0, ml: 'auto' }}>
+                        <TextField
                             size="small"
-                            onClick={loadRecords}
-                            disabled={loading}
-                            sx={{ border: `1px solid ${BORDER}`, borderRadius: '10px', color: MUTED }}
-                        >
-                            <RefreshIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
+                            placeholder="Search name, code, department, or document…"
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                            sx={{
+                                width: { xs: '100%', sm: 280 },
+                                minWidth: { sm: 220 },
+                                maxWidth: '100%',
+                                ...fieldSx,
+                            }}
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <SearchOutlinedIcon sx={{ fontSize: 18, color: MUTED }} />
+                                    </InputAdornment>
+                                ),
+                            }}
+                        />
+                        <Tooltip title="Refresh records">
+                            <IconButton
+                                size="small"
+                                onClick={loadRecords}
+                                disabled={loading}
+                                sx={{ border: `1px solid ${BORDER}`, borderRadius: '10px', color: MUTED }}
+                            >
+                                <RefreshIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                    </Box>
                 </Box>
-
-                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mb: 2 }}>
-                    <FormControl size="small" sx={{ minWidth: 140 }}>
-                        <InputLabel>Status</InputLabel>
-                        <Select
-                            value={filters.status}
-                            label="Status"
-                            onChange={(e) => { setFilters((f) => ({ ...f, status: e.target.value })); setPage(1); }}
-                        >
-                            <MenuItem value="">All</MenuItem>
-                            <MenuItem value="pending">Pending</MenuItem>
-                            <MenuItem value="viewed">Viewed</MenuItem>
-                            <MenuItem value="acknowledged">Acknowledged</MenuItem>
-                            <MenuItem value="hr_pending">HR Pending</MenuItem>
-                        </Select>
-                    </FormControl>
-                    <TextField
-                        size="small"
-                        label="Department"
-                        value={filters.department}
-                        onChange={(e) => { setFilters((f) => ({ ...f, department: e.target.value })); setPage(1); }}
-                        sx={{ minWidth: 160 }}
-                    />
-                    <FormControl size="small" sx={{ minWidth: 180 }}>
-                        <InputLabel>Document Type</InputLabel>
-                        <Select
-                            value={filters.documentType}
-                            label="Document Type"
-                            onChange={(e) => { setFilters((f) => ({ ...f, documentType: e.target.value })); setPage(1); }}
-                        >
-                            <MenuItem value="">All</MenuItem>
-                            {types.map((t) => (
-                                <MenuItem key={t.key} value={t.key}>{t.label}</MenuItem>
-                            ))}
-                        </Select>
-                    </FormControl>
-                </Stack>
 
                 <TableContainer
                     component={Paper}
                     variant="outlined"
                     sx={{
+                        flex: 1,
+                        minHeight: 0,
                         borderRadius: '12px',
                         borderColor: BORDER,
                         boxShadow: 'none',
                         overflowX: 'auto',
-                        overflowY: 'hidden',
+                        overflowY: 'auto',
                         WebkitOverflowScrolling: 'touch',
                     }}
                 >
